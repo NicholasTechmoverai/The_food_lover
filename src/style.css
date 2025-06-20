@@ -1,0 +1,11 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Pacifico&display=swap');
+
+.font-cursive {
+  font-family: 'Pacifico', cursive;
+}
+@layer utilities {
+  .p-splitter-panel {
+    @apply transition-all duration-1000 ease-in-out;
+  }
+}
