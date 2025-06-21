@@ -2,11 +2,11 @@ import splashLogo from '../assets/logo.png';
 import favicon from '../assets/logo.ico';
 import desktopBg from '../assets/blob-scene-landscape.svg';
 import mobileBg from '../assets/blob-scene-potrait.svg';
-import welcomeVideo from '../assets/3196344-uhd_3840_2160_25fps.mp4'
+import welcomeVideo from '../assets/3196344-uhd_3840_2160_25fps-compress.mp4'
 // import welcomeImage from '../assets/2530-white-kitchen.png';
 import welcomeImage from '../assets/kitchen1.jpg';
 // import welcomeImage from '../assets/kitchen2.jpg';
-import design_video from '../assets/3255109-uhd_3840_2160_25fps.mp4'
+import design_video from '../assets/3255109-uhd_3840_2160_25fps-compress.mp4'
 import design_image from '../assets/chips1.jpg';
 
 
