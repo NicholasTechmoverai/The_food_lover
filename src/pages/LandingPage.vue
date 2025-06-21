@@ -9,9 +9,9 @@
                 draggable="false" />
 
             <DishCard class="z-30 relative" />
-            <ServicesOffered class="z-50 w-full flex items-end justify-end p-8 lg:p-[50px]" />
+            <ServicesOffered class="z-50 w-full mt-auto flex items-end justify-end p-8 lg:p-[50px]" />
         </section>
-        <div class="flex relative flex-col justify-around gap-2 lg:flex-row bg-amber-300 p-5">
+        <div class="flex relative flex-col justify-around gap-2 lg:flex-row bg-amber-300 p-5 z-60">
             <TiltedRecipeCard />
             <CookingCard class="relative z-50" />
         </div>
