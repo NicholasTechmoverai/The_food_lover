@@ -309,7 +309,7 @@ const subscribe = async () => {
 }
 </script>
 
-<!-- <style scoped>
+<style scoped>
 /* Custom animations */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(5px); }
@@ -339,12 +339,12 @@ a, button, .transition-all {
 
 /* Custom focus styles */
 :focus-visible {
-  outline: 2px solid theme('colors.amber.400');
+  /* outline: 2px solid theme('colors.amber.400'); */
   outline-offset: 2px;
 }
 
 /* PrimeVue overrides */
-:deep(.p-inputtext) {
+/* :deep(.p-inputtext) {
   background-color: theme('colors.gray.800');
   border-color: theme('colors.gray.700');
   color: theme('colors.gray.100');
@@ -352,11 +352,11 @@ a, button, .transition-all {
 
 :deep(.p-inputtext:enabled:hover) {
   border-color: theme('colors.gray.600');
-}
+} */
 
 :deep(.p-inputtext:enabled:focus) {
   box-shadow: 0 0 0 0.2rem rgba(251, 191, 36, 0.2);
-  border-color: theme('colors.amber.400');
+  /* border-color: theme('colors.amber.400'); */
 }
 
 :deep(.p-button) {
@@ -377,4 +377,4 @@ a, button, .transition-all {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.8; }
 }
-</style> -->
+</style>
