@@ -26,7 +26,7 @@ const routes = [
         component: NewRecipe,
       },
       {
-        path: ':receipe_name/:recipe_id',
+        path: ':recipe_name/:recipe_id',
         name: 'RecipeId',
         component: RecipeId,
         props: true

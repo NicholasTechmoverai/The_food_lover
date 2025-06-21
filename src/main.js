@@ -3,6 +3,7 @@ import App from './App.vue';
 import router from './router'
 
 import PrimeVue from 'primevue/config';
+import ToastService from 'primevue/toastservice';
 import Aura from '@primeuix/themes/aura';
 import Splitter from 'primevue/splitter';
 import SplitterPanel from 'primevue/splitterpanel';
@@ -23,6 +24,9 @@ import StepItem from 'primevue/stepitem';
 import Step from 'primevue/step';
 import StepPanel from 'primevue/steppanel';
 import Popover from 'primevue/popover';
+import Skeleton from 'primevue/skeleton';
+import Toast from 'primevue/toast';
+import AnimateOnScroll from 'primevue/animateonscroll';
 
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import 'primeicons/primeicons.css';
@@ -53,9 +57,14 @@ app.component('Textarea',Textarea)
 app.component('Checkbox',Checkbox)
 app.component('InputText',InputText)
 app.component('Popover',Popover)
+app.component('Skeleton',Skeleton)
+app.component('Toast',Toast)
+app.component('AnimateOnScroll',AnimateOnScroll)
+app.directive('animateonscroll', AnimateOnScroll);
 
 
 app.use(router)
+app.use(ToastService);
 app.use(PrimeVue, {
     // unstyled: true,
     // Default theme configuration

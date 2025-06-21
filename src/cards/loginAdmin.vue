@@ -1,10 +1,11 @@
 <template>
   <div class="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <Toast />
+
     <div class="sm:mx-auto sm:w-full sm:max-w-md">
       <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">Admin Configuration Page</h2>
       <p class="mt-2 text-center text-sm text-gray-600">Sign in to access configuration panel</p>
     </div>
-    <div class=" absolute top-[10%] px-5 left-1/2 border border-gray-400 rounded-2xl text-gray-500">{{ noty }}</div>
 
     <div class="relative mt-8 sm:mx-auto sm:w-full sm:max-w-md border border-gray-300 rounded-md shadow">
       <div class="bg-white py-8 px-6 sm:px-10">
@@ -62,12 +63,7 @@
           </div>
 
           <div class="absolute top-0 right-0 m-4">
-            <Button
-              type="button"
-              :label="selectedMember ? selectedMember.name : 'Generate OTP'"
-              @click="toggle"
-              class="min-w-48"
-            />
+            <Button type="button" :label="'Generate OTP'" @click="toggle" class="min-w-48" />
             <Popover ref="op">
               <div class="p-4">
                 <div class="font-semibold text-gray-700 mb-2">Temporary OTP</div>
@@ -106,7 +102,6 @@
       </div>
     </div>
 
-    <!-- Forgot Password Modal -->
     <div v-if="showForgotPassword" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
       <div class="bg-white p-6 rounded-md shadow-md w-full max-w-sm">
         <h3 class="text-lg font-medium text-gray-900 text-center">Reset your password</h3>
@@ -136,111 +131,128 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import {copyToClipboard} from '../reusables/index.js'
-const emit = defineEmits(['verified'])
+import { ref, onMounted } from 'vue';
+import Toast from 'primevue/toast';
+import { useToast } from 'primevue/usetoast';
+import Button from 'primevue/button';
+import Popover from 'primevue/overlaypanel';
+import { copyToClipboard } from '../reusables';
 
-const email = ref('')
-const password = ref('')
-const otpInput = ref('')
-const rememberMe = ref(false)
-const resetEmail = ref('')
+const emit = defineEmits(['verified']);
+const toast = useToast();
 
-const loading = ref(false)
-const resetLoading = ref(false)
-const showForgotPassword = ref(false)
+const email = ref('');
+const password = ref('');
+const otpInput = ref('');
+const rememberMe = ref(false);
+const resetEmail = ref('');
 
-const emailError = ref('')
-const passwordError = ref('')
-const otpError = ref('')
+const loading = ref(false);
+const resetLoading = ref(false);
+const showForgotPassword = ref(false);
 
-const OneTimePassword = ref('')
-const op = ref()
-const selectedMember = ref(null)
-const noty = ref(null)
+const emailError = ref('');
+const passwordError = ref('');
+const otpError = ref('');
+
+const OneTimePassword = ref('');
+const op = ref();
 
 const generateOTP = () => {
-  OneTimePassword.value = String(Math.floor(100000 + Math.random() * 900000))
-}
+  OneTimePassword.value = String(Math.floor(100000 + Math.random() * 900000));
+};
 
 const toggle = (event) => {
-  generateOTP()
-  op.value.toggle(event)
-}
+  generateOTP();
+  op.value.toggle(event);
+};
 
-const ToClipboard = async (msg) => {
-  const isCopied = copyToClipboard(msg)
-}
-
-
+const ToClipboard = (msg) => {
+  const isCopied = copyToClipboard(msg);
+  if (isCopied) {
+    toast.add({
+      severity: 'success',
+      summary: 'Copied!',
+      detail: 'OTP copied to clipboard.',
+      life: 2000
+    });
+  }
+};
 
 const validateForm = () => {
-  emailError.value = ''
-  passwordError.value = ''
-  otpError.value = ''
-  let valid = true
+  emailError.value = '';
+  passwordError.value = '';
+  otpError.value = '';
+  let valid = true;
 
   if (!email.value) {
-    emailError.value = 'Email is required'
-    valid = false
-  } else if (!/^\S+@\S+\.\S+$/.test(email.value)) {
-    emailError.value = 'Invalid email format'
-    valid = false
+    emailError.value = 'Email is required';
+    valid = false;
+  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value)) {
+    emailError.value = 'Invalid email format';
+    valid = false;
   }
 
   if (!password.value) {
-    passwordError.value = 'Password is required'
-    valid = false
+    passwordError.value = 'Password is required';
+    valid = false;
   } else if (password.value.length < 6) {
-    passwordError.value = 'Password must be at least 6 characters'
-    valid = false
+    passwordError.value = 'Password must be at least 6 characters';
+    valid = false;
   }
 
   if (!otpInput.value) {
-    otpError.value = 'OTP is required'
-    valid = false
+    otpError.value = 'OTP is required';
+    valid = false;
   } else if (otpInput.value !== OneTimePassword.value) {
-    otpError.value = 'Invalid OTP'
-    valid = false
+    otpError.value = 'Invalid OTP';
+    valid = false;
   }
 
-  return valid
-}
+  return valid;
+};
 
 const handleLogin = () => {
-  if (!validateForm()) return
-  loading.value = true
-  
-  // Here you would typically make an API call to verify credentials
-  // For demo purposes, we're just checking the OTP
+  if (!validateForm()) return;
+  loading.value = true;
+
   setTimeout(() => {
-    loading.value = false
+    loading.value = false;
     if (otpInput.value === OneTimePassword.value) {
-      noty.value = 'Login successful!'
-      OneTimePassword.value = ''
-       emit('verified', true)
-      // Generate a new OTP after successful login
-      generateOTP()
+      toast.add({
+        severity: 'success',
+        summary: 'Login Successful',
+        detail: 'Welcome back!',
+        life: 3000
+      });
+      emit('verified', true);
+      OneTimePassword.value = '';
     } else {
-      otpError.value = 'Invalid OTP'
+      otpError.value = 'Invalid OTP';
+      toast.add({
+        severity: 'error',
+        summary: 'Login Failed',
+        detail: 'Incorrect OTP',
+        life: 3000
+      });
     }
-  }, 1500)
-}
+  }, 1500);
+};
 
 const handleResetPassword = () => {
   if (!resetEmail.value) {
-    alert('Enter your email')
-    return
+    toast.add({ severity: 'warn', summary: 'Missing Email', detail: 'Please enter your email', life: 2000 });
+    return;
   }
-  resetLoading.value = true
+  resetLoading.value = true;
   setTimeout(() => {
-    resetLoading.value = false
-    showForgotPassword.value = false
-    alert('Reset link sent!')
-  }, 1500)
-}
+    resetLoading.value = false;
+    showForgotPassword.value = false;
+    toast.add({ severity: 'success', summary: 'Reset Sent', detail: 'Check your email for a reset link', life: 3000 });
+  }, 1500);
+};
 
-onMounted(() => generateOTP())
+onMounted(() => generateOTP());
 </script>
 
 <style scoped>
