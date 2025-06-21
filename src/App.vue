@@ -10,7 +10,7 @@
 
 <script setup>
 import Menubar from './components/menubar.vue';
-import Footer from './pages/footer.vue';
+import Footer from './pages/MainFooter.vue';
 
 // import { siteConfig, useIsMobile } from './config/siteConfig.js';
 </script>

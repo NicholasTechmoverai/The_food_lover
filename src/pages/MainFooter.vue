@@ -4,7 +4,7 @@
     </div>
 </template>
 <script setup>
-import Footer1 from '../footers/Footer1.vue';
+import Footer1 from '../footers/FooterPage1.vue';
 import { siteConfig } from '../config/siteConfig.js';
 import { computed } from 'vue';
 const Footer = computed(() => {
