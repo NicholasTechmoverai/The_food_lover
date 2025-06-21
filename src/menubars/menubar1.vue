@@ -5,8 +5,8 @@
             <!-- Logo Section -->
             <template #start>
                 <div class="flex items-center gap-3">
-                    <img :src="siteConfig.assets.logo" :alt="siteConfig.assets.logoAlt"
-                        class="w-14 h-14 object-contain" />
+                    <img @click="goHome" :src="siteConfig.assets.logo" :alt="siteConfig.assets.logoAlt"
+                        class="w-14 h-14 object-contain cursor-pointer" />
                     <span
                         class="hidden md:block text-3xl text-shadow-2xs font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-purple-300 to-gray-200"
                         style="font-family: 'Caprasimo', sans-serif;">
@@ -129,7 +129,7 @@
 import { ref } from "vue";
 import { siteConfig } from '../config/siteConfig.js';
 import router from "../router/index.js";
-
+import { goHome } from "../reusables/index.js"
 const menu = ref();
 const noty_menu = ref();
 
