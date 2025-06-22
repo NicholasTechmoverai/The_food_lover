@@ -1,6 +1,6 @@
 <template>
         <div class="relative  h-auto perspective-1000 p-2">
-              <p class="z-40 p-5  text-5xl font-extrabold text-purple-800 font-cursive drop-shadow-sm">Enjoy 1000+ Dishes</p>
+              <p class="z-40 p-5  text-5xl font-extrabold text-purple-800 font-cursive drop-shadow-sm">{{recipe_message}}</p>
 
         <div class="relative  h-auto perspective-1000 ">
             <img :src="image_design" alt="Mobile frame"
@@ -85,6 +85,7 @@
 <script setup>
 import image_design from '../assets/laptop.png';
 import { ref, onMounted, nextTick } from 'vue';
+const recipe_message = ref('Access 1000+ recipes,250+ East African dishes')
 const dishes = ref([
     {
         name: "Ugali",

@@ -1,4 +1,6 @@
 @import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Pacifico&display=swap');
 
 .font-cursive {
@@ -8,4 +10,10 @@
   .p-splitter-panel {
     @apply transition-all duration-1000 ease-in-out;
   }
+}
+body{
+  height: fit-content;
+  margin: 0;
+  padding: 0;
+  position: relative;
 }

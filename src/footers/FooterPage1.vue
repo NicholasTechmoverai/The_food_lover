@@ -5,26 +5,21 @@
       <!-- Brand Column -->
       <div class="space-y-5">
         <RouterLink to="/" class="flex items-center gap-3 group" aria-label="Return to homepage">
-          <div class="h-10 w-10 bg-gradient-to-br from-amber-400 to-orange-500 rounded-lg flex items-center justify-center text-white font-bold text-xl transition-transform group-hover:scale-105">
+          <div
+            class="h-10 w-10 bg-gradient-to-br from-amber-400 to-orange-500 rounded-lg flex items-center justify-center text-white font-bold text-xl transition-transform group-hover:scale-105">
             <i class="pi pi-utensils"></i>
           </div>
           <span class="text-2xl font-bold bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent">
             {{ brand.name }}
           </span>
         </RouterLink>
-        
+
         <p class="text-gray-400">{{ brand.description }}</p>
-        
+
         <div class="flex gap-4">
-          <a 
-            v-for="social in socialLinks" 
-            :key="social.name"
-            :href="social.url" 
-            :aria-label="social.name"
+          <a v-for="social in socialLinks" :key="social.name" :href="social.url" :aria-label="social.name"
             class="p-2 rounded-full bg-gray-800 hover:bg-gray-700 transition-all hover:-translate-y-1 hover:text-amber-400"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
+            target="_blank" rel="noopener noreferrer">
             <i :class="social.icon" class="text-lg"></i>
           </a>
         </div>
@@ -38,11 +33,9 @@
         </h3>
         <ul class="space-y-3">
           <li v-for="link in linkGroup.links" :key="link.name">
-            <RouterLink 
-              :to="link.path" 
+            <RouterLink :to="link.path"
               class="text-gray-400 hover:text-amber-300 transition-colors flex items-center gap-2 group"
-              active-class="text-amber-400 font-medium"
-            >
+              active-class="text-amber-400 font-medium">
               <span class="w-2 h-2 rounded-full bg-transparent group-hover:bg-amber-400 transition-all"></span>
               {{ link.name }}
             </RouterLink>
@@ -58,38 +51,23 @@
             <i class="pi pi-map-marker text-amber-400"></i>
             Visit Our Food Haven
           </h3>
-          <div 
+          <div
             class="aspect-video rounded-xl overflow-hidden border border-gray-800 hover:border-amber-400 transition-colors relative"
-            @mouseenter="startMapAnimation"
-            @mouseleave="stopMapAnimation"
-          >
+            @mouseenter="startMapAnimation" @mouseleave="stopMapAnimation">
             <!-- Static preview of hotel/shop -->
-            <img 
-              v-if="!showInteractiveMap"
-              :src="hotelPreviewImage" 
-              alt="Our food hotel/shop location"
-              class="w-full h-full object-cover brightness-90"
-              :class="{'animate-pulse': mapAnimating}"
-            >
-            
+            <img v-if="!showInteractiveMap" :src="hotelPreviewImage" alt="Our food hotel/shop location"
+              class="w-full h-full object-cover brightness-90" :class="{ 'animate-pulse': mapAnimating }">
+
             <!-- Interactive map centered on hotel/shop -->
-            <iframe
-              v-if="showInteractiveMap"
-              :src="hotelMapEmbedUrl"
-              class="w-full h-full"
+            <iframe v-if="showInteractiveMap" :src="hotelMapEmbedUrl" class="w-full h-full"
               title="Interactive map showing our food hotel/shop location"
-              aria-label="Interactive map of our establishment"
-              allowfullscreen
-              loading="lazy"
-              referrerpolicy="no-referrer-when-downgrade"
-            ></iframe>
-            
+              aria-label="Interactive map of our establishment" allowfullscreen loading="lazy"
+              referrerpolicy="no-referrer-when-downgrade"></iframe>
+
             <!-- Overlay with "Explore Location" text -->
-            <div 
-              v-if="!showInteractiveMap"
+            <div v-if="!showInteractiveMap"
               class="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center transition-opacity"
-              :class="{'opacity-0': mapAnimating}"
-            >
+              :class="{ 'opacity-0': mapAnimating }">
               <span class="bg-amber-500 text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2">
                 <i class="pi pi-compass"></i>
                 Explore Location
@@ -119,26 +97,17 @@
             Foodie Newsletter
           </h3>
           <p class="text-gray-400 mb-4">Get weekly recipes, special offers, and dining tips</p>
-          
+
           <form @submit.prevent="subscribe" class="space-y-3">
-            <InputText
-              v-model="email"
-              type="email"
-              required
-              placeholder="Your email address"
+            <InputText v-model="email" type="email" required placeholder="Your email address"
               aria-label="Email for food newsletter subscription"
-              class="w-full bg-gray-800 border-gray-700 placeholder-gray-500 focus:ring-2 focus:ring-amber-400 focus:border-transparent"
-            />
-            <Button
-              type="submit"
-              :label="isSubmitting ? 'Subscribing...' : 'Get Food Updates'"
-              :icon="isSubmitting ? 'pi pi-spinner pi-spin' : 'pi pi-send'"
-              iconPos="right"
-              :disabled="isSubmitting"
-              class="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 border-none shadow-lg hover:shadow-amber-500/20 transition-all"
-            />
+              class="w-full bg-gray-800 border-gray-700 placeholder-gray-500 focus:ring-2 focus:ring-amber-400 focus:border-transparent" />
+            <Button type="submit" :label="isSubmitting ? 'Subscribing...' : 'Get Food Updates'"
+              :icon="isSubmitting ? 'pi pi-spinner pi-spin' : 'pi pi-send'" iconPos="right" :disabled="isSubmitting"
+              class="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 border-none shadow-lg hover:shadow-amber-500/20 transition-all" />
           </form>
-          <p v-if="subscriptionMessage" class="mt-2 text-sm animate-fade-in" :class="subscriptionSuccess ? 'text-green-400' : 'text-red-400'">
+          <p v-if="subscriptionMessage" class="mt-2 text-sm animate-fade-in"
+            :class="subscriptionSuccess ? 'text-green-400' : 'text-red-400'">
             <i :class="subscriptionSuccess ? 'pi pi-check-circle' : 'pi pi-exclamation-circle'" class="mr-1"></i>
             {{ subscriptionMessage }}
           </p>
@@ -152,29 +121,21 @@
         <p class="text-gray-500 text-sm">
           &copy; {{ new Date().getFullYear() }} {{ brand.name }}. All culinary rights reserved.
         </p>
-        
+
         <div class="flex items-center gap-6">
-          <RouterLink 
-            v-for="legal in legalLinks" 
-            :key="legal.name"
-            :to="legal.path" 
-            class="text-gray-500 hover:text-gray-300 text-sm transition-colors hover:underline"
-          >
+          <RouterLink v-for="legal in legalLinks" :key="legal.name" :to="legal.path"
+            class="text-gray-500 hover:text-gray-300 text-sm transition-colors hover:underline">
             {{ legal.name }}
           </RouterLink>
         </div>
-        
+
         <div class="flex items-center gap-4">
           <span class="text-gray-500 text-sm">Dine with us:</span>
-          <a 
-            v-for="reservation in reservationPlatforms" 
-            :key="reservation.name"
-            :href="reservation.url"
-            class="hover:opacity-80 transition-opacity hover:-translate-y-0.5"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <div class="h-8 px-3 bg-gray-800 rounded flex items-center justify-center text-xs font-medium text-gray-300 border border-gray-700">
+          <a v-for="reservation in reservationPlatforms" :key="reservation.name" :href="reservation.url"
+            class="hover:opacity-80 transition-opacity hover:-translate-y-0.5" target="_blank"
+            rel="noopener noreferrer">
+            <div
+              class="h-8 px-3 bg-gray-800 rounded flex items-center justify-center text-xs font-medium text-gray-300 border border-gray-700">
               <i :class="reservation.icon" class="mr-1"></i>
               {{ reservation.name }}
             </div>
@@ -189,30 +150,19 @@
 import { ref } from 'vue'
 import InputText from 'primevue/inputtext'
 import Button from 'primevue/button'
-
+import { siteConfig } from '../config/siteConfig'
 // Constants
 const brand = {
   name: 'The food lovers',
   description: 'Where every meal is a celebration of flavors',
 }
 
-const contactInfo = {
-  address: '89 Culinary Avenue, Food District, FD 89101',
-  phone: '+1 (555) 987-6543',
-  hours: 'Daily: 8:00 AM - 10:00 PM',
-  email: 'reservations@gourmethaven.com',
-}
+const contactInfo = siteConfig.contactInfo
 
 const hotelPreviewImage = 'http://localhost:5173/src/assets/chiken.jpg' // Replace with your actual image
 const hotelMapEmbedUrl = 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3022.215209132713!2d-73.98832068459382!3d40.74844097932881!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89c259a9b3117469%3A0xd134e199a405a163!2sEmpire%20State%20Building!5e0!3m2!1sen!2sus!4v1620000000000!5m2!1sen!2sus'
 
-const socialLinks = [
-  { name: 'Instagram', url: '#', icon: 'pi pi-instagram' },
-  { name: 'Facebook', url: '#', icon: 'pi pi-facebook' },
-  { name: 'TikTok', url: '#', icon: 'pi pi-video' },
-  { name: 'YouTube', url: '#', icon: 'pi pi-youtube' },
-  { name: 'Pinterest', url: '#', icon: 'pi pi-pinterest' }
-]
+const socialLinks = siteConfig.social
 
 const footerLinks = [
   {
@@ -230,9 +180,13 @@ const footerLinks = [
     icon: 'pi pi-star',
     links: [
       { name: 'Meet Our Chefs', path: '/chefs' },
+      { name: 'Cooking Tips', path: '/cooking-tips' },
+      { name: 'Receips', path: '/receips' },
       { name: 'Cooking Classes', path: '/classes' },
       { name: 'Food Tours', path: '/tours' },
+      { name: 'videos', path: '/videos' },
       { name: 'Gallery', path: '/gallery' }
+
     ]
   },
   {
@@ -285,14 +239,14 @@ const stopMapAnimation = () => {
 // Methods
 const subscribe = async () => {
   if (!email.value) return
-  
+
   isSubmitting.value = true
   subscriptionMessage.value = ''
-  
+
   try {
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 1500))
-    
+
     subscriptionSuccess.value = true
     subscriptionMessage.value = 'Welcome to our foodie family! Check your inbox for delicious updates.'
     email.value = ''
@@ -301,7 +255,7 @@ const subscribe = async () => {
     subscriptionMessage.value = 'Subscription failed. Please try again later.'
   } finally {
     isSubmitting.value = false
-    
+
     setTimeout(() => {
       subscriptionMessage.value = ''
     }, 5000)
@@ -312,8 +266,15 @@ const subscribe = async () => {
 <style scoped>
 /* Custom animations */
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(5px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .animate-fade-in {
@@ -321,7 +282,9 @@ const subscribe = async () => {
 }
 
 /* Smooth transitions */
-a, button, .transition-all {
+a,
+button,
+.transition-all {
   transition-property: all;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   transition-duration: 200ms;
@@ -374,7 +337,14 @@ a, button, .transition-all {
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.8; }
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.8;
+  }
 }
 </style>

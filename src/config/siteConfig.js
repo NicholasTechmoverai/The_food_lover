@@ -23,6 +23,12 @@ export const siteConfig = {
         charset: 'UTF-8',
         viewport: 'width=device-width, initial-scale=1.0',
     },
+    contactInfo:{
+  address: '89 Culinary Avenue, Food District, FD 89101',
+  phone: '+1 (555) 987-6543',
+  hours: 'Daily: 8:00 AM - 10:00 PM',
+  email: 'reservations@gourmethaven.com',
+},
     welcomeMessage: {
         card:2,
         note: `Welcome to The Food Lover! Explore our delicious recipes and culinary tips.`,

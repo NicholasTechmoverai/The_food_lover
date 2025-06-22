@@ -50,22 +50,25 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, watch, onMounted, onBeforeUnmount } from 'vue'
 import Dropdown from 'primevue/dropdown'
 import Slider from 'primevue/slider'
 import InputSwitch from 'primevue/inputswitch'
 import Button from 'primevue/button'
 import Toast from 'primevue/toast'
 import { useToast } from 'primevue/usetoast'
-
+import { applyTheme } from '../reusables'
 const toast = useToast()
 
+// Define preferences with default values
 const preferences = ref({
-  language: null,
-  theme: null,
+  language: 'en',
+  theme: 'system', // 'light', 'dark', or 'system'
   fontSize: 16,
   notifications: true
 })
+
+
 
 const languages = [
   { label: 'English', value: 'en' },
@@ -78,6 +81,39 @@ const themes = [
   { label: 'Dark', value: 'dark' },
   { label: 'System', value: 'system' }
 ]
+
+
+
+// Watch for manual theme changes
+watch(() => preferences.value.theme, (newTheme) => {
+  if (newTheme === 'system') {
+    localStorage.removeItem('theme') // Don't store system in localStorage
+  } else {
+    localStorage.setItem('theme', newTheme.value)
+  }
+  console.log("theme",newTheme.value)
+  applyTheme(newTheme.value)
+})
+
+// On app load
+onMounted(() => {
+  const storedTheme = localStorage.getItem('theme')
+  if (storedTheme === 'light' || storedTheme === 'dark') {
+    preferences.value.theme = storedTheme
+  } else {
+    preferences.value.theme = 'system' // Default fallback
+  }
+
+  applyTheme(preferences.value.theme)
+
+  // React to OS-level changes when in system mode
+  const media = window.matchMedia('(prefers-color-scheme: dark)')
+  media.addEventListener('change', () => {
+    if (preferences.value.theme === 'system') {
+      applyTheme('system')
+    }
+  })
+})
 
 const savePreferences = () => {
   toast.add({

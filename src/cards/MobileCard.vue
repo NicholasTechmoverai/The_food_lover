@@ -1,8 +1,8 @@
 <template>
     <div class="flex relative justify-center items-center w-full max-w-[400px] h-full -mb-12">
-        <img :src="mobile_image" alt="mobile design frame" class="w-full z-0 h-full object-cover pointer-events-none select-none" />
-        <div class="absolute inset-0 px-2 py-10 mt-[5%] left-[7%] w-[86%] bg-amber-200/0 flex flex-col justify-center items-center text-gray-900">
-            <h3 class="text-2xl font-bold mb-3 font-display">{{ card.title }}</h3>
+        <img :src="mobile_image" alt="mobile design frame" class="w-full z-50 h-full object-cover pointer-events-none select-none" />
+        <div class="absolute scrollit  inset-0 px-2 pt-8 md:pt-8 lg:pt-8 overflow-y-auto mt-[5%] left-[7%] w-[86%] bg-amber-200/80 flex flex-col  items-center text-gray-900">
+            <h3 class="text-2xl font-bold mb-3 font-display sticky top-0">{{ card.title }}</h3>
             <div ref="descriptionContainer" class="description-container">
                 <p ref="descriptionElement" class="description-display">
                     {{ animatedDescription }}
@@ -175,14 +175,28 @@ onBeforeUnmount(() => {
 .description-container::-webkit-scrollbar {
     width: 4px;
 }
-
+.scrolll,
 .description-container::-webkit-scrollbar-track {
     background: rgba(0, 0, 0, 0.05);
 }
-
+.scrolll,
 .description-container::-webkit-scrollbar-thumb {
     background: rgba(0, 0, 0, 0.2);
     border-radius: 2px;
+}
+
+.scrollit::-webkit-scrollbar {
+    width: 2px;
+}
+
+.scrollit::-webkit-scrollbar-thumb {
+    background-color: rgba(168, 6, 217, 0.3);
+    border-radius: 3px;
+}
+
+.scrollit::-webkit-scrollbar-track {
+    background-color: rgba(54, 54, 52, 0.877);
+    border-radius: 3px;
 }
 
 body {

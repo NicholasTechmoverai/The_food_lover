@@ -1,23 +1,40 @@
-<template>
-  <div class="relative w-full overflow-x-hidden max-w-[2500px] mx-auto">
-    <Menubar class="nav z-100 h-fit sticky top-0" />
-    <router-view />
-    <footer>
-      <Footer />
-    </footer>
-  </div>
-</template>
-
 <script setup>
 import Menubar from './components/menubar.vue';
 import Footer from './pages/MainFooter.vue';
+import { applyTheme } from './reusables'
+import { onMounted } from 'vue'
 
-// import { siteConfig, useIsMobile } from './config/siteConfig.js';
+// Theme application on app mount
+onMounted(() => {
+  const savedTheme = localStorage.getItem('theme') || 'system'
+  applyTheme(savedTheme)
+
+  console.log(savedTheme)
+
+  // Listen to system changes only if using system preference
+  if (savedTheme === 'system') {
+    const media = window.matchMedia('(prefers-color-scheme: dark)')
+    media.addEventListener('change', () => {
+      applyTheme('system')
+    })
+  }
+})
 </script>
+
+<template>
+  <div class="min-h-screen flex flex-col transition-colors duration-300">
+    <Menubar />
+    <router-view class="mt-15"/>
+    <Footer />
+  </div>
+</template>
+
 
 <style scoped>
 .nav {
-  position: sticky !important;
+  /* position: fixed !important; */
   top: 0;
+  width: 100%;
+  border-radius: 0 !important;
 }
 </style>

@@ -1,6 +1,6 @@
 <template>
   <div>
-    <component :is="MenuBar" class="sticky top-0"/>
+    <component :is="MenuBar"/>
   </div>
 </template>
 

@@ -16,7 +16,7 @@
         </div>
 
         <!-- Content Container with Smooth Entrance Animation -->
-        <div class="relative z-10 mf-auto h-full backdrop-blur-[1px] w-full max-w-4xl animate-fade-in-up">
+        <div class="relative z-10  min-h-[70vh] h-[100%]  backdrop-blur-[1px] w-full max-w-4xl animate-fade-in-up">
             <!-- Refined Glass Card -->
             <div
                 class="h-full  bg-gray-900/55 backdrop-blur-lg p-5 shadow-[5px_0_15px_rgba(0,0,0,0.1)] border-r  border-white/10">
@@ -28,7 +28,7 @@
 
                 <!-- Author Credit -->
                 <p class="text-lg text-gray-200 mb-10">
-                    Brought to you by <span class="font-semibold text-purple-700 underline  decoration-purple-400/50">{{
+                    From <span class="font-semibold text-purple-700 underline  decoration-purple-400/50">{{
                         siteConfig.author }}</span>
                 </p>
 

@@ -1,46 +1,58 @@
 <template>
-    <div class="card font-[Gill Sans]">
+    <div class=" font-[Gill Sans]">
         <MegaMenu :model="menuItems" class="p-4 border-0 rounded-none"
-            style="z-index: 1000; background: linear-gradient(to right, #d97706 10%, gray, purple);">
-            <!-- Logo Section -->
+            style="z-index: 1000; position: fixed ; width: 100%; top: 0; border: 0; border-radius: 0%; background: linear-gradient(to right, #d97706 10%, gray, purple);">
+
+            <!-- Logo -->
             <template #start>
                 <div class="flex items-center gap-3">
                     <img @click="goHome" :src="siteConfig.assets.logo" :alt="siteConfig.assets.logoAlt"
                         class="w-14 h-14 object-contain cursor-pointer" />
                     <span
-                        class="hidden md:block text-3xl text-shadow-2xs font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-purple-300 to-gray-200"
+                        class="hidden md:block text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-purple-300 to-gray-200 dark:from-yellow-400 dark:to-gray-100"
                         style="font-family: 'Caprasimo', sans-serif;">
                         The Food Lover
                     </span>
                 </div>
             </template>
 
-            <template #item="{ item }">
-                <!-- Top-level Menu Item -->
+            
+
+            <!-- Menu Items -->
+            <template #item="{ item }" style="background-color: #d97706;">
+                <!-- Root Link -->
                 <a v-if="item.root"
-                    class="flex items-center font-semibold cursor-pointer px-5 py-3 overflow-hidden relative text-lg transition-all duration-300 hover:border-b hover:border-purple-400 rounded-lg font-gill-sans"
-                    :class="{ 'text-amber-400 border-b-2 border-amber-400': item.isActive, 'text-white': !item.isActive }">
+                    class="flex items-center text-gray-300 dark:text-gray-100  font-semibold cursor-pointer px-5 py-3 text-lg transition-all duration-300 hover:border-b hover:border-purple-400 rounded-lg font-gill-sans"
+                    :class="{
+                        'text-amber-400 border-b-2 border-amber-400': item.isActive,
+                        'text-gray-700 dark:text-gray-100': !item.isActive,
+                        'dark:hover:text-amber-300': !item.isActive
+                    }">
                     <span>{{ item.label }}</span>
-                    <i class="pi pi-angle-down text-purple-300 ml-2"></i>
+                    <i class="pi pi-angle-down text-gray-400 ml-2 dark:text-purple-200"></i>
                 </a>
 
-                <!-- Regular Menu Item -->
+                <!-- <div class="max-h-[70vh] overflow-y-auto"> 
+\                     
+                </div> -->
+                                <!-- Simple Item -->
                 <a v-else-if="!item.image"
-                    class="flex items-center p-4 gap-3 rounded-lg cursor-pointer transition-all hover:bg-white/10 group">
+                    class="flex items-center  p-4 gap-3 rounded-lg cursor-pointer transition-all hover:bg-white/10 dark:hover:bg-white/5 group">
                     <span
                         class="flex items-center justify-center w-12 h-12 rounded-full shadow transition-transform group-hover:scale-110"
                         :style="{ backgroundColor: item.color, border: `2px solid ${item.borderColor || '#fff'}` }">
                         <i :class="[item.icon, 'text-white text-xl']"></i>
                     </span>
                     <div class="flex flex-col">
-                        <span class="text-white font-bold text-lg">{{ item.label }}</span>
-                        <span class="text-sm text-gray-300">{{ item.subtext }}</span>
+                        <span class="text-gray-900 dark:text-white font-bold text-lg">{{ item.label }}</span>
+                        <span class="text-sm text-gray-600 dark:text-gray-300">{{ item.subtext }}</span>
                         <div class="flex items-center gap-2 mt-1">
                             <span v-if="item.time"
-                                class="text-xs px-2 py-0.5 bg-gray-700 text-amber-300 rounded-full flex items-center gap-1">
+                                class="text-xs px-2 py-0.5 bg-gray-200 dark:bg-gray-700 text-amber-600 dark:text-amber-300 rounded-full flex items-center gap-1">
                                 <i class="pi pi-clock text-[0.6rem]"></i> {{ item.time }}
                             </span>
-                            <span v-if="item.tip" class="text-xs flex items-center gap-1 text-amber-400">
+                            <span v-if="item.tip"
+                                class="text-xs flex items-center gap-1 text-amber-500 dark:text-amber-400">
                                 <i class="pi pi-info-circle"></i> {{ item.tip }}
                             </span>
                         </div>
@@ -49,7 +61,7 @@
 
                 <!-- Recipe Card -->
                 <div v-else
-                    class="flex flex-col gap-3 p-3 bg-gray-900/80 rounded-lg shadow-inner hover:shadow-lg transition-all border border-gray-700 hover:border-amber-400/30">
+                    class="flex flex-col gap-3 p-3  bg-white/10 dark:bg-black/30 rounded-lg shadow-inner hover:shadow-lg transition-all border border-gray-300 dark:border-gray-600 hover:border-amber-400/40">
                     <div class="relative">
                         <img :src="item.image" alt="food" class="w-full h-[180px] object-cover rounded-lg" />
                         <span v-if="item.difficulty"
@@ -62,26 +74,23 @@
                         </span>
                     </div>
 
-                    <div class="text-gray-200 space-y-2">
-                        <h3 class="font-bold text-lg text-white">{{ item.subtext }}</h3>
-
+                    <div class="text-gray-800 dark:text-gray-200 space-y-2">
+                        <h3 class="font-bold text-lg text-gray-900 dark:text-white">{{ item.subtext }}</h3>
                         <div class="flex justify-between items-center">
                             <div class="flex items-center gap-1">
                                 <i v-for="star in 5" :key="star" :class="[
                                     'pi',
-                                    star <= item.rating ? 'pi-star-fill text-amber-400' : 'pi-star text-gray-500'
+                                    star <= item.rating ? 'pi-star-fill text-amber-400' : 'pi-star text-gray-400 dark:text-gray-600'
                                 ]"></i>
-                                <span class="text-sm text-gray-400 ml-1">
-                                    ({{ item.reviews }})
-                                </span>
+                                <span class="text-sm text-gray-500 dark:text-gray-400 ml-1">({{ item.reviews }})</span>
                             </div>
                             <div class="flex items-center gap-2">
                                 <span v-if="item.time"
-                                    class="text-xs px-2 py-1 bg-gray-700 text-amber-300 rounded-full flex items-center gap-1">
+                                    class="text-xs px-2 py-1 bg-gray-200 dark:bg-gray-700 text-amber-600 dark:text-amber-300 rounded-full flex items-center gap-1">
                                     <i class="pi pi-clock text-[0.6rem]"></i> {{ item.time }}
                                 </span>
                                 <span v-if="item.calories"
-                                    class="text-xs px-2 py-1 bg-gray-700 text-purple-300 rounded-full flex items-center gap-1">
+                                    class="text-xs px-2 py-1 bg-gray-200 dark:bg-gray-700 text-purple-600 dark:text-purple-300 rounded-full flex items-center gap-1">
                                     <i class="pi pi-bolt text-[0.6rem]"></i> {{ item.calories }} kcal
                                 </span>
                             </div>
@@ -89,45 +98,44 @@
                     </div>
 
                     <Button :label="item.label"
-                        class="w-full text-amber-400 border-amber-400 hover:bg-amber-400/10 font-bold mt-2" outlined />
+                        class="w-full text-amber-500 dark:text-amber-400 border-amber-500 dark:border-amber-400 hover:bg-amber-500/10 dark:hover:bg-amber-400/10 font-bold mt-2"
+                        outlined />
                 </div>
+
             </template>
 
-            <!-- Right-side Icons -->
+            <!-- Right Icons -->
             <template #end>
                 <div class="flex items-center gap-3">
                     <Button icon="pi pi-bookmark" severity="secondary" rounded aria-label="Saved"
-                        class="border-purple-300 text-purple-300 hover:bg-purple-300/10 w-10 h-10" />
+                        class="border-purple-400 dark:border-purple-300 text-purple-400 dark:text-purple-300 hover:bg-purple-400/10 dark:hover:bg-purple-300/10 w-10 h-10" />
                     <div class="relative">
                         <Button icon="pi pi-bell" @click="Notytoggle" aria-haspopup="true" severity="secondary" rounded
                             aria-label="Notifications"
-                            class="border-amber-300 text-amber-300 hover:bg-amber-300/10 w-10 h-10" />
+                            class="border-amber-400 dark:border-amber-300 text-amber-400 dark:text-amber-300 hover:bg-amber-400/10 dark:hover:bg-amber-300/10 w-10 h-10" />
                         <span
                             class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
                             3
                         </span>
                         <TieredMenu ref="noty_menu" id="overlay_tmenu" :model="noty_menu_items" popup />
-
                     </div>
                     <div class="card flex justify-center">
                         <Avatar image="https://randomuser.me/api/portraits/women/44.jpg" aria-haspopup="true"
                             @click="toggle" shape="circle" size="large"
-                            class="border-2 border-amber-400 cursor-pointer hover:scale-105 transition-transform" />
-                        <!-- <Button type="button" label="Toggle" @click="toggle" aria-haspopup="true"
-                            aria-controls="overlay_tmenu" /> -->
+                            class="border-2 border-amber-500 dark:border-amber-400 cursor-pointer hover:scale-105 transition-transform" />
                         <TieredMenu ref="menu" id="overlay_tmenu" :model="Menu_items" popup />
                     </div>
-
                 </div>
             </template>
         </MegaMenu>
+
     </div>
 </template>
 
 
 <script setup>
 import { ref } from "vue";
-import { siteConfig } from '../config/siteConfig.js';
+import { siteConfig, useIsMobile } from '../config/siteConfig.js';
 import router from "../router/index.js";
 import { goHome } from "../reusables/index.js"
 const menu = ref();
@@ -138,27 +146,27 @@ const messageCount = ref(9);
 const mentionCount = ref(3);
 
 const noty_menu_items = ref([
-  {
-    label: () => `Likes (${likeCount.value})`,
-    icon: 'pi pi-heart',
-    command: () => {
-      console.log('❤️ Opening likes...');
+    {
+        label: () => `Likes (${likeCount.value})`,
+        icon: 'pi pi-heart',
+        command: () => {
+            console.log('❤️ Opening likes...');
+        }
+    },
+    {
+        label: () => `Messages (${messageCount.value})`,
+        icon: 'pi pi-comments',
+        command: () => {
+            console.log('💬 Opening messages...');
+        }
+    },
+    {
+        label: () => `Mentions (${mentionCount.value})`,
+        icon: 'pi pi-at',
+        command: () => {
+            console.log('🔔 Viewing mentions...');
+        }
     }
-  },
-  {
-    label: () => `Messages (${messageCount.value})`,
-    icon: 'pi pi-comments',
-    command: () => {
-      console.log('💬 Opening messages...');
-    }
-  },
-  {
-    label: () => `Mentions (${mentionCount.value})`,
-    icon: 'pi pi-at',
-    command: () => {
-      console.log('🔔 Viewing mentions...');
-    }
-  }
 ]);
 
 const Menu_items = ref([
