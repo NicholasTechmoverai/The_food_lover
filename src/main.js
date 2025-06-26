@@ -27,10 +27,24 @@ import Popover from 'primevue/popover';
 import Skeleton from 'primevue/skeleton';
 import Toast from 'primevue/toast';
 import AnimateOnScroll from 'primevue/animateonscroll';
+import Galleria from 'primevue/galleria';
+import IftaLabel from 'primevue/iftalabel';
+import KeyFilter from 'primevue/keyfilter';
+import MultiSelect from 'primevue/multiselect';
+import Editor from 'primevue/editor';
+import ColorPicker from 'primevue/colorpicker';
+import Knob from 'primevue/knob';
+import SelectButton from 'primevue/selectbutton';
+import Dialog from 'primevue/dialog';
+import SpeedDial from 'primevue/speeddial';
+import Tooltip from 'primevue/tooltip';
+import Chip from 'primevue/chip';
+import AutoComplete from 'primevue/autocomplete';
+import Card from 'primevue/card';
+
 
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import 'primeicons/primeicons.css';
-
 import '@fontsource/inter/400.css'; // Regular
 import '@fontsource/inter/700.css'; // Bold
 import '@fontsource/inter/900.css'; // Black
@@ -61,7 +75,20 @@ app.component('Skeleton',Skeleton)
 app.component('Toast',Toast)
 app.component('AnimateOnScroll',AnimateOnScroll)
 app.directive('animateonscroll', AnimateOnScroll);
-
+app.component('Galleria',Galleria)
+app.directive('tooltip', Tooltip);
+app.directive('keyfilter', KeyFilter);
+app.component('IftaLabel',IftaLabel)
+app.component('MultiSelect',MultiSelect)
+app.component('Editor',Editor)
+app.component('ColorPicker',ColorPicker)
+app.component('Knob',Knob)
+app.component('Dialog',Dialog)
+app.component('SelectButton',SelectButton)
+app.component('SpeedDial',SpeedDial)
+app.component('Card',Card)
+app.component('AutoComplete',AutoComplete)
+app.component('Chip',Chip)
 
 app.use(router)
 app.use(ToastService);

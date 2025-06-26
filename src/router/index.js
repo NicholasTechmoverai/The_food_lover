@@ -1,14 +1,17 @@
 import { createRouter, createWebHistory } from 'vue-router'
 
-// Page components
+// Static Imports (or use dynamic if needed)
 import LandingPage from '../pages/LandingPage.vue'
 import SettingsPage from '../pages/Settings.vue'
 import AdminPage from '../pages/AdminPage.vue'
-import PreferenceSettings from '../pages/PreferenceSestting.vue'
+import PreferenceSettings from '../pages/PreferenceSettings.vue' // fixed typo
 import NotFoundPage from '../pages/404Page.vue'
 import RecipesPage from '../pages/RecipesPage.vue'
 import NewRecipe from '../pages/NewRecipe.vue'
 import RecipeId from '../pages/RecipeId.vue'
+import CoverInfo from '../pages/CoverInfo.vue'
+import NewRecipeUploads from '../cards/NewRecipeUploads.vue'
+
 const routes = [
   {
     path: '/',
@@ -24,14 +27,30 @@ const routes = [
         path: 'new',
         name: 'NewRecipe',
         component: NewRecipe,
+        children: [
+          {
+            path: '',
+            redirect: 'cover',
+          },
+          {
+            path: 'cover',
+            name: 'CoverInfo',
+            component: CoverInfo,
+          },
+          {
+            path: 'uploads',
+            name: 'NewRecipeUploads',
+            component: NewRecipeUploads,
+          },
+        ],
       },
       {
         path: ':recipe_name/:recipe_id',
         name: 'RecipeId',
         component: RecipeId,
-        props: true
+        props: true,
       },
-    ]
+    ],
   },
   {
     path: '/settings',
@@ -40,7 +59,7 @@ const routes = [
     children: [
       {
         path: '',
-        redirect: '/settings/preferences', // Default redirect
+        redirect: '/settings/preferences',
       },
       {
         path: 'preferences',

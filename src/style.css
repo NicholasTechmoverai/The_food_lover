@@ -17,3 +17,11 @@ body{
   padding: 0;
   position: relative;
 }
+
+.p-colorpicker-panel {
+    z-index: 100 !important;
+}
+.p-image,
+.p-colorpicker{
+    z-index: 100 !important;
+}

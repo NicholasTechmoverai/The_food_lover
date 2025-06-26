@@ -1,104 +1,178 @@
+
 <template>
-  <div class="relative min-h-screen p-4">
-    <!-- Main Grid -->
-    <div class="grid gap-6 md:grid-cols-2 max-w-6xl mx-auto z-10 relative">
-      <!-- Left Skeleton Block -->
-      <div class="rounded-lg border p-6 shadow-sm">
-        <div class="flex mb-4">
-          <Skeleton shape="circle" size="4rem" class="mr-4" />
-          <div class="flex flex-col justify-center flex-1">
-            <Skeleton width="10rem" class="mb-2" />
-            <Skeleton width="5rem" class="mb-2" />
-            <Skeleton height=".5rem" />
-          </div>
-        </div>
-        <Skeleton width="100%" height="150px" />
-        <div class="flex justify-between mt-4">
-          <Skeleton width="4rem" height="2rem" />
-          <Skeleton width="4rem" height="2rem" />
-        </div>
-      </div>
-
-      <!-- Right List Skeletons -->
-      <div class="rounded-lg border p-6 shadow-sm">
-        <ul class="space-y-4">
-          <li v-for="i in 4" :key="i">
-            <div class="flex">
-              <Skeleton shape="circle" size="4rem" class="mr-4" />
-              <div class="flex-1 self-center">
-                <Skeleton width="100%" class="mb-2" />
-                <Skeleton width="75%" />
-              </div>
-            </div>
-          </li>
-        </ul>
-      </div>
+  <router-view class="fixed pt-15 w-full h-[80%] md:h-full z-60" />
+    <div class="card">
+        <Galleria
+            ref="galleria"
+            v-model:activeIndex="activeIndex"
+            :value="images"
+            :numVisible="5"
+            containerStyle="max-width: 640px"
+            :showThumbnails="showThumbnails"
+            :showItemNavigators="true"
+            :showItemNavigatorsOnHover="true"
+            :circular="true"
+            :autoPlay="isAutoPlay"
+            :transitionInterval="3000"
+            :responsiveOptions="responsiveOptions"
+            :pt="{
+                root: {
+                    class: [{ 'flex flex-col': fullScreen }]
+                },
+                content: {
+                    class: ['relative', { 'flex-1 justify-center': fullScreen }]
+                },
+                thumbnails: 'absolute w-full left-0 bottom-0'
+            }"
+        >
+            <template #item="slotProps">
+                <img :src="slotProps.item.itemImageSrc" :alt="slotProps.item.alt" :style="[{ width: !fullScreen ? '100%' : '', display: !fullScreen ? 'block' : '' }]" />
+            </template>
+            <template #thumbnail="slotProps">
+                <div class="grid gap-4 justify-center">
+                    <img :src="slotProps.item.thumbnailImageSrc" :alt="slotProps.item.alt" style="display: block" />
+                </div>
+            </template>
+            <template #footer>
+                <div class="flex items-stretch bg-surface-950 text-white h-10">
+                    <button type="button" @click="onThumbnailButtonClick" class="bg-transparent border-none rounded-none hover:bg-white/10 text-white inline-flex justify-center items-center cursor-pointer px-3">
+                        <i class="pi pi-th-large"></i>
+                    </button>
+                    <button type="button" @click="toggleAutoSlide" class="bg-transparent border-none rounded-none hover:bg-white/10 text-white inline-flex justify-center items-center cursor-pointer px-3"><i :class="slideButtonIcon"></i></button>
+                    <span v-if="images" class="flex items-center gap-4 ml-3">
+                        <span class="text-sm">{{ activeIndex + 1 }}/{{ images.length }}</span>
+                        <span class="font-bold text-sm">{{ images[activeIndex].title }}</span>
+                        <span class="text-sm">{{ images[activeIndex].alt }}</span>
+                    </span>
+                    <button type="button" @click="toggleFullScreen" class="bg-transparent border-none rounded-none hover:bg-white/10 text-white inline-flex justify-center items-center cursor-pointer px-3 ml-auto">
+                        <i :class="fullScreenIcon"></i>
+                    </button>
+                </div>
+            </template>
+        </Galleria>
     </div>
-
-    <!-- Toast Message -->
-    <div class="flex justify-center mt-6">
-      <Toast position="bottom-center" group="bc" @close="onClose">
-        <template #message="slotProps">
-          <div class="flex flex-col items-start flex-auto">
-            <div class="flex items-center gap-2">
-              <Avatar
-                image="https://avatars.githubusercontent.com/u/184249562?v=4"
-                shape="circle"
-              />
-              <span class="font-bold">Developer</span>
-            </div>
-            <div class="font-medium text-lg my-4">
-              {{ slotProps.message.summary }}
-            </div>
-          </div>
-        </template>
-      </Toast>
-      <Button @click="showTemplate" label="??" />
-    </div>
-
-    <!-- Child route content (simulated as overlay) -->
-    <router-view
-      class="absolute inset-0 z-50 w-full h-full bg-black/20 backdrop-blur-md"
-    />
-  </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-import { useToast } from 'primevue/usetoast'
-import Skeleton from 'primevue/skeleton'
-import Toast from 'primevue/toast'
-import Button from 'primevue/button'
-import Avatar from 'primevue/avatar'
+import { ref, computed, onMounted } from "vue";
+// import { PhotoService } from '@/service/PhotoService';
 
-const props = defineProps({
-  recipe_id: [String, Number],
-  recipe_name: String
-})
+// onMounted(() => {
+//     PhotoService.getImages().then((data) => (images.value = data));
+//     bindDocumentListeners();
+// });
 
-const formattedRecipeName = computed(() =>
-  props.recipe_name ? props.recipe_name.replace(/-/g, ' ') : ''
-)
-
-const toast = useToast()
-const visible = ref(false)
-
-const showTemplate = () => {
-  if (!visible.value) {
-    toast.add({
-      severity: 'error',
-      summary: 'Not Fully Developed!',
-      group: 'bc'
-    })
-    visible.value = true
+const galleria = ref();
+const images = ref([
+  {
+    itemImageSrc: 'https://picsum.photos/id/1018/1920/1080',
+    thumbnailImageSrc: 'https://picsum.photos/id/1018/250/150',
+    alt: 'Mountain landscape',
+    title: 'Scenic View 1'
+  },
+  {
+    itemImageSrc: 'https://picsum.photos/id/1015/1920/1080',
+    thumbnailImageSrc: 'https://picsum.photos/id/1015/250/150',
+    alt: 'Cliff by the ocean',
+    title: 'Coastal Scene'
+  },
+  {
+    itemImageSrc: 'https://picsum.photos/id/1019/1920/1080',
+    thumbnailImageSrc: 'https://picsum.photos/id/1019/250/150',
+    alt: 'Snowy peaks',
+    title: 'Winter Mountains'
+  },
+  {
+    itemImageSrc: 'https://picsum.photos/id/1020/1920/1080',
+    thumbnailImageSrc: 'https://picsum.photos/id/1020/250/150',
+    alt: 'Bear in the forest',
+    title: 'Wildlife'
+  },
+  {
+    itemImageSrc: 'https://picsum.photos/id/1021/1920/1080',
+    thumbnailImageSrc: 'https://picsum.photos/id/1021/250/150',
+    alt: 'Desert canyon',
+    title: 'Arid Landscape'
   }
-}
+]);
+const activeIndex = ref(0);
+const showThumbnails = ref(false);
+const fullScreen = ref(false);
+const isAutoPlay = ref(true);
 
-const onClose = () => {
-  visible.value = false
-}
+const toggleAutoSlide = () => {
+    isAutoPlay.value  = !isAutoPlay.value ;
+};
+const onThumbnailButtonClick = () => {
+    showThumbnails.value  = !showThumbnails.value ;
+};
 
-onMounted(() => {
-  setTimeout(showTemplate, 2000)
-})
+const responsiveOptions = ref([
+    {
+        breakpoint: '1300px',
+        numVisible: 4
+    },
+    {
+        breakpoint: '575px',
+        numVisible: 1
+    }
+]);
+
+const toggleFullScreen = () => {
+    if (fullScreen.value ) {
+        closeFullScreen();
+    } else {
+        openFullScreen();
+    }
+};
+const onFullScreenChange = () => {
+    fullScreen.value  = !fullScreen.value ;
+};
+const openFullScreen = () =>{
+    let elem = galleria.value.$el;
+
+    if (elem.requestFullscreen) {
+        elem.requestFullscreen();
+    } else if (elem.mozRequestFullScreen) {
+        /* Firefox */
+        elem.mozRequestFullScreen();
+    } else if (elem.webkitRequestFullscreen) {
+        /* Chrome, Safari & Opera */
+        elem.webkitRequestFullscreen();
+    } else if (elem.msRequestFullscreen) {
+        /* IE/Edge */
+        elem.msRequestFullscreen();
+    }
+};
+const closeFullScreen = () => {
+    if (document.exitFullscreen) {
+        document.exitFullscreen();
+    } else if (document.mozCancelFullScreen) {
+        document.mozCancelFullScreen();
+    } else if (document.webkitExitFullscreen) {
+        document.webkitExitFullscreen();
+    } else if (document.msExitFullscreen) {
+        document.msExitFullscreen();
+    }
+};
+const bindDocumentListeners = () => {
+    document.addEventListener('fullscreenchange', onFullScreenChange);
+    document.addEventListener('mozfullscreenchange', onFullScreenChange);
+    document.addEventListener('webkitfullscreenchange', onFullScreenChange);
+    document.addEventListener('msfullscreenchange', onFullScreenChange);
+};
+const unbindDocumentListeners = () => {
+    document.removeEventListener('fullscreenchange', onFullScreenChange);
+    document.removeEventListener('mozfullscreenchange', onFullScreenChange);
+    document.removeEventListener('webkitfullscreenchange', onFullScreenChange);
+    document.removeEventListener('msfullscreenchange', onFullScreenChange);
+};
+
+const fullScreenIcon = computed(() => {
+    return `pi ${fullScreen.value ? 'pi-window-minimize' : 'pi-window-maximize'}`;
+});
+const slideButtonIcon = computed(() => {
+    return `pi ${isAutoPlay.value ? 'pi-pause' : 'pi-play'}`;
+});
 </script>
+

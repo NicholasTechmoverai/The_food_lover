@@ -19,8 +19,10 @@
     "lucide-vue-next": "^0.516.0",
     "primeicons": "^7.0.0",
     "primevue": "^4.3.5",
+    "quill": "^2.0.3",
     "tailwindcss": "^4.1.10",
     "vue": "^3.5.13",
+    "vue-advanced-cropper": "^2.8.9",
     "vue-router": "^4.5.1"
   },
   "devDependencies": {
