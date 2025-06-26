@@ -182,7 +182,8 @@
 3. Spread tomato sauce evenly over the dough
 4. Add fresh mozzarella slices
 5. Bake for 10-12 minutes until crust is golden
-6. Add fresh basil leaves before serving" class="border rounded-lg overflow-hidden dark:border-gray-600" />
+6. Add fresh basil leaves before serving" 
+class="border rounded-lg overflow-hidden dark:border-gray-600" />
             </div>
 
             <!-- Submit Button -->
