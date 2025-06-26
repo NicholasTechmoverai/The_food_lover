@@ -173,9 +173,10 @@
                     Recipe Instructions
                 </label>
                 <small class="text-xs text-gray-500 dark:text-gray-400 block mb-2">
-                    Write detailed steps for your recipe
+                    Write cover info about  your recipe
                 </small>
-                <Editor v-model="recipeCover.recipeContent" editorStyle="min-height: 300px" placeholder="Example: 
+
+                <Editor v-model="recipeCover.recipeContent" editorStyle="min-height:200px" placeholder="Example: 
 1. Preheat oven to 475°F (245°C)
 2. Roll out the pizza dough on a floured surface
 3. Spread tomato sauce evenly over the dough
@@ -200,7 +201,8 @@
                     <!-- <Cropper ref="cropper" :src="imageToEdit"
                         :stencil-props="{ aspectRatio: 16 / 9, handlers: {}, movable: true, resizable: true }"
                         class="cropper" /> -->
-                        <Cropper ref="cropper" :src="imageToEdit" :stencil-props="{ aspectRatio: 16 / 9 }" class="w-full h-full" />
+                    <Cropper ref="cropper" :src="imageToEdit" :stencil-props="{ aspectRatio: 16 / 9 }"
+                        class="w-full h-full" />
 
 
                 </div>

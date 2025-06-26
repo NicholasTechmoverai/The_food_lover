@@ -1,10 +1,10 @@
 <template>
   <div class="min-h-screen bg-gray-50 dark:bg-gray-900 p-4">
     <!-- Header -->
-    <div class="max-w-6xl mx-auto mb-8">
+    <div class="max-w-6xl mx-auto mb-8 relative">
       <div class="flex justify-between items-center">
         <h1 class="text-3xl font-bold text-gray-800 dark:text-white">Recipe Builder</h1>
-        <div class="flex gap-2">
+        <div class="flex gap-2 sticky top-0">
           <Button label="Preview" icon="pi pi-eye" severity="secondary" @click="showPreview = true"
             class="dark:bg-gray-700 dark:text-white" />
           <Button label="Save Recipe" icon="pi pi-save" @click="saveRecipe" :disabled="!isFormValid"

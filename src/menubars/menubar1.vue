@@ -16,7 +16,7 @@
                 </div>
             </template>
 
-            
+
 
             <!-- Menu Items -->
             <template #item="{ item }" style="background-color: #d97706;">
@@ -35,7 +35,7 @@
                 <!-- <div class="max-h-[70vh] overflow-y-auto"> 
 \                     
                 </div> -->
-                                <!-- Simple Item -->
+                <!-- Simple Item -->
                 <a v-else-if="!item.image"
                     class="flex items-center  p-4 gap-3 rounded-lg cursor-pointer transition-all hover:bg-white/10 dark:hover:bg-white/5 group">
                     <span
@@ -178,8 +178,7 @@ const Menu_items = ref([
                 label: 'New Recipe',
                 icon: 'pi pi-plus',
                 command: () => {
-                    router.push('/recipes/new');
-                    // openNewRecipeModal();
+                    router.push('/recipes/new/cover'); // ✅ clean, avoids redirect
                 }
             },
             {
