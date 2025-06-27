@@ -1,6 +1,5 @@
 <!-- 
 <template>
-  <router-view class="fixed pt-15 w-full h-[80%] md:h-full z-60" />
     <div class="card">
         <Galleria
             ref="galleria"
@@ -172,6 +171,8 @@ const slideButtonIcon = computed(() => {
  -->
 
  <template>
+      <router-view class="fixed pt-15 w-full h-[80%] md:h-full z-60" />
+
   <div class="p-6">
     <h1 class="text-2xl font-bold mb-6 text-gray-800 dark:text-gray-100">Browse Recipes</h1>
 
