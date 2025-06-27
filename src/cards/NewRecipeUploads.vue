@@ -24,7 +24,7 @@
           <template #title>
             <div class="flex items-center gap-2 text-gray-800 dark:text-white">
               <i class="pi pi-info-circle"></i>
-              <span>Basic Information</span>
+              <span>Recipe cover Information</span>
             </div>
           </template>
           <template #content>
@@ -431,6 +431,7 @@ onMounted(() => {
     recipeCover.value = { ...cover };
     recipe.value.name = cover.recipeName || '';
     recipe.value.description = cover.description || '';
+    recipe.value.tags = cover.tags || [];
   }
 
 })
