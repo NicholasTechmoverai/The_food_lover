@@ -9,7 +9,10 @@
 </template>
 <script setup>
 import { ref } from 'vue';
-import { siteConfig } from '../config/siteConfig';
+import { useSiteStore } from '../config/siteConfig.js'
+
+const { siteConfig, getResponsiveValue } = useSiteStore()
+
 import background_image from '../assets/pexels-rajesh-tp-749235-1633525.jpg'
 const who_are_we = ref(`We are ${siteConfig.meta.siteName}`)
 </script>

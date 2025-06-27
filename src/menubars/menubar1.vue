@@ -11,7 +11,7 @@
                     <span
                         class="hidden md:block text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-purple-300 to-gray-200 dark:from-yellow-400 dark:to-gray-100"
                         style="font-family: 'Caprasimo', sans-serif;">
-                        The Food Lover
+                        {{siteConfig.meta.siteName}}
                     </span>
                 </div>
             </template>
@@ -135,7 +135,10 @@
 
 <script setup>
 import { ref } from "vue";
-import { siteConfig, useIsMobile } from '../config/siteConfig.js';
+// import {  useIsMobile } from '../reusables';
+import { useSiteStore } from '../config/siteConfig.js'
+
+const { siteConfig, getResponsiveValue } = useSiteStore()
 import router from "../router/index.js";
 import { goHome } from "../reusables/index.js"
 const menu = ref();

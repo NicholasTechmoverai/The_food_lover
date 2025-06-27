@@ -53,16 +53,19 @@
                     <component :is="SearchBar" />
                 </div>
 
-                <p v-if="siteConfig.social.shareText" class="mt-10 text-sm text-gray-300/90 animate-fade-in delay-500">
+                <!-- <p v-if="siteConfig.social.shareText" class="mt-10 text-sm text-gray-300/90 animate-fade-in delay-500">
                     {{ siteConfig.social.shareText }}
-                </p>
+                </p> -->
             </div>
         </div>
     </div>
 </template>
 
 <script setup>
-import { siteConfig } from '../config/siteConfig.js';
+import { useSiteStore } from '../config/siteConfig.js'
+
+const { siteConfig, getResponsiveValue } = useSiteStore()
+
 import { computed, ref } from 'vue';
 import SearchBar1 from "../searchbar/SearchBar1.vue";
 import SearchBar2 from "../searchbar/SearchBar2.vue";

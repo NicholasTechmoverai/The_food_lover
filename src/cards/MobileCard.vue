@@ -26,8 +26,9 @@
 <script setup>
 import { ref, watch, onMounted, onBeforeUnmount } from 'vue'
 import mobile_image from "../assets/topphone.png"
-import { siteConfig } from '../config/siteConfig.js'
+import { useSiteStore } from '../config/siteConfig.js'
 
+const { siteConfig, getResponsiveValue } = useSiteStore()
 const card = {
   title: siteConfig.servicesOffred.title,
   description: siteConfig.servicesOffred.description,

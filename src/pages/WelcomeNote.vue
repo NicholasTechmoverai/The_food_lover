@@ -5,7 +5,10 @@
 </template>
 
 <script setup>
-import { siteConfig } from '../config/siteConfig.js';
+import { useSiteStore } from '../config/siteConfig.js'
+
+const { siteConfig, getResponsiveValue } = useSiteStore()
+
 import { computed } from 'vue';
 
 import WelcomeNote1 from '../cards/WelcomeNote1.vue';

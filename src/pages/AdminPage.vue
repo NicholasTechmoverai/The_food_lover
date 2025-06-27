@@ -70,7 +70,9 @@
 
 <script setup>
 import { reactive, ref, computed } from 'vue'
-import { siteConfig } from '../config/siteConfig'
+import { storeToRefs } from 'pinia'
+import { useSiteStore } from '../config/siteConfig.js'
+
 import ConfigEditor from './ComponentEditor.vue'
 import loginAdmin from '../cards/loginAdmin.vue'
 import { goHome } from '../reusables'
@@ -80,21 +82,31 @@ import Button from 'primevue/button'
 import Toast from 'primevue/toast'
 import Message from 'primevue/message'
 
+// Load store
+const siteStore = useSiteStore()
+const { siteConfig } = storeToRefs(siteStore)  // Ensure reactivity
+
+// UI state
 const toast = useToast()
 const isVerified = ref(false)
 const isSaving = ref(false)
 const openSections = ref({})
-const configCopy = reactive(JSON.parse(JSON.stringify(siteConfig)))
-const originalConfig = JSON.parse(JSON.stringify(siteConfig))
 
+// Editable config copy
+const configCopy = reactive(JSON.parse(JSON.stringify(siteConfig.value)))
+const originalConfig = JSON.parse(JSON.stringify(siteConfig.value))
+
+// Detect changes
 const hasChanges = computed(() => {
   return JSON.stringify(configCopy) !== JSON.stringify(originalConfig)
 })
 
+// Toggle accordion sections
 const toggleSection = (key) => {
   openSections.value[key] = !openSections.value[key]
 }
 
+// Update nested value
 const updateValue = (path, newValue) => {
   let target = configCopy
   for (let i = 0; i < path.length - 1; i++) {
@@ -103,25 +115,43 @@ const updateValue = (path, newValue) => {
   target[path[path.length - 1]] = newValue
 }
 
+// Save configuration
 const saveConfig = async () => {
   isSaving.value = true
   try {
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    await new Promise(resolve => setTimeout(resolve, 500))
+
+    if (!configCopy || !siteConfig.value) {
+      throw new Error('Config not initialized properly')
+    }
+
+    // Sync originalConfig with updated values
     Object.assign(originalConfig, JSON.parse(JSON.stringify(configCopy)))
+
+    // 🔁 Update store
+    Object.assign(siteConfig.value, JSON.parse(JSON.stringify(configCopy)))
+
+    console.log('Updated config:', siteConfig.value)
     toast.add({ severity: 'success', summary: 'Configuration saved successfully!', life: 3000 })
   } catch (error) {
-    toast.add({ severity: 'error', summary: 'Failed to save configuration', detail: error.message })
+    toast.add({
+      severity: 'error',
+      summary: 'Failed to save configuration',
+      detail: error.message,
+    })
   } finally {
     isSaving.value = false
   }
 }
 
+// Reset to original config
 const resetConfig = () => {
   if (confirm('Are you sure you want to reset all changes?')) {
     Object.assign(configCopy, JSON.parse(JSON.stringify(originalConfig)))
   }
 }
 
+// Optional UI formatting
 const formatKey = (key) => {
   return key
     .replace(/([A-Z])/g, ' $1')
@@ -129,10 +159,12 @@ const formatKey = (key) => {
     .replace('Offred', 'Offered')
 }
 
+// Emit verification event
 const handleVerified = (value) => {
   if (value) isVerified.value = true
 }
 </script>
+
 
 <style scoped>
 .fade-enter-active, .fade-leave-active {

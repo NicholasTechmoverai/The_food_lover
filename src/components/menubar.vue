@@ -5,7 +5,9 @@
 </template>
 
 <script setup>
-import { siteConfig } from '../config/siteConfig.js';
+import { useSiteStore } from '../config/siteConfig.js'
+
+const { siteConfig, getResponsiveValue } = useSiteStore();
 import { computed } from 'vue';
 import MenuBar1 from "../menubars/menubar1.vue";
 

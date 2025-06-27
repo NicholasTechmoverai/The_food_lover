@@ -188,7 +188,10 @@
 </template>
 
 <script setup>
-import { siteConfig } from '../config/siteConfig.js';
+import { useSiteStore } from '../config/siteConfig.js'
+
+const { siteConfig, getResponsiveValue } = useSiteStore()
+
 
 const card = {
   title: siteConfig.servicesOffred.title,

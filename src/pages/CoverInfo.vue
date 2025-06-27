@@ -7,7 +7,7 @@
                     <h1 class="text-2xl font-bold text-gray-800 dark:text-white">Create New Recipe</h1>
                     <p class="text-gray-600 dark:text-gray-300">Share your culinary masterpiece with the world</p>
                 </div>
-                <Button @click="showPreview = !showPreview" :label="showPreview ? 'Hide Preview' : 'Show Preview'"
+                <Button @click="showPreview = !showPreview" :label="showPreview ? 'Hide' : 'Preview'"
                     icon="pi pi-eye"
                     :style="{ backgroundColor: recipeCover.repiceColor, borderColor: recipeCover.repiceColor }"
                     class="hover:opacity-90 transition-opacity" />
@@ -100,7 +100,7 @@
 
                         <div class="flex flex-wrap gap-2 mb-2">
                             <Chip v-for="(tag, index) in recipeCover.tags" :key="index" :label="`#${tag}`" removable
-                                @remove="removeTag(index)" class="dark:bg-gray-700"
+                                @remove="removeTag(index)" class="dark:bg-gray-700 cursor-pointer"
                                 :style="{ backgroundColor: tagBackground(tag) }" />
                         </div>
 
@@ -123,32 +123,32 @@
                             <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Popular tags:</p>
                             <div class="flex flex-wrap gap-2">
                                 <Chip v-for="tag in popularTags" :key="tag.value" :label="`#${tag}`" :class="{
-                                    'bg-primary-100 text-primary-800 dark:bg-primary-900 dark:text-primary-200': isTagSelected(tag),
-                                    'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200': !isTagSelected(tag)
+                                    'bg-primary-100 text-primary-800 dark:bg-primary-900 dark:text-primary-200 cursor-not-allowed text-decoration: line-through': isTagSelected(tag),
+                                    'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200 cursor-pointer': !isTagSelected(tag)
                                 }" @click="toggleTag(tag)" />
                             </div>
                         </div>
                     </div>
 
                     <!-- Estimated Cook Time -->
-                    <div class="space-y-2">
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                            Estimated Cook Time
+                    <div class="space-y-2 flex flex-col justify-center ">
+                        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                            Estimated Total meal preparation Time
                         </label>
-                        <div class="flex flex-col md:flex-row items-center gap-4">
+                        <div class="flex flex-row items-center gap-4">
                             <div class="flex flex-col items-center">
                                 <label class="text-xs text-gray-500 dark:text-gray-400 mb-1">Hours</label>
                                 <Knob v-model="recipeCover.cookTime.hr" valueTemplate="{value} hr" :min="0" :max="12"
                                     :step="1" class="w-16 h-16" />
                             </div>
-                            <div class="flex flex-col items-center">
+                            <div class="flex flex-col items-center ml-3">
                                 <label class="text-xs text-gray-500 dark:text-gray-400 mb-1">Minutes</label>
                                 <Knob v-model="recipeCover.cookTime.min" valueTemplate="{value} min" :min="0" :max="55"
                                     :step="5" class="w-16 h-16" />
                             </div>
-                            <div class="text-sm text-gray-600 dark:text-gray-300 mt-2">
-                                Total: {{ recipeCover.cookTime.hr }} hr {{ recipeCover.cookTime.min }} min
-                            </div>
+                        </div>
+                        <div class="text-sm text-gray-600 dark:text-gray-300 mt-5">
+                            Total: {{ recipeCover.cookTime.hr }} hr {{ recipeCover.cookTime.min }} min
                         </div>
                     </div>
                 </div>
@@ -173,7 +173,7 @@
                     Recipe Instructions
                 </label>
                 <small class="text-xs text-gray-500 dark:text-gray-400 block mb-2">
-                    Write cover info about  your recipe
+                    Write cover info about your recipe
                 </small>
 
                 <Editor v-model="recipeCover.recipeContent" editorStyle="min-height:200px" placeholder="Example: 
@@ -182,8 +182,7 @@
 3. Spread tomato sauce evenly over the dough
 4. Add fresh mozzarella slices
 5. Bake for 10-12 minutes until crust is golden
-6. Add fresh basil leaves before serving" 
-class="border rounded-lg overflow-hidden dark:border-gray-600" />
+6. Add fresh basil leaves before serving" class="border rounded-lg overflow-hidden dark:border-gray-600" />
             </div>
 
             <!-- Submit Button -->
@@ -229,16 +228,28 @@ class="border rounded-lg overflow-hidden dark:border-gray-600" />
             :modal="true" class="dark:bg-gray-800">
             <RecipeCard :recipe="recipeCover" />
         </Dialog>
+        <Toast />
+        <ConfirmDialog></ConfirmDialog>
     </div>
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue';
+import { ref, nextTick, computed, watch, onMounted, onBeforeUnmount } from 'vue';
 import { Cropper } from 'vue-advanced-cropper';
 import 'vue-advanced-cropper/dist/style.css';
 import RecipeCard from '../cards/RecipeCard.vue';
 import router from '../router';
+import { useOngoingStore } from '../store/ongoing'
+import { generateUUID } from '../reusables';
+import { useConfirm } from "primevue/useconfirm";
+import { useToast } from "primevue/usetoast";
 
+const confirm = useConfirm();
+const toast = useToast();
+
+
+// Store & PrimeVue
+const ongoingStore = useOngoingStore()
 
 const showPreview = ref(false);
 const showImageEditor = ref(false);
@@ -252,6 +263,7 @@ const selectedTag = ref(null);
 const filteredTags = ref([]);
 
 const recipeCover = ref({
+    id: null,
     recipeName: '',
     repiceColor: color.value,
     image: null,
@@ -263,6 +275,57 @@ const recipeCover = ref({
     description: '',
     recipeContent: ''
 });
+
+// On mount, restore unfinished recipe if exists
+onMounted(async () => {
+  await nextTick() // ensure ConfirmDialog is rendered
+  if (ongoingStore.coverRecipe) {
+    const nameOrId = ongoingStore.coverRecipe.recipeName || ongoingStore.coverRecipe.id || 'Unnamed'
+    continueConfirm(nameOrId)
+  }
+})
+
+
+
+// Before unmount, save the current state to the store
+onBeforeUnmount(() => {
+    // Auto-generate ID if missing
+    if (!recipeCover.value.id) {
+        recipeCover.value.id = generateUUID()
+    }
+    ongoingStore.setCoverRecipe({ ...recipeCover.value })
+})
+
+// Confirmation logic
+const continueConfirm = (header) => {
+    confirm.require({
+        message: 'Unfinished recipe has been detected. Continue editing?',
+        header: `Recipe: ${header}`,
+        icon: 'pi pi-exclamation-triangle',
+        rejectProps: {
+            label: 'Cancel',
+            severity: 'secondary',
+            outlined: true,
+        },
+        acceptProps: {
+            label: 'Continue',
+        },
+        accept: () => {
+            recipeCover.value = { ...ongoingStore.coverRecipe }
+            toast.add({ severity: 'info', summary: 'Loaded', detail: 'Recipe restored.', life: 3000 })
+        },
+        reject: () => {
+            ongoingStore.clearCoverRecipe()
+            toast.add({
+                severity: 'warn',
+                summary: 'Dismissed',
+                detail: 'Unfinished recipe discarded.',
+                life: 3000,
+            })
+        },
+    })
+}
+
 
 // Simulated backend tags
 const backendTags = ref([
@@ -284,7 +347,7 @@ const backendTags = ref([
 ]);
 
 
-const popularTags = computed(() => backendTags.value.slice(0, 7));
+const popularTags = computed(() => backendTags.value.slice(0, 12));
 
 const isRecipeNameValid = computed(() =>
     recipeCover.value.recipeName && recipeCover.value.recipeName.length <= 50
@@ -412,8 +475,12 @@ const removeTag = (index) => {
 
 const submitForm = () => {
     if (isFormValid.value) {
+        if (!recipeCover.value.id) {
+            recipeCover.value.id = generateUUID()
+        }
+        ongoingStore.setCoverRecipe({ ...recipeCover.value })
         console.log('Recipe submitted:', recipeCover.value);
-        router.push('/recipes/new/uploads')
+        router.push(`/recipes/new/e/${recipeCover.value.id}`)
     }
 };
 </script>

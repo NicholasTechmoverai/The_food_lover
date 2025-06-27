@@ -23,8 +23,11 @@
 import image_design from '../assets/phoneinhand.png';
 import { ref, onMounted, nextTick } from 'vue';
 import { ShieldCheck, HeartPulse, Flame, Smile, Leaf } from 'lucide-vue-next';
-import { siteConfig } from '../config/siteConfig.js'
+// import { useSiteStore } from '../config/siteConfig.js'
 
+import { useSiteStore } from '../config/siteConfig.js'
+
+const { siteConfig, getResponsiveValue } = useSiteStore()
 
 // console.log(healthTitle)
 const healthBenefits = ref([
@@ -102,7 +105,7 @@ onMounted(() => {
             // Handle scroll
             scrollByOneCard(scrollDirection);
 
-            const { scrollTop, scrollHeight, clientHeight } = healthCards.value;
+            const { scrollTop, scrollHeight, clientHeight } = healthCards?.value;
 
             if (scrollTop + clientHeight >= scrollHeight) {
                 scrollDirection = 'up';

@@ -64,9 +64,11 @@
         <div 
           class="prose dark:prose-invert max-w-none text-sm text-gray-600 dark:text-gray-300 transition-all duration-200"
           :class="showFullContent ? '' : 'line-clamp-3'"
+          
         >
+        <div v-html="recipe.recipeContent" class="w-full break-words"></div>
           <!-- Simple text extraction from HTML content -->
-          {{ stripHtml(recipe.recipeContent) }}
+          <!-- {{ stripHtml(recipe.recipeContent) }} -->
         </div>
         <button 
           v-if="recipe.recipeContent && recipe.recipeContent.length > 100"

@@ -8,7 +8,9 @@
           <Button label="Preview" icon="pi pi-eye" severity="secondary" @click="showPreview = true"
             class="dark:bg-gray-700 dark:text-white" />
           <Button label="Save Recipe" icon="pi pi-save" @click="saveRecipe" :disabled="!isFormValid"
-            class="dark:bg-primary-600" />
+            class="dark:bg-primary-600"
+            :style="{ backgroundColor: recipeCover.repiceColor, borderColor: recipeCover.repiceColor }" />
+
         </div>
       </div>
       <p class="text-gray-600 dark:text-gray-300 mt-2">Build your recipe step by step</p>
@@ -29,15 +31,20 @@
             <div class="space-y-4">
               <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Recipe Name</label>
-                <InputText v-model="recipe.name" placeholder="e.g. Classic Beef Bourguignon"
+                <InputText v-model="recipe.name" placeholder="e.g. Classic Beef Bourguignon" disabled
                   class="w-full dark:bg-gray-700 dark:border-gray-600" />
               </div>
-              
+
               <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
-                <Textarea v-model="recipe.description" rows="3" placeholder="Briefly describe your recipe..."
+                <Textarea v-model="recipe.description"  rows="3" placeholder="Briefly describe your recipe..." disabled
                   class="w-full dark:bg-gray-700 dark:border-gray-600" />
-              </div>
+                <!-- <div
+                  class="w-full dark:bg-gray-700 dark:border-gray-600 p-3 rounded-md text-sm text-gray-800 dark:text-gray-100 overflow-hidden"
+                  :style="{ maxHeight: expanded ? 'none' : '6em' }" v-html="recipe.description"></div>-->
+
+              </div> 
+
             </div>
           </template>
         </Card>
@@ -52,7 +59,8 @@
           </template>
           <template #content>
             <div class="space-y-4">
-              <div v-for="(ingredient, index) in recipe.ingredients" :key="index" class="grid grid-cols-12 gap-2 items-center">
+              <div v-for="(ingredient, index) in recipe.ingredients" :key="index"
+                class="grid grid-cols-12 gap-2 items-center">
                 <div class="col-span-5">
                   <InputText v-model="ingredient.name" placeholder="Ingredient name"
                     class="w-full dark:bg-gray-700 dark:border-gray-600" />
@@ -71,7 +79,8 @@
                 </div>
               </div>
               <Button label="Add Ingredient" icon="pi pi-plus" severity="secondary" @click="addIngredient"
-                class="w-full mt-2 dark:bg-gray-700" />
+                class="w-full mt-2 dark:bg-gray-700"
+                :style="{ backgroundColor: recipeCover.repiceColor, borderColor: recipeCover.repiceColor }" />
             </div>
           </template>
         </Card>
@@ -100,21 +109,44 @@
               <div class="space-y-4">
                 <!-- Cooking Parameters -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
+                  <!-- <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Time Required</label>
                     <InputNumber v-model="step.timeRequired" mode="decimal" :min="0" suffix=" minutes"
                       class="w-full dark:bg-gray-700 dark:border-gray-600" />
+                  </div> -->
+                  <div class="space-y-2 flex flex-col justify-center ">
+                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                      Time Required
+                    </label>
+                    <div class="flex flex-row items-center gap-4">
+                      <div class="flex flex-col items-center">
+                        <label class="text-xs text-gray-500 dark:text-gray-400 mb-1">Hours</label>
+                        <Knob v-model="step.timeRequired.hr" valueTemplate="{value} hr" :min="0" :max="12" :step="1"
+                          class="w-16 h-16" />
+                      </div>
+                      <div class="flex flex-col items-center ml-3">
+                        <label class="text-xs text-gray-500 dark:text-gray-400 mb-1">Minutes</label>
+                        <Knob v-model="step.timeRequired.min" valueTemplate="{value} min" :min="0" :max="55" :step="5"
+                          class="w-16 h-16" />
+                      </div>
+                    </div>
+                    <div class="text-sm text-gray-600 dark:text-gray-300 mt-5">
+                      Total: {{ step.timeRequired.hr }} hr {{ step.timeRequired.min }} min
+                    </div>
                   </div>
                   <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Temperature</label>
                     <InputNumber v-model="step.tempRequired" :min="0" :max="300" suffix=" °C"
                       class="w-full dark:bg-gray-700 dark:border-gray-600" />
+                    <Slider v-model="step.tempRequired" :min="0" :max="300" />
+
                   </div>
                 </div>
 
                 <!-- Ingredients Used -->
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Ingredients Used</label>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Ingredients
+                    Used</label>
                   <MultiSelect v-model="step.ingredientsUsed" :options="recipe.ingredients" optionLabel="name"
                     placeholder="Select ingredients" display="chip"
                     class="w-full dark:bg-gray-700 dark:border-gray-600" />
@@ -128,7 +160,8 @@
                       optionValue="value" size="small" />
                   </div>
                   <Textarea v-if="instructionsInput === 'text_area'" v-model="step.instructions" rows="5"
-                    placeholder="Describe this step in detail..." class="w-full dark:bg-gray-700 dark:border-gray-600" />
+                    placeholder="Describe this step in detail..."
+                    class="w-full dark:bg-gray-700 dark:border-gray-600" />
                   <Editor v-else v-model="step.instructions" editorStyle="min-height:200px" />
                 </div>
 
@@ -153,7 +186,8 @@
                     </div>
                   </div>
                   <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Video URL (optional)</label>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Video URL
+                      (optional)</label>
                     <InputText v-model="step.videoUrl" placeholder="https://youtube.com/..."
                       class="w-full dark:bg-gray-700 dark:border-gray-600" />
                   </div>
@@ -162,7 +196,9 @@
             </div>
 
             <Button label="Add New Step" icon="pi pi-plus" severity="secondary" @click="addStep"
-              class="w-full mt-2 dark:bg-gray-700" />
+              class="w-full mt-2 dark:bg-gray-700"
+              :style="{ backgroundColor: recipeCover.repiceColor, borderColor: recipeCover.repiceColor }" />
+
           </template>
         </Card>
       </div>
@@ -181,19 +217,23 @@
             <div class="space-y-4">
               <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Category</label>
-                <Dropdown v-model="recipe.category" :options="categories" optionLabel="name" placeholder="Select category"
-                  class="w-full dark:bg-gray-700 dark:border-gray-600" />
+                <Dropdown v-model="recipe.category" :options="categories" optionLabel="name"
+                  placeholder="Select category" class="w-full dark:bg-gray-700 dark:border-gray-600" />
               </div>
               <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tags</label>
                 <div class="flex flex-wrap gap-2 mb-2">
-                  <Chip v-for="(tag, index) in recipe.tags" :key="index" :label="tag" removable @remove="removeTag(index)"
-                    class="dark:bg-gray-700" />
+                  <Chip v-for="(tag, index) in recipe.tags" :key="index" :label="tag" removable
+                    @remove="removeTag(index)" class="dark:bg-gray-700"
+                    :style="{ backgroundColor: recipeCover.repiceColor, borderColor: recipeCover.repiceColor }" />
+
                 </div>
                 <div class="flex gap-2">
-                  <AutoComplete v-model="newTag" :suggestions="filteredTags" @complete="searchTags" placeholder="Add tag"
+                  <AutoComplete v-model="newTag" :suggestions="filteredTags" @complete="searchTags"
+                    @keydown.enter.prevent="addTag" placeholder="Add tag"
                     class="flex-1 dark:bg-gray-700 dark:border-gray-600" />
-                  <Button icon="pi pi-plus" @click="addTag" class="dark:bg-gray-700" />
+                  <Button icon="pi pi-plus" @click="addTag" class="dark:bg-gray-700"
+                    :style="{ backgroundColor: recipeCover.repiceColor, borderColor: recipeCover.repiceColor }" />
                 </div>
               </div>
             </div>
@@ -250,39 +290,65 @@
       :modal="true" class="dark:bg-gray-800">
       <div class="space-y-4">
         <div class="relative h-96 bg-gray-100 dark:bg-gray-700 rounded-lg">
-          <Cropper ref="cropper" :src="imageToEdit.url" :stencil-props="{ aspectRatio: 4/3 }" class="cropper" />
+          <Cropper ref="cropper" :src="imageToEdit.url" :stencil-props="{ aspectRatio: 4 / 3 }" class="cropper" />
         </div>
         <div class="flex flex-wrap gap-2 justify-center">
           <Button label="Rotate Left" icon="pi pi-undo" severity="secondary" @click="rotateImage(-90)"
             class="dark:bg-gray-700" />
           <Button label="Rotate Right" icon="pi pi-redo" severity="secondary" @click="rotateImage(90)"
             class="dark:bg-gray-700" />
+          <Button label="Use Original" icon="pi pi-image" severity="secondary" @click="useOriginalImage"
+            class="dark:bg-gray-700" />
           <Button label="Crop & Save" icon="pi pi-check" @click="saveEditedImage" class="dark:bg-primary-600" />
           <Button label="Cancel" icon="pi pi-times" severity="secondary" @click="showImageEditor = false"
             class="dark:bg-gray-700" />
+
         </div>
+
       </div>
     </Dialog>
 
     <!-- Preview Dialog -->
-    <Dialog v-model:visible="showPreview" header="Recipe Preview" :style="{ width: '90vw', maxWidth: '1000px' }"
-      :modal="true" class="dark:bg-gray-800">
-      <FlowGalleryViewer :recipe="recipe" :activeIndex="0" v-if="listType === 'flow'" />
-      <GridStepsView :recipe="recipe" v-if="listType === 'grid'" />
+    <Dialog v-model:visible="showPreview" header="Recipe Preview" :style="{
+      width: '90vw',
+      maxWidth: '1000px',
+      maxHeight: '90vh',
+      overflow: 'auto'
+    }" :modal="true" class="dark:bg-gray-800">
+      <FlowGalleryViewer v-if="listType === 'flow'" :recipe="recipe" :activeIndex="0" />
+      <GridStepsView v-else-if="listType === 'grid'" :recipe="recipe" />
     </Dialog>
 
+    <Toast />
+    <ConfirmDialog></ConfirmDialog>
     <!-- File Upload -->
     <input ref="fileInput" type="file" accept="image/*" class="hidden" @change="handleImageUpload" />
   </div>
 </template>
 
 <script setup>
-import { ref, computed, watchEffect } from 'vue';
+import { ref, computed, watchEffect, nextTick, onMounted } from 'vue';
 import { Cropper } from 'vue-advanced-cropper';
 import 'vue-advanced-cropper/dist/style.css';
 import RecipePreview from '../cards/RecipeCard.vue';
 import FlowGalleryViewer from './FlowGalleryViewer.vue';
 import GridStepsView from './GridStepsView.vue';
+import { generateUUID } from '../reusables';
+import { useRoute, useRouter } from 'vue-router'
+import { useOngoingStore } from '../store/ongoing'
+import { useConfirm } from "primevue/useconfirm";
+import { useToast } from "primevue/usetoast";
+import router from '../router';
+
+const confirm = useConfirm();
+const toast = useToast();
+const route = useRoute()
+const routeRecipeId = route.params.id
+
+
+// Store & PrimeVue
+const ongoingStore = useOngoingStore()
+const recipeCover = ref([])
 const listType = ref('flow');
 const instructionsInput = ref('text_area');
 const activeIndex = ref(0)
@@ -295,14 +361,36 @@ const instructionsInputList = ref([
   { label: 'Editor', value: 'editor' },
 ]);
 
+
+
+const filteredTags = ref([
+  'vegetarian',
+  'vegan',
+  'gluten-free',
+  'dairy-free',
+  'quick',
+  'healthy',
+  'dessert',
+  'dinner',
+  'breakfast',
+  'low-carb',
+  'high-protein',
+  'keto',
+  'paleo',
+  'comfort-food',
+  'meal-prep'
+]);
 const recipe = ref({
-  id:null,
+  id: null,
   name: '',
   description: '',
   category: null,
   ingredients: [{ name: '', amount: '', unit: '' }],
   steps: [{
-    timeRequired: 0,
+    timeRequired: {
+      hr: 0,
+      min: 0
+    },
     tempRequired: 0,
     ingredientsUsed: [],
     instructions: '',
@@ -311,6 +399,75 @@ const recipe = ref({
   }],
   tags: []
 });
+
+
+
+
+onMounted(() => {
+  const cover = ongoingStore.coverRecipe
+  console.log("Cover:", cover)
+  console.log("Route ID:", routeRecipeId)
+
+  if (!cover) {
+    MissingCover('Info');
+    return;
+  }
+
+  if (cover.id !== routeRecipeId) {
+    console.warn('Route ID does not match current coverRecipe. Consider loading from backend.');
+    // TODO: Fetch cover data from backend using routeRecipeId
+    return;
+  }
+
+  // Now we are sure cover exists and matches route ID
+  if (!cover.recipeName) {
+    MissingCover('Recipe Name');
+  } else if (!cover.image) {
+    MissingCover('Image');
+  } else if (!cover.description && !cover.recipeContent) {
+    MissingCover('Description / Editor Content');
+  } else {
+    // Valid cover
+    recipeCover.value = { ...cover };
+    recipe.value.name = cover.recipeName || '';
+    recipe.value.description = cover.description || '';
+  }
+
+})
+
+
+
+
+const MissingCover = (msg) => {
+  confirm.require({
+    message: 'You have an incomplete Recipe Cover page. Would you like to complete it?',
+    header: `Missing Cover  ${msg}`,
+    icon: 'pi pi-exclamation-triangle',
+    rejectLabel: 'Skip',
+    rejectProps: {
+      label: 'Skip',
+      severity: 'secondary',
+      outlined: true,
+    },
+    acceptProps: {
+      label: `Set cover ${msg}`,
+      severity: 'primary',
+    },
+    accept: () => {
+      router.push('/recipes/new/cover')
+    },
+    reject: () => {
+      if (!recipeCover.value.id) {
+        recipeCover.value.id = generateUUID()
+      }
+
+      if (ongoingStore.coverRecipe) {
+        recipeCover.value = { ...ongoingStore.coverRecipe }
+      }
+    },
+  })
+}
+
 
 const isFormValid = computed(() => {
   return recipe.value.ingredients.length > 0 &&
@@ -357,7 +514,10 @@ const rotateImage = (degrees) => {
     cropper.value.rotate(degrees);
   }
 };
-
+const useOriginalImage = () => {
+  recipe.value.steps[imageToEdit.value.index].image = imageToEdit.value.url;
+  showImageEditor.value = false;
+};
 const saveEditedImage = () => {
   const canvas = cropper.value.getResult().canvas;
   if (canvas) {
@@ -450,6 +610,8 @@ watchEffect(() => {
 
 <style scoped>
 .dark .p-card {
+  background-color: #1f2937;
+  /* Tailwind's bg-gray-800 */
   transition: background-color 0.3s ease;
 }
 

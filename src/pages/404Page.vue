@@ -57,6 +57,9 @@
 </template>
 
 <script setup>
-import { siteConfig } from '../config/siteConfig';
+// import {  useIsMobile } from '../reusables';
+import { useSiteStore } from '../config/siteConfig.js'
+
+const { siteConfig, getResponsiveValue } = useSiteStore()
 import { RouterLink } from 'vue-router';
 </script>

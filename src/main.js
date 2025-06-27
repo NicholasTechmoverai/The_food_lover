@@ -1,6 +1,7 @@
 import { createApp } from 'vue';
 import App from './App.vue';
 import router from './router'
+import { createPinia } from 'pinia'
 
 import PrimeVue from 'primevue/config';
 import ToastService from 'primevue/toastservice';
@@ -41,6 +42,10 @@ import Tooltip from 'primevue/tooltip';
 import Chip from 'primevue/chip';
 import AutoComplete from 'primevue/autocomplete';
 import Card from 'primevue/card';
+import Slider from 'primevue/slider';
+import ConfirmDialog from 'primevue/confirmdialog';
+import ConfirmationService from 'primevue/confirmationservice';
+
 
 
 import '@fortawesome/fontawesome-free/css/all.min.css';
@@ -52,6 +57,8 @@ import '@fontsource/inter/900.css'; // Black
 import './style.css';
 
 const app = createApp(App);
+const pinia = createPinia()
+
 app.component('Button', Button)
 app.component('Panel', Panel)
 app.component('Splitter', Splitter);
@@ -89,9 +96,13 @@ app.component('SpeedDial',SpeedDial)
 app.component('Card',Card)
 app.component('AutoComplete',AutoComplete)
 app.component('Chip',Chip)
+app.component('Slider',Slider)
+app.component('ConfirmDialog',ConfirmDialog)
 
 app.use(router)
 app.use(ToastService);
+app.use(ConfirmationService);
+app.use(pinia)
 app.use(PrimeVue, {
     // unstyled: true,
     // Default theme configuration

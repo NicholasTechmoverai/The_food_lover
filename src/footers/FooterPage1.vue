@@ -150,7 +150,11 @@
 import { ref } from 'vue'
 import InputText from 'primevue/inputtext'
 import Button from 'primevue/button'
-import { siteConfig } from '../config/siteConfig'
+// import {  useIsMobile } from '../reusables';
+import { useSiteStore } from '../config/siteConfig.js'
+
+const { siteConfig, getResponsiveValue } = useSiteStore()
+
 // Constants
 const brand = {
   name: 'The food lovers',

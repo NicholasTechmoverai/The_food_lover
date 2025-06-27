@@ -57,8 +57,9 @@
 <script setup>
 import { ref, onMounted, nextTick } from 'vue';
 import mobile_image from '../assets/61d980464826740004290527.png';
-import { siteConfig } from '../config/siteConfig.js'
+import { useSiteStore } from '../config/siteConfig.js'
 
+const { siteConfig, getResponsiveValue } = useSiteStore()
 const imageLogo = siteConfig.assets.logo
 const recipeCard = ref(null);
 

@@ -42,5 +42,9 @@
 </template>
 
 <script setup>
-import { siteConfig } from '../config/siteConfig.js';
+import { useSiteStore } from '../config/siteConfig.js'
+
+const { siteConfig, getResponsiveValue } = useSiteStore()
+
+;
 </script>

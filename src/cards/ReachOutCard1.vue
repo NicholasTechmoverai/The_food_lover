@@ -69,7 +69,9 @@
 </template>
 
 <script setup>
-import { siteConfig } from '../config/siteConfig.js'
+import { useSiteStore } from '../config/siteConfig.js'
+
+const { siteConfig, getResponsiveValue } = useSiteStore()
 const design_video = siteConfig.reachOut.video || '../assets/3255109-uhd_3840_2160_25fps.mp4';
 const design_image = siteConfig.reachOut.image || '../assets/chips1.jpg';
 </script>

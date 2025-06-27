@@ -38,9 +38,17 @@ const routes = [
             component: CoverInfo,
           },
           {
-            path: 'uploads',
-            name: 'NewRecipeUploads',
+            path: 'e',
+            name: 'NewRecipeUploadsBase',
             component: NewRecipeUploads,
+            children: [
+              {
+                path: ':id',
+                name: 'NewRecipeUploadsWithId',
+                component: NewRecipeUploads,
+                props: true
+              }
+            ]
           },
         ],
       },

@@ -38,7 +38,11 @@ import TiltedRecipeCard from '../cards/TiltedRecipeCard.vue'
 import DishCard from '../cards/DishCard.vue';
 import InhandPhone from '../cards/InHandPhone.vue'
 import HealthyDescription from '../cards/HealthyDescription.vue';
-import { siteConfig, useIsMobile } from '../config/siteConfig.js';
+import {  useIsMobile } from '../reusables';
+import { useSiteStore } from '../config/siteConfig.js'
+
+const { siteConfig, getResponsiveValue } = useSiteStore()
+
 
 const isMobile = useIsMobile();
 const servicesImage = isMobile

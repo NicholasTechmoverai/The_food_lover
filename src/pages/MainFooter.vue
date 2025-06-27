@@ -5,7 +5,11 @@
 </template>
 <script setup>
 import Footer1 from '../footers/FooterPage1.vue';
-import { siteConfig } from '../config/siteConfig.js';
+import { useSiteStore } from '../config/siteConfig.js'
+
+const { siteConfig, getResponsiveValue } = useSiteStore()
+
+;
 import { computed } from 'vue';
 const Footer = computed(() => {
     const footer = siteConfig.components.footer;

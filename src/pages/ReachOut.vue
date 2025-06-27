@@ -5,7 +5,11 @@
 </template>
 
 <script setup>
-import { siteConfig } from '../config/siteConfig.js';
+import { useSiteStore } from '../config/siteConfig.js'
+
+const { siteConfig, getResponsiveValue } = useSiteStore()
+
+;
 import { computed } from 'vue';
 import ReachOutCard1 from "../cards/ReachOutCard1.vue";
 import ReachOutCard2 from '../cards/ReachOutCard2.vue';
