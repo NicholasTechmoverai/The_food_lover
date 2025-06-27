@@ -1,17 +1,27 @@
 <template>
   <div class="recipe-galleria">
     <Galleria
+      ref="galleria"
       :value="recipe.steps"
       :numVisible="5"
       :circular="true"
-      :autoPlay="true"
+      :autoPlay="isAutoPlay"
       :transitionInterval="3000"
       :activeIndex="activeIndex"
-      :showThumbnails="true"
+      :showThumbnails="showThumbnails"
       :showIndicators="true"
       :showItemNavigators="true"
       :responsiveOptions="responsiveOptions"
       @activeIndexChange="onIndexChange"
+      :pt="{
+        root: {
+          class: [{ 'flex flex-col': fullScreen }]
+        },
+        content: {
+          class: ['relative', { 'flex-1 justify-center': fullScreen }]
+        },
+        thumbnails: 'absolute w-full left-0 bottom-0'
+      }"
     >
       <!-- Slide Item View -->
       <template #item="{ item, index }">
@@ -114,13 +124,44 @@
           {{ recipe.name }}
         </div>
       </template>
+
+      <!-- Footer with controls -->
+      <template #footer>
+        <div class="flex items-stretch bg-surface-950 text-white h-10">
+          <button 
+            type="button" 
+            @click="onThumbnailButtonClick" 
+            class="bg-transparent border-none rounded-none hover:bg-white/10 text-white inline-flex justify-center items-center cursor-pointer px-3"
+          >
+            <i class="pi pi-th-large"></i>
+          </button>
+          <button 
+            type="button" 
+            @click="toggleAutoSlide" 
+            class="bg-transparent border-none rounded-none hover:bg-white/10 text-white inline-flex justify-center items-center cursor-pointer px-3"
+          >
+            <i :class="slideButtonIcon"></i>
+          </button>
+          <span v-if="recipe.steps" class="flex items-center gap-4 ml-3">
+            <span class="text-sm">{{ activeIndex + 1 }}/{{ recipe.steps.length }}</span>
+            <span class="font-bold text-sm">Step {{ recipe.steps[activeIndex].no || activeIndex + 1 }}</span>
+          </span>
+          <button 
+            type="button" 
+            @click="toggleFullScreen" 
+            class="bg-transparent border-none rounded-none hover:bg-white/10 text-white inline-flex justify-center items-center cursor-pointer px-3 ml-auto"
+          >
+            <i :class="fullScreenIcon"></i>
+          </button>
+        </div>
+      </template>
     </Galleria>
   </div>
 </template>
 
 <script setup>
 import Galleria from 'primevue/galleria';
-import { ref } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 
 const props = defineProps({
   recipe: {
@@ -135,6 +176,11 @@ const props = defineProps({
 
 const emit = defineEmits(['update:activeIndex']);
 
+const galleria = ref();
+const showThumbnails = ref(false);
+const fullScreen = ref(false);
+const isAutoPlay = ref(true);
+
 const responsiveOptions = ref([
   { breakpoint: '1024px', numVisible: 3 },
   { breakpoint: '768px', numVisible: 2 },
@@ -144,6 +190,74 @@ const responsiveOptions = ref([
 const onIndexChange = (val) => {
   emit('update:activeIndex', val);
 };
+
+const toggleAutoSlide = () => {
+  isAutoPlay.value = !isAutoPlay.value;
+};
+
+const onThumbnailButtonClick = () => {
+  showThumbnails.value = !showThumbnails.value;
+};
+
+const toggleFullScreen = () => {
+  if (fullScreen.value) {
+    closeFullScreen();
+  } else {
+    openFullScreen();
+  }
+};
+
+const onFullScreenChange = () => {
+  fullScreen.value = !fullScreen.value;
+};
+
+const openFullScreen = () => {
+  let elem = galleria.value.$el;
+
+  if (elem.requestFullscreen) {
+    elem.requestFullscreen();
+  } else if (elem.mozRequestFullScreen) {
+    elem.mozRequestFullScreen();
+  } else if (elem.webkitRequestFullscreen) {
+    elem.webkitRequestFullscreen();
+  } else if (elem.msRequestFullscreen) {
+    elem.msRequestFullscreen();
+  }
+};
+
+const closeFullScreen = () => {
+  if (document.exitFullscreen) {
+    document.exitFullscreen();
+  } else if (document.mozCancelFullScreen) {
+    document.mozCancelFullScreen();
+  } else if (document.webkitExitFullscreen) {
+    document.webkitExitFullscreen();
+  } else if (document.msExitFullscreen) {
+    document.msExitFullscreen();
+  }
+};
+
+const bindDocumentListeners = () => {
+  document.addEventListener('fullscreenchange', onFullScreenChange);
+  document.addEventListener('mozfullscreenchange', onFullScreenChange);
+  document.addEventListener('webkitfullscreenchange', onFullScreenChange);
+  document.addEventListener('msfullscreenchange', onFullScreenChange);
+};
+
+const unbindDocumentListeners = () => {
+  document.removeEventListener('fullscreenchange', onFullScreenChange);
+  document.removeEventListener('mozfullscreenchange', onFullScreenChange);
+  document.removeEventListener('webkitfullscreenchange', onFullScreenChange);
+  document.removeEventListener('msfullscreenchange', onFullScreenChange);
+};
+
+const fullScreenIcon = computed(() => {
+  return `pi ${fullScreen.value ? 'pi-window-minimize' : 'pi-window-maximize'}`;
+});
+
+const slideButtonIcon = computed(() => {
+  return `pi ${isAutoPlay.value ? 'pi-pause' : 'pi-play'}`;
+});
 
 const getTotalTime = (timeObj) => {
   if (!timeObj) return 0;
@@ -173,6 +287,11 @@ const getYoutubeEmbedUrl = (url) => {
   const videoId = (match && match[2].length === 11) ? match[2] : null;
   return videoId ? `https://www.youtube.com/embed/${videoId}?modestbranding=1` : '';
 };
+
+// Lifecycle hooks
+onMounted(() => {
+  bindDocumentListeners();
+});
 </script>
 
 <style scoped>
@@ -188,5 +307,24 @@ const getYoutubeEmbedUrl = (url) => {
 :deep(.p-galleria-thumbnail-item:hover),
 :deep(.p-galleria-thumbnail-item.p-highlight) {
   opacity: 1;
+}
+
+/* Fullscreen styles */
+:deep(.p-galleria.p-galleria-fullscreen) {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 1000;
+  background: black;
+}
+
+:deep(.p-galleria.p-galleria-fullscreen .p-galleria-content) {
+  height: calc(100vh - 100px);
+}
+
+:deep(.p-galleria.p-galleria-fullscreen .p-galleria-item-wrapper) {
+  height: 100%;
 }
 </style>

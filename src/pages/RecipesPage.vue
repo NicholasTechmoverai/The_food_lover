@@ -1,11 +1,11 @@
-
+<!-- 
 <template>
   <router-view class="fixed pt-15 w-full h-[80%] md:h-full z-60" />
     <div class="card">
         <Galleria
             ref="galleria"
             v-model:activeIndex="activeIndex"
-            :value="images"
+            :value="recipes"
             :numVisible="5"
             containerStyle="max-width: 640px"
             :showThumbnails="showThumbnails"
@@ -55,15 +55,9 @@
 
 <script setup>
 import { ref, computed, onMounted } from "vue";
-// import { PhotoService } from '@/service/PhotoService';
-
-// onMounted(() => {
-//     PhotoService.getImages().then((data) => (images.value = data));
-//     bindDocumentListeners();
-// });
 
 const galleria = ref();
-const images = ref([
+const recipes = ref([
   {
     itemImageSrc: 'https://picsum.photos/id/1018/1920/1080',
     thumbnailImageSrc: 'https://picsum.photos/id/1018/250/150',
@@ -175,4 +169,53 @@ const slideButtonIcon = computed(() => {
     return `pi ${isAutoPlay.value ? 'pi-pause' : 'pi-play'}`;
 });
 </script>
+ -->
 
+ <template>
+  <div class="p-6">
+    <h1 class="text-2xl font-bold mb-6 text-gray-800 dark:text-gray-100">Browse Recipes</h1>
+
+    <div class="grid gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
+      <RecipeCard
+        v-for="recipe in recipes"
+        :key="recipe.id"
+        :recipe="recipe"
+      />
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { ref } from 'vue'
+import RecipeCard from '../cards/RecipeCard.vue'
+
+const recipes = ref([
+  {
+    id: '1',
+    recipeName: 'Spaghetti Bolognese',
+    repiceColor: '#FF7043',
+    image: 'https://source.unsplash.com/400x300/?spaghetti',
+    tags: ['pasta', 'beef'],
+    cookTime: {
+      hr: 1,
+      min: 30
+    },
+    description: 'A classic Italian dish with rich tomato and meat sauce.',
+    recipeContent: 'Steps and ingredients for spaghetti...',
+  },
+  {
+    id: '2',
+    recipeName: 'Avocado Toast',
+    repiceColor: '#66BB6A',
+    image: 'https://source.unsplash.com/400x300/?avocado-toast',
+    tags: ['vegan', 'quick'],
+    cookTime: {
+      hr: 0,
+      min: 10
+    },
+    description: 'Quick and healthy breakfast with smashed avocado.',
+    recipeContent: 'Instructions for preparing avocado toast...',
+  },
+  // Add more recipes here...
+])
+</script>
