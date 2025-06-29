@@ -64,7 +64,10 @@
             <div class="flex justify-between items-start">
               <div>
                 <div class="text-lg font-semibold">Step {{ item.no || index + 1 }}</div>
-                <div class="text-sm mt-1">{{ item.instructions || 'No instructions' }}</div>
+                <div 
+                  class="text-sm mt-1 break-words whitespace-pre-line" 
+                  v-html="formatInstructions(item.instructions || 'No instructions')"
+                ></div>
               </div>
               <div class="text-xs space-y-1 text-right">
                 <div v-if="getTotalTime(item.timeRequired) > 0" class="bg-white/20 px-2 py-1 rounded-full inline-block">
@@ -161,7 +164,7 @@
 
 <script setup>
 import Galleria from 'primevue/galleria';
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted ,onUnmounted} from 'vue';
 
 const props = defineProps({
   recipe: {
@@ -288,13 +291,41 @@ const getYoutubeEmbedUrl = (url) => {
   return videoId ? `https://www.youtube.com/embed/${videoId}?modestbranding=1` : '';
 };
 
+// Format instructions with basic HTML support
+const formatInstructions = (text) => {
+  if (!text) return 'No instructions';
+  
+  // Basic sanitization (in a real app, use a proper sanitizer library)
+  const sanitized = text
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/\n/g, '<br>')
+    // Allow some basic formatting
+    .replace(/&lt;b&gt;(.*?)&lt;\/b&gt;/g, '<strong>$1</strong>')
+    .replace(/&lt;i&gt;(.*?)&lt;\/i&gt;/g, '<em>$1</em>')
+    .replace(/&lt;u&gt;(.*?)&lt;\/u&gt;/g, '<u>$1</u>')
+    // Support markdown-style formatting
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+    .replace(/_(.*?)_/g, '<u>$1</u>');
+    
+  return sanitized;
+};
+
 // Lifecycle hooks
 onMounted(() => {
   bindDocumentListeners();
 });
+
+onUnmounted(() => {
+  unbindDocumentListeners();
+});
 </script>
 
 <style scoped>
+.p-galleria-caption{
+  background: transparent !important;
+}
 .recipe-galleria {
   max-width: 900px;
   margin: 0 auto;
@@ -326,5 +357,11 @@ onMounted(() => {
 
 :deep(.p-galleria.p-galleria-fullscreen .p-galleria-item-wrapper) {
   height: 100%;
+}
+
+/* Instruction text styling */
+.instruction-text {
+  word-break: break-word;
+  white-space: pre-line;
 }
 </style>

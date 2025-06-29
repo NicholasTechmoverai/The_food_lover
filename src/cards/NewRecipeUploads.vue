@@ -1,22 +1,31 @@
 <template>
-  <div class="min-h-screen bg-gray-50 dark:bg-gray-900 p-4">
+  <div class="min-h-screen relative bg-gray-50 dark:bg-gray-900 p-4">
     <!-- Header -->
-    <div class="max-w-6xl mx-auto mb-8 relative">
+    <div
+      class="max-w-6xl mx-auto  sticky -top-2 z-50 rounded-lg shadow-sm mb-6 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm p-4 ">
       <div class="flex justify-between items-center">
         <h1 class="text-3xl font-bold text-gray-800 dark:text-white">Recipe Builder</h1>
-        <div class="flex gap-2 sticky top-0">
+        <div class="flex gap-2 sticky top-0" v-if="!isMobile">
           <Button label="Preview" icon="pi pi-eye" severity="secondary" @click="showPreview = true"
             class="dark:bg-gray-700 dark:text-white" />
-          <Button label="Save Recipe" icon="pi pi-save" @click="saveRecipe" :disabled="!isFormValid"
+          <Button label="reset" icon="pi pi-refresh" severity="danger" @click="reset()"
+            class="dark:bg-gray-700 dark:text-white" />
+          <Button label="Recipe Cover" icon="pi pi-image" @click="router.push('/recipes/new/cover')"
             class="dark:bg-primary-600"
             :style="{ backgroundColor: recipeCover.repiceColor, borderColor: recipeCover.repiceColor }" />
-
+          <Button label="Next" icon="pi pi-save" @click="saveRecipe" class="dark:bg-primary-600"
+            :style="{ backgroundColor: recipeCover.repiceColor, borderColor: recipeCover.repiceColor }" />
+        </div>
+        <div class="card flex justify-center" v-else>
+          <SplitButton label="Next" icon="pi pi-save" @click="saveRecipe" class="dark:bg-primary-600"
+            :model="morebuttonItems"
+            :style="{ backgroundColor: recipeCover.repiceColor, borderColor: recipeCover.repiceColor }" />
         </div>
       </div>
       <p class="text-gray-600 dark:text-gray-300 mt-2">Build your recipe step by step</p>
     </div>
 
-    <div class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div v-if="recipe" class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
       <!-- Recipe Form -->
       <div class="lg:col-span-2 space-y-6">
         <!-- Basic Information -->
@@ -37,13 +46,13 @@
 
               <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
-                <Textarea v-model="recipe.description"  rows="3" placeholder="Briefly describe your recipe..." disabled
+                <Textarea v-model="recipe.description" rows="3" placeholder="Briefly describe your recipe..." disabled
                   class="w-full dark:bg-gray-700 dark:border-gray-600" />
                 <!-- <div
                   class="w-full dark:bg-gray-700 dark:border-gray-600 p-3 rounded-md text-sm text-gray-800 dark:text-gray-100 overflow-hidden"
                   :style="{ maxHeight: expanded ? 'none' : '6em' }" v-html="recipe.description"></div>-->
 
-              </div> 
+              </div>
 
             </div>
           </template>
@@ -169,11 +178,15 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Step Image</label>
+
+
+
                     <div v-if="!step.image"
                       class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-4 text-center cursor-pointer hover:border-primary-500 transition-colors"
-                      @click="openImageUpload(index)">
+                      @click="openImageUpload(index)" @dragover.prevent @dragenter.prevent @drop.prevent="handleDrop">
+
                       <i class="pi pi-image text-2xl text-gray-400 dark:text-gray-500 mb-2"></i>
-                      <p class="text-sm text-gray-600 dark:text-gray-400">Click to upload image</p>
+                      <p class="text-sm text-gray-600 dark:text-gray-400">Click/drop to upload image</p>
                     </div>
                     <div v-else class="relative group">
                       <img :src="step.image" class="w-full h-40 object-cover rounded-lg" />
@@ -210,16 +223,11 @@
           <template #title>
             <div class="flex items-center gap-2 text-gray-800 dark:text-white">
               <i class="pi pi-tags"></i>
-              <span>Categories & Tags</span>
+              <span>Tags</span>
             </div>
           </template>
           <template #content>
             <div class="space-y-4">
-              <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Category</label>
-                <Dropdown v-model="recipe.category" :options="categories" optionLabel="name"
-                  placeholder="Select category" class="w-full dark:bg-gray-700 dark:border-gray-600" />
-              </div>
               <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tags</label>
                 <div class="flex flex-wrap gap-2 mb-2">
@@ -322,12 +330,11 @@
     <Toast />
     <ConfirmDialog></ConfirmDialog>
     <!-- File Upload -->
-    <input ref="fileInput" type="file" accept="image/*" class="hidden" @change="handleImageUpload" />
+    <input ref="fileInput" type="file" accept="image/*" class="hidden" multiple @change="handleImageUpload" />
   </div>
 </template>
-
 <script setup>
-import { ref, computed, watchEffect, nextTick, onMounted } from 'vue';
+import { ref, computed, watchEffect, nextTick, onMounted, onBeforeUnmount } from 'vue';
 import { Cropper } from 'vue-advanced-cropper';
 import 'vue-advanced-cropper/dist/style.css';
 import RecipePreview from '../cards/RecipeCard.vue';
@@ -338,15 +345,15 @@ import { useRoute, useRouter } from 'vue-router'
 import { useOngoingStore } from '../store/ongoing'
 import { useConfirm } from "primevue/useconfirm";
 import { useToast } from "primevue/usetoast";
+import { useIsMobile } from '../reusables';
 import router from '../router';
 
 const confirm = useConfirm();
 const toast = useToast();
 const route = useRoute()
 const routeRecipeId = route.params.id
+const isMobile = useIsMobile()
 
-
-// Store & PrimeVue
 const ongoingStore = useOngoingStore()
 const recipeCover = ref([])
 const listType = ref('flow');
@@ -361,36 +368,19 @@ const instructionsInputList = ref([
   { label: 'Editor', value: 'editor' },
 ]);
 
-
-
 const filteredTags = ref([
-  'vegetarian',
-  'vegan',
-  'gluten-free',
-  'dairy-free',
-  'quick',
-  'healthy',
-  'dessert',
-  'dinner',
-  'breakfast',
-  'low-carb',
-  'high-protein',
-  'keto',
-  'paleo',
-  'comfort-food',
-  'meal-prep'
+  'vegetarian', 'vegan', 'gluten-free', 'dairy-free', 'quick', 'healthy', 'dessert',
+  'dinner', 'breakfast', 'low-carb', 'high-protein', 'keto', 'paleo', 'comfort-food', 'meal-prep'
 ]);
-const recipe = ref({
+
+const defaultRecipe = {
   id: null,
   name: '',
   description: '',
   category: null,
   ingredients: [{ name: '', amount: '', unit: '' }],
   steps: [{
-    timeRequired: {
-      hr: 0,
-      min: 0
-    },
+    timeRequired: { hr: 0, min: 0 },
     tempRequired: 0,
     ingredientsUsed: [],
     instructions: '',
@@ -398,46 +388,105 @@ const recipe = ref({
     videoUrl: ''
   }],
   tags: []
-});
+};
 
-
-
+const recipe = ref(null);
 
 onMounted(() => {
-  const cover = ongoingStore.coverRecipe
-  console.log("Cover:", cover)
-  console.log("Route ID:", routeRecipeId)
+  const cover = ongoingStore.coverRecipe;
+  const recipeSteps = ongoingStore.recipeSteps;
 
   if (!cover) {
     MissingCover('Info');
     return;
   }
 
+  console.log("Recipe steps::", recipeSteps)
+
+  if (recipeSteps && recipeSteps.id === routeRecipeId) {
+    recipe.value = JSON.parse(JSON.stringify(recipeSteps));
+  } else {
+    recipe.value = {
+      ...defaultRecipe,
+      id: routeRecipeId,
+    };
+    console.warn('Route ID mismatch or missing recipeSteps in store. Using default.');
+  }
+
   if (cover.id !== routeRecipeId) {
     console.warn('Route ID does not match current coverRecipe. Consider loading from backend.');
-    // TODO: Fetch cover data from backend using routeRecipeId
     return;
   }
 
-  // Now we are sure cover exists and matches route ID
+  recipeCover.value = { ...cover };
+
+  if (!recipe.value.name) {
+    recipe.value.name = cover.recipeName || '';
+  }
+
+  if (!recipe.value.description) {
+    recipe.value.description = cover.description || '';
+  }
+
+  if (!recipe.value.tags?.length) {
+    recipe.value.tags = cover.tags || [];
+  }
+
   if (!cover.recipeName) {
     MissingCover('Recipe Name');
   } else if (!cover.image) {
     MissingCover('Image');
-  } else if (!cover.description && !cover.recipeContent) {
+  } else if (!cover.description) {
     MissingCover('Description / Editor Content');
-  } else {
-    // Valid cover
-    recipeCover.value = { ...cover };
-    recipe.value.name = cover.recipeName || '';
-    recipe.value.description = cover.description || '';
-    recipe.value.tags = cover.tags || [];
+  }
+});
+
+const handleDrop = (e) => {
+  const files = Array.from(e.dataTransfer.files).filter(file => file.type.startsWith('image/'));
+  appendStepsWithImages(files);
+};
+
+const defaultStep = () => ({
+  instructions: '',
+  image: null,
+  videoUrl: '',
+  tempRequired: 0,
+  timeRequired: { hr: 0, min: 0 },
+  ingredientsUsed: []
+});
+
+const appendStepsWithImages = (files) => {
+  if (!files.length) return;
+
+  if (recipe.value.steps.length === 0) {
+    const step = defaultStep();
+    recipe.value.steps.push(step);
   }
 
-})
+  let imagesLoaded = 0;
+  const totalImages = files.length;
 
+  files.forEach((file, index) => {
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const imageData = event.target.result;
 
+      if (index === 0) {
+        recipe.value.steps[recipe.value.steps.length - 1].image = imageData;
+      } else {
+        const step = defaultStep();
+        step.image = imageData;
+        recipe.value.steps.push(step);
+      }
 
+      imagesLoaded++;
+      if (imagesLoaded === totalImages) {
+        ongoingStore.setRecipeSteps(JSON.parse(JSON.stringify(recipe.value)))
+      }
+    };
+    reader.readAsDataURL(file);
+  });
+};
 
 const MissingCover = (msg) => {
   confirm.require({
@@ -445,39 +494,30 @@ const MissingCover = (msg) => {
     header: `Missing Cover  ${msg}`,
     icon: 'pi pi-exclamation-triangle',
     rejectLabel: 'Skip',
-    rejectProps: {
-      label: 'Skip',
-      severity: 'secondary',
-      outlined: true,
-    },
-    acceptProps: {
-      label: `Set cover ${msg}`,
-      severity: 'primary',
-    },
-    accept: () => {
-      router.push('/recipes/new/cover')
-    },
+    rejectProps: { label: 'Skip', severity: 'secondary', outlined: true },
+    acceptProps: { label: `Set cover ${msg}`, severity: 'primary' },
+    accept: () => { router.push('/recipes/new/cover') },
     reject: () => {
-      if (!recipeCover.value.id) {
-        recipeCover.value.id = generateUUID()
-      }
-
-      if (ongoingStore.coverRecipe) {
-        recipeCover.value = { ...ongoingStore.coverRecipe }
-      }
+      if (!recipeCover.value.id) recipeCover.value.id = generateUUID();
+      if (ongoingStore.coverRecipe) recipeCover.value = { ...ongoingStore.coverRecipe };
     },
   })
 }
 
+const morebuttonItems = [
+  { label: 'recipe cover', icon: "pi pi-image", command: () => router.push('/recipes/new/cover') },
+  { label: 'Preview', icon: "pi pi-eye", command: () => showPreview.value = !showPreview.value },
+  { separator: true },
+  { label: 'reset', icon: 'pi-refresh', command: () => { reset(); toast.add({ severity: 'warn', summary: 'Reset!', detail: 'Page reset!', life: 3000 }); } }
+];
 
 const isFormValid = computed(() => {
-  return recipe.value.ingredients.length > 0 &&
+  return recipe.value.ingredients?.length > 0 &&
     recipe.value.steps.length > 0 &&
     !recipe.value.steps.some(step => !step.instructions.trim()) &&
     !recipe.value.ingredients.some(ing => !ing.name.trim());
 });
 
-// Image handling
 const fileInput = ref(null);
 const cropper = ref(null);
 const showImageEditor = ref(false);
@@ -493,32 +533,31 @@ const openImageEditor = (index) => {
     openImageUpload(index);
     return;
   }
-
   imageToEdit.value = { index, url: recipe.value.steps[index].image };
   showImageEditor.value = true;
 };
 
 const handleImageUpload = (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
+  const files = Array.from(e.target.files).filter(file => file.type.startsWith('image/'));
+  if (!files.length) return;
 
   const reader = new FileReader();
   reader.onload = (event) => {
     imageToEdit.value.url = event.target.result;
     showImageEditor.value = true;
   };
-  reader.readAsDataURL(file);
+  reader.readAsDataURL(files[0]);
+
+  appendStepsWithImages(files);
 };
 
-const rotateImage = (degrees) => {
-  if (cropper.value) {
-    cropper.value.rotate(degrees);
-  }
-};
+const rotateImage = (degrees) => cropper.value?.rotate(degrees);
+
 const useOriginalImage = () => {
   recipe.value.steps[imageToEdit.value.index].image = imageToEdit.value.url;
   showImageEditor.value = false;
 };
+
 const saveEditedImage = () => {
   const canvas = cropper.value.getResult().canvas;
   if (canvas) {
@@ -527,20 +566,13 @@ const saveEditedImage = () => {
   }
 };
 
-const removeStepImage = (index) => {
-  recipe.value.steps[index].image = null;
-};
+const removeStepImage = (index) => recipe.value.steps[index].image = null;
 
-// Recipe content management
-const addIngredient = () => {
-  recipe.value.ingredients.push({ name: '', amount: '' });
-};
+const addIngredient = () => recipe.value.ingredients.push({ name: '', amount: '' });
 
 const removeIngredient = (index) => {
   if (recipe.value.ingredients.length > 1) {
     recipe.value.ingredients.splice(index, 1);
-
-    // Remove from steps that use this ingredient
     recipe.value.steps.forEach(step => {
       step.ingredientsUsed = step.ingredientsUsed.filter(
         ing => ing !== recipe.value.ingredients[index]
@@ -549,20 +581,10 @@ const removeIngredient = (index) => {
   }
 };
 
-const addStep = () => {
-  recipe.value.steps.push({
-    instructions: '',
-    image: null,
-    videoUrl: '',
-    timeRequired: 0,
-    ingredientsUsed: []
-  });
-};
+const addStep = () => recipe.value.steps.push(defaultStep());
 
 const removeStep = (index) => {
-  if (recipe.value.steps.length > 1) {
-    recipe.value.steps.splice(index, 1);
-  }
+  if (recipe.value.steps.length > 1) recipe.value.steps.splice(index, 1);
 };
 
 const moveStepUp = (index) => {
@@ -581,7 +603,6 @@ const moveStepDown = (index) => {
   }
 };
 
-// Tags functionality
 const newTag = ref('');
 
 const addTag = () => {
@@ -592,22 +613,30 @@ const addTag = () => {
   }
 };
 
-const removeTag = (index) => {
-  recipe.value.tags.splice(index, 1);
-};
+const removeTag = (index) => recipe.value.tags.splice(index, 1);
 
-// Preview
 const showPreview = ref(false);
+
+const reset = () => {
+  Object.assign(recipe.value, JSON.parse(JSON.stringify(defaultRecipe)));
+  ongoingStore.clearRecipeSteps();
+};
 
 const saveRecipe = () => {
   console.log('Recipe saved:', recipe.value);
-  // Here you would typically call an API to save the recipe
+  ongoingStore.setRecipeSteps({ ...recipe.value });
+  router.push(`/recipes/new/p/${routeRecipeId}`);
 };
+
+onBeforeUnmount(() => {
+  ongoingStore.setRecipeSteps({ ...recipe.value });
+})
+
 watchEffect(() => {
   recipe.steps?.forEach((step, i) => step.no = i + 1);
 });
-
 </script>
+
 
 <style scoped>
 .dark .p-card {

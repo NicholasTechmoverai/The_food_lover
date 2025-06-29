@@ -1,159 +1,161 @@
 <template>
-  <div 
-    class="max-w-sm mx-auto bg-white dark:bg-gray-900 rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1 group"
+  <div
+    class="rounded-2xl overflow-hidden shadow-md transition-transform duration-300 hover:-translate-y-1 hover:shadow-xl bg-white dark:bg-gray-900"
     :style="{ '--theme-color': recipe.repiceColor || '#f97316' }"
   >
-    <!-- Image with theme-colored overlay -->
-    <div class="relative overflow-hidden h-56">
-      <Image 
-        :src="recipe.image" 
-        :alt="recipe.name" 
-        preview 
-        class=" object-cover transition-transform duration-500 group-hover:scale-105" 
-      />
-      <div class="absolute inset-0 bg-gradient-to-t from-[var(--theme-color)]/80 to-transparent flex flex-col justify-end p-4">
-        <div class="flex items-center justify-between">
-          <span class="text-white bg-[var(--theme-color)]/90 px-3 py-1 rounded-full text-xs font-medium">
-            {{ recipe.cookTime.hr }}h {{ recipe.cookTime.min }}m
-          </span>
-          <button class="text-white hover:text-white/80 transition-colors" aria-label="Save recipe">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-            </svg>
-          </button>
+    <!-- User Profile -->
+    <div class="flex justify-between items-center border-b px-4 py-3 dark:border-gray-700">
+      <div class="flex items-center gap-3">
+        <img
+          :src="recipe.user?.profilePic || defaultAvatar"
+          :alt="recipe.user?.name"
+          class="w-10 h-10 rounded-full object-cover"
+        />
+        <div>
+          <h4 class="text-sm font-semibold text-gray-800 dark:text-white">{{ recipe.user?.name }}</h4>
+          <p class="text-xs text-gray-500 dark:text-gray-400">{{ recipe.user?.totalRecipes }} recipes shared</p>
         </div>
+      </div>
+      <button class="text-xs px-3 py-1 border border-[var(--theme-color)] text-[var(--theme-color)] rounded-full hover:bg-[var(--theme-color)] hover:text-white">
+        Follow
+      </button>
+    </div>
+
+    <!-- Recipe Image -->
+    <div class="relative h-52 overflow-hidden">
+      <img
+        :src="recipe.image || placeholderImage"
+        :alt="recipe.recipeName"
+        class="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+        loading="lazy"
+      />
+      <div class="absolute bottom-2 left-2 flex gap-2">
+        <span class="text-xs px-2 py-1 rounded-full bg-black/70 text-white backdrop-blur-sm">
+          {{ recipe.complexityLevel.name }}
+        </span>
+        <span class="text-xs px-2 py-1 rounded-full bg-black/70 text-white backdrop-blur-sm flex items-center gap-1">
+          <ClockIcon class="w-4 h-4" /> {{ formatCookTime(recipe.cookTime) }}
+        </span>
       </div>
     </div>
 
-    <div class="p-5">
-      <!-- Recipe title -->
-      <h2 class="text-xl font-bold text-gray-800 dark:text-white line-clamp-1 mb-2">
-        {{ recipe.recipeName }}
-      </h2>
-
-      <!-- Description with show more -->
-      <div class="mb-3 relative">
-        <p 
-          ref="description"
-          class="text-gray-600 dark:text-gray-300 text-sm transition-all duration-200"
-          :class="showFullDescription ? '' : 'line-clamp-2'"
-        >
-          {{ recipe.description }}
-        </p>
-        <button 
-          v-if="shouldShowToggle"
-          @click="showFullDescription = !showFullDescription"
-          class="text-xs mt-1 text-[var(--theme-color)] hover:text-[var(--theme-color)]/80 font-medium flex items-center gap-1"
-        >
-          {{ showFullDescription ? 'Show less' : 'Show more' }}
-          <svg 
-            xmlns="http://www.w3.org/2000/svg" 
-            class="h-3 w-3 transition-transform duration-200" 
-            :class="{ 'rotate-180': showFullDescription }"
-            fill="none" 
-            viewBox="0 0 24 24" 
-            stroke="currentColor"
-          >
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-          </svg>
-        </button>
-      </div>
-
-      <!-- Recipe preview content -->
-      <div class="mb-4 relative">
-        <div 
-          class="prose dark:prose-invert max-w-none text-sm text-gray-600 dark:text-gray-300 transition-all duration-200"
-          :class="showFullContent ? '' : 'line-clamp-3'"
-          
-        >
-        <div v-html="recipe.recipeContent" class="w-full break-words"></div>
-          <!-- Simple text extraction from HTML content -->
-          <!-- {{ stripHtml(recipe.recipeContent) }} -->
+    <!-- Recipe Content -->
+    <div class="p-4 space-y-2">
+      <div>
+        <h3 class="text-lg font-semibold text-gray-800 dark:text-white">{{ recipe.recipeName }}</h3>
+        <div class="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-2">
+          <GlobeIcon class="w-4 h-4" />
+          <span>{{ recipe.cuisine.name }} • {{ recipe.cuisine.region }}</span>
         </div>
-        <button 
-          v-if="recipe.recipeContent && recipe.recipeContent.length > 100"
-          @click="showFullContent = !showFullContent"
-          class="text-xs mt-1 text-[var(--theme-color)] hover:text-[var(--theme-color)]/80 font-medium flex items-center gap-1"
-        >
-          {{ showFullContent ? 'Show less' : 'Show more steps' }}
-          <svg 
-            xmlns="http://www.w3.org/2000/svg" 
-            class="h-3 w-3 transition-transform duration-200" 
-            :class="{ 'rotate-180': showFullContent }"
-            fill="none" 
-            viewBox="0 0 24 24" 
-            stroke="currentColor"
-          >
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-          </svg>
-        </button>
       </div>
 
-      <!-- Tags -->
-      <div class="flex flex-wrap gap-2 mb-4">
-        <span 
-          v-for="tag in recipe.tags" 
-          :key="tag.name"
-          class="text-xs px-2.5 py-1 bg-[var(--theme-color)]/10 text-[var(--theme-color)] dark:bg-[var(--theme-color)]/20 dark:text-[var(--theme-color)]/90 rounded-full hover:bg-[var(--theme-color)]/20 dark:hover:bg-[var(--theme-color)]/30 transition-colors"
+      <p class="text-sm text-gray-600 dark:text-gray-300">
+        {{ truncateDescription(recipe.description) }}
+        <button
+          v-if="shouldShowMore"
+          class="text-[var(--theme-color)] font-medium ml-1"
+          @click="showFullDescription = !showFullDescription"
+        >
+          {{ showFullDescription ? 'Show less' : 'Read more' }}
+        </button>
+      </p>
+
+      <div class="flex flex-wrap gap-2 pt-2">
+        <span
+          v-for="tag in recipe.tags.slice(0, 3)"
+          :key="tag"
+          class="bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 px-2 py-1 text-xs rounded-full"
         >
           #{{ tag }}
         </span>
       </div>
+    </div>
 
-      <!-- Action buttons -->
-      <div class="flex justify-between items-center border-t border-gray-100 dark:border-gray-700 pt-4">
-        <button class="text-sm font-medium text-[var(--theme-color)] hover:text-[var(--theme-color)]/80 flex items-center gap-1 transition-colors">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-          </svg>
-          Preview
-        </button>
-        <button 
-          class="px-4 py-2 bg-[var(--theme-color)] hover:bg-[var(--theme-color)]/90 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-1"
+    <!-- Footer -->
+    <div class="flex justify-between items-center px-4 py-3 border-t dark:border-gray-700">
+      <div class="flex gap-2 flex-wrap">
+        <span
+          v-for="cat in recipe.category"
+          :key="cat"
+          class="bg-[color:var(--theme-color-light)] text-[color:var(--theme-color-dark)] px-2 py-1 text-xs font-medium rounded-full"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-          </svg>
-          Cook This
-        </button>
+          {{ cat }}
+        </span>
+      </div>
+      <router-link
+        :to="`/recipes/${recipe.recipeName}/${recipe.id}`"
+        class="text-sm bg-[color:var(--theme-color)] text-white px-4 py-1.5 rounded-full flex items-center gap-2 hover:bg-[color:var(--theme-color-dark)]"
+      >
+        View Recipe
+        <ArrowRightIcon class="w-4 h-4" />
+      </router-link>
+    </div>
+
+    <!-- Modal -->
+    <div
+      v-if="showFullDescription"
+      class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex justify-center items-center"
+      @click.self="showFullDescription = false"
+    >
+      <div class="bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 rounded-xl p-6 max-w-xl w-full relative max-h-[80vh] overflow-y-auto">
+        <button class="absolute top-4 right-4 text-2xl" @click="showFullDescription = false">&times;</button>
+        <h3 class="text-xl font-bold mb-4">About {{ recipe.recipeName }}</h3>
+        <div v-html="recipe.description" class="prose dark:prose-invert"></div>
       </div>
     </div>
   </div>
 </template>
 
+
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed } from 'vue';
+// import { ClockIcon, GlobeIcon, ArrowRightIcon } from 'your-icon-library';
 
 const props = defineProps({
   recipe: {
     type: Object,
-    required: true
+    required: true,
+    default: () => ({
+      user: {
+        name: '',
+        profilePic: '',
+        id: '',
+        totalRecipes: 0
+      },
+      id: null,
+      recipeName: '',
+      repiceColor: '#f97316',
+      image: null,
+      tags: [],
+      cookTime: { hr: 0, min: 0 },
+      description: '',
+      cuisine: { name: 'Kenyan', region: 'East Africa' },
+      complexityLevel: { name: 'Easy', value: 1 },
+      category: []
+    })
   }
 });
 
 const showFullDescription = ref(false);
-const showFullContent = ref(false);
-const description = ref(null);
-const shouldShowToggle = ref(false);
+const defaultAvatar = 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png';
+const placeholderImage = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?ixlib=rb-4.0.3&auto=format&fit=crop&w=880&q=80';
 
-// Check if description needs toggle
-onMounted(() => {
-  if (description.value) {
-    shouldShowToggle.value = description.value.scrollHeight > description.value.clientHeight;
+const formatCookTime = (cookTime) => {
+  if (cookTime.hr > 0 && cookTime.min > 0) {
+    return `${cookTime.hr}h ${cookTime.min}m`;
+  } else if (cookTime.hr > 0) {
+    return `${cookTime.hr}h`;
   }
-});
-
-// Simple HTML stripper for recipe content preview
-const stripHtml = (html) => {
-  if (!html) return '';
-  return html.replace(/<[^>]*>/g, ' ');
+  return `${cookTime.min}m`;
 };
-</script>
 
-<style>
-/* Fallback for older browsers */
-:root {
-  --theme-color: #f97316;
-}
-</style>
+const truncateDescription = (desc) => {
+  if (!desc) return '';
+  const text = desc.replace(/<[^>]*>/g, '');
+  return text.length > 100 ? `${text.substring(0, 100)}...` : text;
+};
+
+const shouldShowMore = computed(() => {
+  return props.recipe.description?.replace(/<[^>]*>/g, '').length > 100;
+});
+</script>

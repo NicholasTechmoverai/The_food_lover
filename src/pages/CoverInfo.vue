@@ -1,26 +1,45 @@
 <template>
-    <div class="min-h-[80%] bg-gray-50 dark:bg-gray-900 p-4 md:p-8">
-        <div class="max-w-7xl mx-auto bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden p-6 space-y-6">
-            <!-- Header with Preview Button -->
-            <div class="flex justify-between items-start border-b border-gray-200 dark:border-gray-700 pb-4">
+    <div class="min-h-[80%] relative bg-gray-50 dark:bg-gray-900 p-4 md:p-8">
+        <!-- Sticky Header -->
+        <div class="sticky -top-4 z-50 rounded-lg shadow-sm mb-6 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm">
+            <div
+                class="max-w-7xl mx-auto p-4 md:p-6 flex justify-between items-start border-gray-200 dark:border-gray-700">
                 <div>
                     <h1 class="text-2xl font-bold text-gray-800 dark:text-white">Create New Recipe</h1>
                     <p class="text-gray-600 dark:text-gray-300">Share your culinary masterpiece with the world</p>
                 </div>
-                <Button @click="showPreview = !showPreview" :label="showPreview ? 'Hide' : 'Preview'"
-                    icon="pi pi-eye"
-                    :style="{ backgroundColor: recipeCover.repiceColor, borderColor: recipeCover.repiceColor }"
-                    class="hover:opacity-90 transition-opacity" />
-            </div>
 
-            <!-- Grid Layout for Landscape Screens -->
+                <!-- Mobile Controls -->
+                <div class="card flex justify-center md:hidden">
+                    <SplitButton label="Next" icon="pi pi-arrow-right" @click="submitForm" :model="morebuttonItems"
+                        v-tooltip="!isFormValid ? 'Add cover photo, recipe name, and description to proceed' : 'Next'"
+                        :style="{ backgroundColor: recipeCover.repiceColor, borderColor: recipeCover.repiceColor }" />
+
+                </div>
+
+                <!-- Desktop Controls -->
+                <div class="hidden md:flex flex-row gap-2 pt-4">
+                    <Button @click="showPreview = !showPreview" severity="secondary"
+                        :label="showPreview ? 'Hide' : 'Preview'" icon="pi pi-eye"
+                        class="hover:opacity-90 transition-opacity bg-gray-700 text-white dark:bg-gray-700" />
+                    <Button label="Next Step" icon="pi pi-arrow-right" @click="submitForm" :disabled="!isFormValid"
+                        v-tooltip="!isFormValid ? 'Complete required fields to proceed' : 'Next'"
+                        class="hover:opacity-90 transition-opacity"
+                        :style="{ backgroundColor: recipeCover.repiceColor, borderColor: recipeCover.repiceColor }" />
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="max-w-7xl mx-auto bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden p-6 space-y-6">
+            <!-- Essential Info Section -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <!-- Left Column -->
+                <!-- Left Column - Most important inputs -->
                 <div class="space-y-6">
-                    <!-- Recipe Name Section -->
+                    <!-- Recipe Name - Top priority -->
                     <div class="space-y-2">
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                            Recipe Name
+                            Recipe Name *
                             <span class="text-gray-500 dark:text-gray-400 text-xs ml-1">
                                 {{ recipeCover.recipeName?.length || 0 }}/50
                             </span>
@@ -33,18 +52,50 @@
                         </small>
                     </div>
 
-                    <!-- Cover Image Section -->
-                    <div class="space-y-4">
-                        <div class="flex items-center justify-between">
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                                Cover Image
+                    <!-- Recipe Editor with Toggle -->
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-800 dark:text-gray-200">
+                                Recipe Description / Instructions *
                             </label>
-                            <span class="text-xs text-gray-500 dark:text-gray-400">Recommended: 16:9 aspect ratio</span>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                Provide a short introduction or instructions for your recipe.
+                            </p>
                         </div>
+
+                        <!-- Input Type Switcher -->
+                        <div class="max-w-xl space-y-2">
+                            <div class="flex justify-between items-center">
+                                <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Input Type</label>
+                                <SelectButton v-model="instructionsInput" :options="instructionsInputList"
+                                    optionLabel="label" optionValue="value" class="text-sm" size="small" />
+                            </div>
+
+                            <!-- Description Editor -->
+                            <div>
+                                <Textarea v-if="instructionsInput === 'text_area'" v-model="recipeCover.description"
+                                    rows="5" placeholder="Briefly describe your recipe..."
+                                    class="w-full rounded-md border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:ring-2 focus:ring-primary-500" />
+                                <Editor v-else v-model="recipeCover.description" editorStyle="min-height:200px"
+                                    placeholder="Briefly describe your recipe..."
+                                    class="dark:!bg-gray-800 dark:!text-white" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column - Visual elements -->
+                <div class="space-y-6">
+                    <!-- Cover Image - High priority -->
+                    <div class="space-y-4">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Cover Image *
+                            <span class="text-xs text-gray-500 dark:text-gray-400 ml-2">(Recommended: 16:9 ratio)</span>
+                        </label>
 
                         <!-- Upload Area -->
                         <div v-if="!recipeCover.image"
-                            class="relative border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-8 text-center hover:border-primary-500 transition-colors cursor-pointer"
+                            class="relative border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 text-center hover:border-primary-500 transition-colors cursor-pointer"
                             @click="triggerFileInput" :style="{ borderColor: recipeCover.repiceColor }">
                             <input ref="fileInput" type="file" accept="image/jpeg, image/png, image/webp" class="hidden"
                                 @change="handleImageUpload" />
@@ -52,13 +103,13 @@
                                 <i class="pi pi-image text-4xl" :style="{ color: recipeCover.repiceColor }"></i>
                                 <p class="text-sm text-gray-600 dark:text-gray-400">
                                     <span class="font-medium" :style="{ color: recipeCover.repiceColor }">Click to
-                                        upload</span> or drag and drop
+                                        upload</span>
                                 </p>
                                 <p class="text-xs text-gray-500 dark:text-gray-500">JPG, PNG, or WEBP (max 5MB)</p>
                             </div>
                         </div>
 
-                        <!-- Cover Image Preview -->
+                        <!-- Image Preview -->
                         <div v-if="recipeCover.image" class="relative group">
                             <div class="relative rounded-lg overflow-hidden" :style="{ aspectRatio: '16/9' }">
                                 <img :src="recipeCover.image" class="w-full h-full object-cover" />
@@ -70,126 +121,113 @@
                                         class="dark:bg-red-600" />
                                 </div>
                             </div>
-                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 text-center">Cover image selected
-                            </p>
                         </div>
                     </div>
 
-                    <!-- Theme Color Picker -->
+                    <!-- Theme Color - Medium priority -->
                     <div class="space-y-2">
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
                             Recipe Theme Color
                         </label>
-                        <ColorPicker v-model="color" format="hex" class="z-10" :style="{ width: '100%' }" />
+                        <ColorPicker v-model="color" format="hex" class="z-10 w-full" />
+                    </div>
+                </div>
+            </div>
+
+            <!-- Secondary Sections -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+                <!-- Left Column -->
+                <div class="space-y-6">
+                    <!-- Category Selection -->
+                    <div class="space-y-2">
+                        <CategorySelectPage v-model="recipeCover.category" />
+                        <Chip v-for="(tag, index) in recipeCover.category" :key="index" :label="tag" removable
+                            @remove="removeCatogry(index)" class="dark:bg-gray-700"
+                            :style="{ backgroundColor: recipeCover.repiceColor, borderColor: recipeCover.repiceColor }" />
+                    </div>
+
+                    <!-- Cuisine Selection -->
+                    <div class="space-y-4 flex flex-col justify-start">
+                        <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">Cuisine Type</h3>
+                        <CuisineSelector v-model="recipeCover.cuisine" class=" mr-auto" />
+                    </div>
+
+                    <!-- Complexity Level -->
+                    <div class="space-y-2">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Difficulty Level
+                        </label>
+                        <SelectButton v-model="recipeCover.complexityLevel" :options="complexityLevels"
+                            optionLabel="name" class="w-full" aria-labelledby="multiple" />
                     </div>
                 </div>
 
                 <!-- Right Column -->
                 <div class="space-y-6">
-                    <!-- Tags Section -->
-                    <div class="space-y-2">
-                        <div class="flex justify-between items-center">
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                                Tags
-                            </label>
-                            <span class="text-xs text-gray-500 dark:text-gray-400">
-                                {{ recipeCover.tags.length }}/5 tags
-                                <span v-if="recipeCover.tags.length >= 5" class="text-red-500 ml-1">(Max reached)</span>
-                            </span>
-                        </div>
-
-                        <div class="flex flex-wrap gap-2 mb-2">
-                            <Chip v-for="(tag, index) in recipeCover.tags" :key="index" :label="`#${tag}`" removable
-                                @remove="removeTag(index)" class="dark:bg-gray-700 cursor-pointer"
-                                :style="{ backgroundColor: tagBackground(tag) }" />
-                        </div>
-
-                        <!-- Tag Search and Selection -->
-                        <div class="space-y-2">
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                                Search Popular Tags
-                            </label>
-                            <div class="flex gap-2">
-                                <AutoComplete v-model="tagSearch" :suggestions="filteredTags" @complete="searchTags"
-                                    @keydown.enter.prevent="addCustomTag" @item-select="addCustomTag"
-                                    placeholder="Type and press enter to add tag..." class="flex-1" />
-                                <Button icon="pi pi-plus" @click="addCustomTag" :disabled="!tagSearch" />
-
-                            </div>
-                        </div>
-
-                        <!-- Popular Tags -->
-                        <div class="mb-2">
-                            <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Popular tags:</p>
-                            <div class="flex flex-wrap gap-2">
-                                <Chip v-for="tag in popularTags" :key="tag.value" :label="`#${tag}`" :class="{
-                                    'bg-primary-100 text-primary-800 dark:bg-primary-900 dark:text-primary-200 cursor-not-allowed text-decoration: line-through': isTagSelected(tag),
-                                    'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200 cursor-pointer': !isTagSelected(tag)
-                                }" @click="toggleTag(tag)" />
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Estimated Cook Time -->
-                    <div class="space-y-2 flex flex-col justify-center ">
+                    <!-- Cook Time -->
+                    <div class="space-y-2 bg-gray-200/10 flex flex-col justify-between p-2 items-center">
                         <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300">
-                            Estimated Total meal preparation Time
+                            Preparation Time
                         </label>
-                        <div class="flex flex-row items-center gap-4">
-                            <div class="flex flex-col items-center">
+                        <div class="flex flex-row gap-8 items-center justify-between ">
+                            <div class="flex-1 flex flex-col items-center">
                                 <label class="text-xs text-gray-500 dark:text-gray-400 mb-1">Hours</label>
                                 <Knob v-model="recipeCover.cookTime.hr" valueTemplate="{value} hr" :min="0" :max="12"
                                     :step="1" class="w-16 h-16" />
                             </div>
-                            <div class="flex flex-col items-center ml-3">
+                            <div class="flex-1 flex flex-col items-center">
                                 <label class="text-xs text-gray-500 dark:text-gray-400 mb-1">Minutes</label>
                                 <Knob v-model="recipeCover.cookTime.min" valueTemplate="{value} min" :min="0" :max="55"
                                     :step="5" class="w-16 h-16" />
                             </div>
                         </div>
-                        <div class="text-sm text-gray-600 dark:text-gray-300 mt-5">
+                        <div class="text-sm text-center text-gray-600 dark:text-gray-300 mt-2">
                             Total: {{ recipeCover.cookTime.hr }} hr {{ recipeCover.cookTime.min }} min
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Description Section -->
-            <div class="space-y-2">
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Description
-                    <span class="text-gray-500 dark:text-gray-400 text-xs ml-1">
-                        {{ recipeCover.description?.length || 0 }}/200
-                    </span>
-                </label>
-                <Textarea v-model="recipeCover.description" rows="3" maxlength="200"
-                    placeholder="Briefly describe your recipe..." class="w-full" />
-                <small class="text-xs text-gray-500 dark:text-gray-400">Keep it short and enticing</small>
-            </div>
+            <!-- Tags Section - Lower priority -->
+            <div class="space-y-6 mt-6">
+                <div class="space-y-2">
+                    <div class="flex justify-between items-center">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Tags
+                            <span class="text-xs text-gray-500 dark:text-gray-400 ml-1">(Optional)</span>
+                        </label>
+                        <span class="text-xs text-gray-500 dark:text-gray-400">
+                            {{ recipeCover.tags.length }}/5 tags
+                        </span>
+                    </div>
 
-            <!-- Recipe Editor -->
-            <div class="space-y-2">
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Recipe Instructions
-                </label>
-                <small class="text-xs text-gray-500 dark:text-gray-400 block mb-2">
-                    Write cover info about your recipe
-                </small>
+                    <div class="flex flex-wrap gap-2 mb-2">
+                        <Chip v-for="(tag, index) in recipeCover.tags" :key="index" :label="`#${tag}`" removable
+                            @remove="removeTag(index)" class="dark:bg-gray-700 cursor-pointer"
+                            :style="{ backgroundColor: tagBackground(tag) }" />
+                    </div>
 
-                <Editor v-model="recipeCover.recipeContent" editorStyle="min-height:200px" placeholder="Example: 
-1. Preheat oven to 475°F (245°C)
-2. Roll out the pizza dough on a floured surface
-3. Spread tomato sauce evenly over the dough
-4. Add fresh mozzarella slices
-5. Bake for 10-12 minutes until crust is golden
-6. Add fresh basil leaves before serving" class="border rounded-lg overflow-hidden dark:border-gray-600" />
-            </div>
+                    <div class="space-y-2">
+                        <div class="flex gap-2">
+                            <AutoComplete v-model="tagSearch" :suggestions="filteredTags" @complete="searchTags"
+                                @keydown.enter.prevent="addCustomTag" @item-select="addCustomTag"
+                                placeholder="Search tags..." class="flex-1" />
+                            <Button icon="pi pi-plus" @click="addCustomTag"
+                                :disabled="!tagSearch || recipeCover.tags.length >= 5"
+                                :style="{ backgroundColor: recipeCover.repiceColor, borderColor: recipeCover.repiceColor }" />
+                        </div>
+                    </div>
 
-            <!-- Submit Button -->
-            <div class="flex justify-end pt-4 sticky bottom-1">
-                <Button label="Next Step" icon="pi pi-arrow-right" @click="submitForm" :disabled="!isFormValid"
-                    :style="{ backgroundColor: recipeCover.repiceColor, borderColor: recipeCover.repiceColor }"
-                    class="hover:opacity-90 transition-opacity" />
+                    <div>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Popular tags:</p>
+                        <div class="flex flex-wrap gap-2">
+                            <Chip v-for="tag in popularTags" :key="tag.value" :label="`#${tag}`" :class="{
+                                'bg-primary-100 text-primary-800 dark:bg-primary-900 dark:text-primary-200 cursor-not-allowed': isTagSelected(tag),
+                                'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200 cursor-pointer': !isTagSelected(tag)
+                            }" @click="toggleTag(tag)" />
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -198,13 +236,8 @@
             :style="{ width: '90vw', maxWidth: '800px' }" :modal="true" class="dark:bg-gray-800">
             <div class="space-y-4">
                 <div class="relative h-[70vh] min-h-[400px] bg-gray-100 dark:bg-gray-700 rounded-lg">
-                    <!-- <Cropper ref="cropper" :src="imageToEdit"
-                        :stencil-props="{ aspectRatio: 16 / 9, handlers: {}, movable: true, resizable: true }"
-                        class="cropper" /> -->
                     <Cropper ref="cropper" :src="imageToEdit" :stencil-props="{ aspectRatio: 16 / 9 }"
                         class="w-full h-full" />
-
-
                 </div>
 
                 <div class="flex flex-wrap gap-2 justify-center">
@@ -228,6 +261,7 @@
             :modal="true" class="dark:bg-gray-800">
             <RecipeCard :recipe="recipeCover" />
         </Dialog>
+
         <Toast />
         <ConfirmDialog></ConfirmDialog>
     </div>
@@ -243,10 +277,13 @@ import { useOngoingStore } from '../store/ongoing'
 import { generateUUID } from '../reusables';
 import { useConfirm } from "primevue/useconfirm";
 import { useToast } from "primevue/usetoast";
-
+import { useIsMobile } from '../reusables';
+import CuisineSelector from '../cards/CuisineSelector.vue';
+import CategorySelectPage from './CategorySelectPage.vue';
 const confirm = useConfirm();
 const toast = useToast();
-
+const isMobile = useIsMobile()
+const instructionsInput = ref('text_area');
 
 // Store & PrimeVue
 const ongoingStore = useOngoingStore()
@@ -273,16 +310,28 @@ const recipeCover = ref({
         min: 0
     },
     description: '',
-    recipeContent: ''
+    cuisine: { name: 'Kenyan', region: 'East Africa' },
+    complexityLevel: { name: 'Easy', value: 1 },
+    category: []
 });
+
+const complexityLevels = ref([
+    { name: 'Easy', value: 1 },
+    { name: 'Medium', value: 2 },
+    { name: 'Hard', value: 3 }
+]);
+const instructionsInputList = ref([
+    { label: 'Text', value: 'text_area' },
+    { label: 'Editor', value: 'editor' },
+]);
 
 // On mount, restore unfinished recipe if exists
 onMounted(async () => {
-  await nextTick() // ensure ConfirmDialog is rendered
-  if (ongoingStore.coverRecipe) {
-    const nameOrId = ongoingStore.coverRecipe.recipeName || ongoingStore.coverRecipe.id || 'Unnamed'
-    continueConfirm(nameOrId)
-  }
+    await nextTick() // ensure ConfirmDialog is rendered
+    if (ongoingStore.coverRecipe) {
+        const nameOrId = ongoingStore.coverRecipe.recipeName || ongoingStore.coverRecipe.id || 'Unnamed'
+        continueConfirm(nameOrId)
+    }
 })
 
 
@@ -356,7 +405,7 @@ const isRecipeNameValid = computed(() =>
 const isFormValid = computed(() =>
     isRecipeNameValid.value &&
     recipeCover.value.description &&
-    recipeCover.value.recipeContent
+    recipeCover.value.image
 );
 
 watch(color, (val) => {
@@ -468,6 +517,10 @@ const toggleTag = (tag) => {
     }
 };
 
+const removeCatogry = (index) => {
+    recipeCover.value.category.splice(index, 1);
+};
+
 
 const removeTag = (index) => {
     recipeCover.value.tags.splice(index, 1);
@@ -483,6 +536,27 @@ const submitForm = () => {
         router.push(`/recipes/new/e/${recipeCover.value.id}`)
     }
 };
+const morebuttonItems = [
+    {
+        label: 'Preview',
+        icon: "pi pi-eye",
+        command: () => {
+            showPreview.value = !showPreview.value
+        }
+    },
+    {
+        separator: true
+    },
+    //     {
+    //     label: 'reset',
+    //     icon: 'pi-refresh',
+    //     command: () => {
+    //       reset()
+    //       toast.add({ severity: 'warn', summary: 'Reset!', detail: 'Page reset!', life: 3000 });
+    //     }
+    //   }
+
+];
 </script>
 
 <style scoped>

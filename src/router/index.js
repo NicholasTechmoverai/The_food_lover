@@ -11,7 +11,7 @@ import NewRecipe from '../pages/NewRecipe.vue'
 import RecipeId from '../pages/RecipeId.vue'
 import CoverInfo from '../pages/CoverInfo.vue'
 import NewRecipeUploads from '../cards/NewRecipeUploads.vue'
-
+import PublishRecipe from '../cards/PublishRecipe.vue'
 const routes = [
   {
     path: '/',
@@ -46,6 +46,19 @@ const routes = [
                 path: ':id',
                 name: 'NewRecipeUploadsWithId',
                 component: NewRecipeUploads,
+                props: true
+              }
+            ]
+          },
+          {
+            path: 'p',
+            name: 'PublishRecipe',
+            component: PublishRecipe,
+            children: [
+              {
+                path: ':id',
+                name: 'PublishRecipeWithId',
+                component: PublishRecipe,
                 props: true
               }
             ]

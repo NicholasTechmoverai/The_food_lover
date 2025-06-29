@@ -45,7 +45,9 @@ import Card from 'primevue/card';
 import Slider from 'primevue/slider';
 import ConfirmDialog from 'primevue/confirmdialog';
 import ConfirmationService from 'primevue/confirmationservice';
-
+import SplitButton from 'primevue/splitbutton';
+import ToggleButton from 'primevue/togglebutton';
+import Dropdown from 'primevue/dropdown'
 
 
 import '@fortawesome/fontawesome-free/css/all.min.css';
@@ -55,9 +57,11 @@ import '@fontsource/inter/700.css'; // Bold
 import '@fontsource/inter/900.css'; // Black
 
 import './style.css';
+import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
 
 const app = createApp(App);
 const pinia = createPinia()
+pinia.use(piniaPluginPersistedstate)
 
 app.component('Button', Button)
 app.component('Panel', Panel)
@@ -98,7 +102,9 @@ app.component('AutoComplete',AutoComplete)
 app.component('Chip',Chip)
 app.component('Slider',Slider)
 app.component('ConfirmDialog',ConfirmDialog)
-
+app.component('SplitButton',SplitButton)
+app.component('ToggleButton',ToggleButton)
+app.component('Dropdown',Dropdown)
 app.use(router)
 app.use(ToastService);
 app.use(ConfirmationService);

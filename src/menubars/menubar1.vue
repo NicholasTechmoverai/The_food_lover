@@ -120,7 +120,7 @@
                         <TieredMenu ref="noty_menu" id="overlay_tmenu" :model="noty_menu_items" popup />
                     </div>
                     <div class="card flex justify-center">
-                        <Avatar image="https://randomuser.me/api/portraits/women/44.jpg" aria-haspopup="true"
+                        <Avatar :image="user.profilePic" aria-haspopup="true"
                             @click="toggle" shape="circle" size="large"
                             class="border-2 border-amber-500 dark:border-amber-400 cursor-pointer hover:scale-105 transition-transform" />
                         <TieredMenu ref="menu" id="overlay_tmenu" :model="Menu_items" popup />
@@ -147,6 +147,12 @@ const noty_menu = ref();
 const likeCount = ref(150);
 const messageCount = ref(9);
 const mentionCount = ref(3);
+
+const user = ref({
+    profilePic:'https://cdn-icons-png.flaticon.com/512/3135/3135715.png',
+    id:null,
+    name:null
+})
 
 const noty_menu_items = ref([
     {
