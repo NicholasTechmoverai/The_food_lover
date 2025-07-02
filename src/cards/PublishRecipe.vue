@@ -8,7 +8,7 @@
           <h1 class="text-2xl font-bold text-gray-800 dark:text-white">Publish Your Recipe</h1>
           
           <div class="flex flex-wrap gap-2">
-            <Button 
+            <!-- <Button 
               label="Cover" 
               icon="pi pi-image" 
               @click="router.push('/recipes/new/cover')"
@@ -31,7 +31,7 @@
                 color: getContrastColor(recipeCover.repiceColor)
               }"
               outlined
-            />
+            /> -->
             <Button 
               :label="isPublishing?'Publishing...':'Publish Recipe'" 
               :icon="isPublishing?'pi pi-spin pi-spinner':'pi pi-send'" 

@@ -106,6 +106,7 @@
             <div v-for="(step, index) in recipe.steps" :key="index" class="mb-8">
               <div class="flex items-center justify-between mb-4 p-3 bg-gray-100 dark:bg-gray-700 rounded-lg">
                 <h3 class="font-medium text-gray-800 dark:text-white">Step {{ index + 1 }}</h3>
+                <input hidden type="number" v-model="step.no" >
                 <div class="flex gap-2">
                   <Button icon="pi pi-arrow-up" severity="secondary" @click="moveStepUp(index)" :disabled="index === 0"
                     class="dark:bg-gray-700" />
@@ -334,7 +335,7 @@
   </div>
 </template>
 <script setup>
-import { ref, computed, watchEffect, nextTick, onMounted, onBeforeUnmount } from 'vue';
+import { ref, computed, watchEffect,watch, nextTick, onMounted, onBeforeUnmount } from 'vue';
 import { Cropper } from 'vue-advanced-cropper';
 import 'vue-advanced-cropper/dist/style.css';
 import RecipePreview from '../cards/RecipeCard.vue';
@@ -380,6 +381,7 @@ const defaultRecipe = {
   category: null,
   ingredients: [{ name: '', amount: '', unit: '' }],
   steps: [{
+    no: null,
     timeRequired: { hr: 0, min: 0 },
     tempRequired: 0,
     ingredientsUsed: [],
@@ -447,6 +449,7 @@ const handleDrop = (e) => {
 };
 
 const defaultStep = () => ({
+  no: null,
   instructions: '',
   image: null,
   videoUrl: '',
@@ -632,9 +635,18 @@ onBeforeUnmount(() => {
   ongoingStore.setRecipeSteps({ ...recipe.value });
 })
 
-watchEffect(() => {
-  recipe.steps?.forEach((step, i) => step.no = i + 1);
-});
+watch(
+  () => recipe.value?.steps, // safely access steps
+  (newSteps) => {
+    if (newSteps) {
+      newSteps.forEach((step, i) => {
+        step.no = i + 1;
+      });
+    }
+  },
+  { deep: true, immediate: true }
+);
+
 </script>
 
 
