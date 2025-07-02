@@ -25,70 +25,83 @@
     >
       <!-- Slide Item View -->
       <template #item="{ item, index }">
-        <div class="relative h-full">
-          <!-- Media: YouTube / video / image -->
-          <div v-if="item.videoUrl" class="media-container bg-black rounded-lg">
-            <iframe
-              v-if="isYoutubeUrl(item.videoUrl)"
-              :src="getYoutubeEmbedUrl(item.videoUrl)"
-              frameborder="0"
-              allowfullscreen
-              class="w-full h-96"
-              title="Step Video"
-            ></iframe>
-            <video
-              v-else
-              :src="item.videoUrl"
-              controls
-              class="w-full h-96 object-contain"
-            ></video>
-          </div>
+        <div class="relative h-full flex flex-col md:flex-row gap-4 p-4">
+          <!-- Media Column -->
+          <div class="w-full md:w-1/2 h-96 flex-shrink-0">
+            <!-- Media: YouTube / video / image -->
+            <div v-if="item.videoUrl" class="media-container bg-black rounded-lg h-full">
+              <iframe
+                v-if="isYoutubeUrl(item.videoUrl)"
+                :src="getYoutubeEmbedUrl(item.videoUrl)"
+                frameborder="0"
+                allowfullscreen
+                class="w-full h-full"
+                title="Step Video"
+              ></iframe>
+              <video
+                v-else
+                :src="item.videoUrl"
+                controls
+                class="w-full h-full object-contain"
+              ></video>
+            </div>
 
-          <div v-else-if="item.image">
-            <img
-              :src="item.image"
-              :alt="`Step ${item.no || index + 1} image`"
-              class="w-full h-96 object-cover rounded-lg"
-            />
-          </div>
+            <div v-else-if="item.image" class="h-full">
+              <img
+                :src="item.image"
+                :alt="`Step ${item.no || index + 1} image`"
+                class="w-full h-full object-cover rounded-lg"
+              />
+            </div>
 
-          <div v-else class="w-full h-96 bg-gray-200 dark:bg-gray-700 flex items-center justify-center rounded-lg">
-            <div class="text-center text-gray-500 dark:text-gray-400">
-              <i class="pi pi-image text-4xl mb-2"></i>
-              <p>No media available</p>
+            <div v-else class="w-full h-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center rounded-lg">
+              <div class="text-center text-gray-500 dark:text-gray-400">
+                <i class="pi pi-image text-4xl mb-2"></i>
+                <p>No media available</p>
+              </div>
             </div>
           </div>
 
-          <!-- Info Overlay -->
-          <div class="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/70 to-transparent p-4 text-white">
-            <div class="flex justify-between items-start">
-              <div>
-                <div class="text-lg font-semibold">Step {{ item.no || index + 1 }}</div>
+          <!-- Content Column -->
+          <div class="w-full md:w-1/2 flex flex-col border rounded border-gray-200 dark:border-gray-700">
+            <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm flex-1 flex flex-col">
+              <!-- Step Header -->
+              <div class="flex justify-between items-start mb-4">
+                <h3 class="text-xl font-bold text-gray-900 dark:text-white">
+                  Step {{ item.no || index + 1 }}
+                </h3>
+                <div class="flex gap-2">
+                  <div v-if="getTotalTime(item.timeRequired) > 0" class="bg-primary-100 dark:bg-primary-900 text-primary-800 dark:text-primary-100 px-3 py-1 rounded-full text-sm">
+                    <i class="pi pi-clock mr-1"></i>{{ formatTime(item.timeRequired) }}
+                  </div>
+                  <div v-if="item.tempRequired > 0" class="bg-amber-100 dark:bg-amber-900 text-amber-800 dark:text-amber-100 px-3 py-1 rounded-full text-sm">
+                    <i class="pi pi-thermometer mr-1"></i>{{ item.tempRequired }}°C
+                  </div>
+                </div>
+              </div>
+
+              <!-- Instructions -->
+              <div class="flex-1 mb-4 overflow-y-auto">
                 <div 
-                  class="text-sm mt-1 break-words whitespace-pre-line" 
-                  v-html="formatInstructions(item.instructions || 'No instructions')"
+                  class="text-gray-700 dark:text-gray-300 break-words whitespace-pre-line leading-relaxed" 
+                  v-html="formatInstructions(item.instructions || 'No instructions provided')"
                 ></div>
               </div>
-              <div class="text-xs space-y-1 text-right">
-                <div v-if="getTotalTime(item.timeRequired) > 0" class="bg-white/20 px-2 py-1 rounded-full inline-block">
-                  <i class="pi pi-clock mr-1"></i>{{ formatTime(item.timeRequired) }}
-                </div>
-                <div v-if="item.tempRequired > 0" class="bg-white/20 px-2 py-1 rounded-full inline-block">
-                  <i class="pi pi-thermometer mr-1"></i>{{ item.tempRequired }}°C
+
+              <!-- Ingredients -->
+              <div v-if="item.ingredientsUsed?.length" class="mt-auto pt-4 border-t border-gray-200 dark:border-gray-700">
+                <h4 class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-2">INGREDIENTS FOR THIS STEP</h4>
+                <div class="flex flex-wrap gap-2">
+                  <span
+                    v-for="(ingredient, i) in item.ingredientsUsed"
+                    :key="i"
+                    class="text-xs bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 px-3 py-1.5 rounded-full flex items-center hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                  >
+                    <i class="pi pi-circle-fill text-[8px] mr-2 text-primary-500"></i>
+                    {{ formatIngredient(ingredient) }}
+                  </span>
                 </div>
               </div>
-            </div>
-
-            <!-- Ingredients -->
-            <div class="flex flex-wrap gap-1 mt-3" v-if="item.ingredientsUsed?.length">
-              <span
-                v-for="(ingredient, i) in item.ingredientsUsed"
-                :key="i"
-                class="text-xs bg-white/20 px-2 py-1 rounded-full flex items-center"
-              >
-                <i class="pi pi-circle-fill text-[8px] mr-1"></i>
-                {{ formatIngredient(ingredient) }}
-              </span>
             </div>
           </div>
         </div>
@@ -96,7 +109,7 @@
 
       <!-- Thumbnail View -->
       <template #thumbnail="{ item, index }">
-        <div class="relative w-24 h-16 rounded-md overflow-hidden">
+        <div class="relative w-24 h-16 rounded-md overflow-hidden border-2 border-transparent hover:border-primary-400 transition-all">
           <img
             v-if="item.image"
             :src="item.image"
@@ -111,48 +124,57 @@
           </div>
           <div
             v-else
-            class="w-full h-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center"
+            class="w-full h-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center"
           >
             <i class="pi pi-image text-gray-500 dark:text-gray-400"></i>
           </div>
-          <span class="absolute bottom-1 right-1 bg-black/70 text-white text-xs px-1 rounded">
+          <span class="absolute bottom-1 right-1 bg-black/80 text-white text-xs px-1.5 py-0.5 rounded-full">
             {{ item.no || index + 1 }}
           </span>
         </div>
       </template>
 
       <!-- Caption (Recipe Name) -->
-      <template #caption v-if="recipe.name">
-        <div class="text-lg font-bold text-center p-2">
-          {{ recipe.name }}
+      <!-- <template #caption v-if="recipe.name">
+        <div class="bg-gradient-to-r from-primary-600 to-primary-800 text-white text-xl md:text-2xl font-bold text-center p-3 rounded-t-lg shadow-md">
+          <div class="flex items-center justify-center gap-2">
+            <i class="pi pi-bookmark"></i>
+            <span>{{ recipe.name }}</span>
+          </div>
+          <div v-if="recipe.description" class="text-sm font-normal mt-1 opacity-90">
+            {{ recipe.description }}
+          </div>
         </div>
-      </template>
+      </template> -->
 
       <!-- Footer with controls -->
       <template #footer>
-        <div class="flex items-stretch bg-surface-950 text-white h-10">
+        <div class="flex items-stretch bg-surface-900 text-gray-600 dark:text-white h-12 rounded-b-lg overflow-hidden">
           <button 
             type="button" 
             @click="onThumbnailButtonClick" 
-            class="bg-transparent border-none rounded-none hover:bg-white/10 text-white inline-flex justify-center items-center cursor-pointer px-3"
+            class="bg-transparent border-none hover:bg-white/10  text-gray-600 dark:text-white inline-flex justify-center items-center cursor-pointer px-4 transition-colors"
+            :title="showThumbnails ? 'Hide thumbnails' : 'Show thumbnails'"
           >
             <i class="pi pi-th-large"></i>
           </button>
           <button 
             type="button" 
             @click="toggleAutoSlide" 
-            class="bg-transparent border-none rounded-none hover:bg-white/10 text-white inline-flex justify-center items-center cursor-pointer px-3"
+            class="bg-transparent border-none hover:bg-white/10 text-gray-600 dark:text-white inline-flex justify-center items-center cursor-pointer px-4 transition-colors"
+            :title="isAutoPlay ? 'Pause slideshow' : 'Play slideshow'"
           >
             <i :class="slideButtonIcon"></i>
           </button>
-          <span v-if="recipe.steps" class="flex items-center gap-4 ml-3">
-            <span class="text-sm">{{ activeIndex + 1 }}/{{ recipe.steps.length }}</span>
-            <span class="font-bold text-sm">Step {{ recipe.steps[activeIndex].no || activeIndex + 1 }}</span>
+          <span v-if="recipe.steps" class="flex items-center gap-4 ml-3 text-sm">
+            <span class="bg-white/10 px-3 py-1 rounded-full">{{ activeIndex + 1 }}/{{ recipe.steps.length }}</span>
+            <span class="font-bold">Step {{ recipe.steps[activeIndex].no || activeIndex + 1 }}</span>
           </span>
           <button 
             type="button" 
             @click="toggleFullScreen" 
-            class="bg-transparent border-none rounded-none hover:bg-white/10 text-white inline-flex justify-center items-center cursor-pointer px-3 ml-auto"
+            class="bg-transparent border-none hover:bg-white/10  text-gray-600 dark:text-white inline-flex justify-center items-center cursor-pointer px-4 ml-auto transition-colors"
+            :title="fullScreen ? 'Exit fullscreen' : 'Enter fullscreen'"
           >
             <i :class="fullScreenIcon"></i>
           </button>
@@ -323,21 +345,20 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-.p-galleria-caption{
-  background: transparent !important;
-}
 .recipe-galleria {
-  max-width: 900px;
+  /* max-width: 900px; */
   margin: 0 auto;
+  border-radius: 0.5rem;
 }
 
 :deep(.p-galleria-thumbnail-item) {
-  opacity: 0.5;
+  opacity: 0.7;
   transition: all 0.3s ease;
 }
 :deep(.p-galleria-thumbnail-item:hover),
 :deep(.p-galleria-thumbnail-item.p-highlight) {
   opacity: 1;
+  transform: scale(1.05);
 }
 
 /* Fullscreen styles */
@@ -352,16 +373,39 @@ onUnmounted(() => {
 }
 
 :deep(.p-galleria.p-galleria-fullscreen .p-galleria-content) {
-  height: calc(100vh - 100px);
+  height: calc(100vh - 120px);
 }
 
 :deep(.p-galleria.p-galleria-fullscreen .p-galleria-item-wrapper) {
   height: 100%;
 }
 
-/* Instruction text styling */
-.instruction-text {
-  word-break: break-word;
-  white-space: pre-line;
+/* Custom scrollbar for content */
+:deep(.p-galleria-item) {
+  overflow-y: auto;
+}
+
+:deep(.p-galleria-item::-webkit-scrollbar) {
+  width: 6px;
+}
+
+:deep(.p-galleria-item::-webkit-scrollbar-track) {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+:deep(.p-galleria-item::-webkit-scrollbar-thumb) {
+  background-color: var(--primary-500);
+  border-radius: 3px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  :deep(.p-galleria-item-wrapper) {
+    flex-direction: column;
+  }
+  
+  :deep(.p-galleria-item) > div {
+    width: 100% !important;
+  }
 }
 </style>

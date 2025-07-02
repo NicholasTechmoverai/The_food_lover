@@ -25,3 +25,9 @@ body{
 .p-colorpicker{
     z-index: 100 !important;
 }
+
+.p-galleria-close-button,
+.p-galleria-next-button,
+.p-galleria-prev-button{
+  z-index: 100;
+}
