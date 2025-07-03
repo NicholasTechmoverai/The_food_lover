@@ -1,18 +1,14 @@
 <template>
     <div class="relative flex min-h-[70vh] h-fit w-full items-center justify-start overflow-hidden bg-gray-100">
         <!-- Enhanced Video Background -->
-        <div class="absolute inset-0 z-0">
+        <div class="absolute inset-0 z-0"
+            style="
+    background: url('https://www.svgbackgrounds.com/wp-content/uploads/2021/05/dragon-scales-purple-circle-pattern.jpg') repeat;">
             <video autoplay loop muted playsinline class="h-full w-full object-cover">
                 <source :src="welcomeMessage.video" type="video/mp4">
 
             </video>
-            <!-- Fallback image with subtle animation -->
-            <img :src="welcomeMessage.image" alt="Kitchen background"
-                class="h-full w-full object-cover transition-opacity duration-1000"
-                :class="{ 'opacity-0': !videoError }" @error="videoError = true">
-            <div
-                class="absolute inset-0 bg-gradient-to-r from-gray-900/30 via-gray-900/10 to-gray-900/40 backdrop-blur-[1px]">
-            </div>
+
         </div>
 
         <!-- Content Container with Smooth Entrance Animation -->
@@ -22,7 +18,7 @@
                 class="h-full  bg-gray-900/55 backdrop-blur-lg p-5 shadow-[5px_0_15px_rgba(0,0,0,0.1)] border-r  border-white/10">
                 <!-- Main Heading with Improved Gradient -->
                 <h1 :style="{ fontFamily: welcomeMessage.fontFamily }"
-                    class="text-4xl font-bold leading-tight sm:text-5xl md:text-6xl mb-8 bg-clip-text text-transparent bg-gradient-to-r from-purple-800 via-amber-600 to-purple-800 bg-size-200 animate-text-gradient">
+                    class=" animate-text-gradient">
                     {{ welcomeMessage.note || 'Welcome to our website!' }}
                 </h1>
 
@@ -93,10 +89,6 @@ const welcomeMessage = siteConfig.welcomeMessage;
     animation: fadeInUp 0.8s ease-out forwards;
 }
 
-.animate-text-gradient {
-    background-size: 200% auto;
-    animation: gradientShift 3s ease infinite;
-}
 
 .animate-fade-in {
     animation: fadeIn 1s ease-out forwards;
@@ -114,19 +106,6 @@ const welcomeMessage = siteConfig.welcomeMessage;
     }
 }
 
-@keyframes gradientShift {
-    0% {
-        background-position: 0% center;
-    }
-
-    50% {
-        background-position: 100% center;
-    }
-
-    100% {
-        background-position: 0% center;
-    }
-}
 
 @keyframes fadeIn {
     from {

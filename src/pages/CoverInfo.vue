@@ -222,7 +222,7 @@
                         <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Popular tags:</p>
                         <div class="flex flex-wrap gap-2">
                             <Chip v-for="tag in popularTags" :key="tag.value" :label="`#${tag}`" :class="{
-                                'bg-primary-100 text-primary-800 dark:bg-primary-900 dark:text-primary-200 cursor-not-allowed': isTagSelected(tag),
+                                'bg-primary-100 text-primary-800 dark:bg-primary-900 dark:text-primary-200 cursor-not-allowed decoration line-through': isTagSelected(tag),
                                 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200 cursor-pointer': !isTagSelected(tag)
                             }" @click="toggleTag(tag)" />
                         </div>
@@ -413,7 +413,7 @@ watch(color, (val) => {
 });
 
 const tagBackground = (tag) => {
-    return isTagSelected(tag) ? `${recipeCover.value.repiceColor}20` : '';
+    return isTagSelected(tag) ? `${recipeCover.value.repiceColor}25` : '';
 };
 
 const triggerFileInput = () => {

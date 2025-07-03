@@ -1,11 +1,11 @@
 <template>
     <div class="overflow-visible h-full relative flex flex-col items-center justify-center z-50">
         <p class="text-center leading-relaxed mt-6">
-            <span class="block text-5xl font-extrabold text-purple-800 font-cursive drop-shadow-sm">{{ cookingHeadline }}</span>
-            <span class="block mt-2 text-lg text-gray-700 font-sans">
+            <span :style="{ fontFamily: siteConfig.welcomeMessage.fontFamily }" class="p-1 font-cursive drop-shadow-sm animate-text-gradient">{{ cookingHeadline }}</span>
+            <span :style="{color:siteConfig.colors.text.secondary}" class="block mt-2 text-lg text-gray-700 font-sans">
                 {{ cookinngMotto }}
             </span>
-            <span class="block text-md mt-1 text-purple-500 font-sans italic">
+            <span :style="{color:siteConfig.colors.text.primary}" class=" block text-md mt-1 text-purple-500 font-sans italic">
                 {{ cookingDescription }}
             </span>
         </p>
@@ -62,6 +62,8 @@ import chickenwings from '../assets/pexels-babydov-7788311-removebg-preview.png'
 import chihuahua from '../assets/pexels-goochie-poochie-3299908-removebg-preview.png';
 import dogfood from '../assets/0nqx8qas-removebg-preview.png';
 import { ref, onMounted } from 'vue';
+import { useSiteStore } from '../config/siteConfig';
+const { siteConfig, getResponsiveValue } = useSiteStore()
 
 const sequence = [
     { fallSymbol: eggs, fallColor: '#facc15', riseSymbol: cookedeggs, riseColor: '#fbbf24' },

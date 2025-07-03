@@ -31,3 +31,25 @@ body{
 .p-galleria-prev-button{
   z-index: 100;
 }
+
+
+.animate-text-gradient {
+    @apply text-4xl font-bold leading-tight sm:text-5xl md:text-6xl mb-8 bg-clip-text text-transparent bg-gradient-to-r from-purple-800 via-amber-600 to-purple-800;
+
+    background-size: 200% auto;
+    animation: gradientShift 3s ease infinite;
+}
+
+@keyframes gradientShift {
+    0% {
+        background-position: 0% center;
+    }
+
+    50% {
+        background-position: 100% center;
+    }
+
+    100% {
+        background-position: 0% center;
+    }
+}

@@ -9,7 +9,7 @@
       </div>
     </div>
 
-        <!-- SIMPLE FILE PREVIEW (image or video) -->
+    <!-- SIMPLE FILE PREVIEW (image or video) -->
     <div v-else-if="inputType === 'file'" class="space-y-1">
       <label class="block text-sm font-medium text-gray-700">{{ displayKeyName }}</label>
       <div v-if="isImage(localValue)" class="preview-box">
@@ -27,38 +27,33 @@
         {{ displayKeyName }}
       </h4>
       <div class="pl-2">
-        <ConfigEditor
-          v-for="(v, k) in localValue"
-          :key="k"
-          :keyName="k"
-          :value="v"
-          @update:modelValue="nv => updateNestedValue(k, nv)"
-        />
+        <ConfigEditor v-for="(v, k) in localValue" :key="k" :keyName="k" :value="v"
+          @update:modelValue="nv => updateNestedValue(k, nv)" />
       </div>
     </div>
 
-      <div v-else-if="inputType === 'object' && isImageObject(localValue)" class="nested space-y-2">
-    <h4 class="font-bold text-gray-500 decoration-1 underline flex items-center gap-2">
-      <i v-if="fieldIcon" :class="fieldIcon" class="text-gray-500"></i>
-      {{ displayKeyName }}
-    </h4>
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <div class="space-y-2">
-        <label class="block text-sm font-medium text-gray-700">Desktop Image</label>
-        <InputText v-model="localValue.desktop" class="w-full" />
-        <div v-if="isImage(localValue.desktop)" class="preview-box mt-2">
-          <img :src="localValue.desktop" class="preview-img" />
+    <div v-else-if="inputType === 'object' && isImageObject(localValue)" class="nested space-y-2">
+      <h4 class="font-bold text-gray-500 decoration-1 underline flex items-center gap-2">
+        <i v-if="fieldIcon" :class="fieldIcon" class="text-gray-500"></i>
+        {{ displayKeyName }}
+      </h4>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="space-y-2">
+          <label class="block text-sm font-medium text-gray-700">Desktop Image</label>
+          <InputText v-model="localValue.desktop" class="w-full" />
+          <div v-if="isImage(localValue.desktop)" class="preview-box mt-2">
+            <img :src="localValue.desktop" class="preview-img" />
+          </div>
         </div>
-      </div>
-      <div class="space-y-2">
-        <label class="block text-sm font-medium text-gray-700">Mobile Image</label>
-        <InputText v-model="localValue.mobile" class="w-full" />
-        <div v-if="isImage(localValue.mobile)" class="preview-box mt-2">
-          <img :src="localValue.mobile" class="preview-img" />
+        <div class="space-y-2">
+          <label class="block text-sm font-medium text-gray-700">Mobile Image</label>
+          <InputText v-model="localValue.mobile" class="w-full" />
+          <div v-if="isImage(localValue.mobile)" class="preview-box mt-2">
+            <img :src="localValue.mobile" class="preview-img" />
+          </div>
         </div>
       </div>
     </div>
-  </div>
 
     <!-- Simple Inputs -->
     <div v-else-if="inputType !== 'object' && inputType !== 'array' && inputType !== 'null'">
@@ -68,7 +63,9 @@
       </label>
 
       <InputText v-if="inputType === 'text'" v-model="localValue" class="w-full" />
-      <input v-else-if="inputType === 'color'" type="color" v-model="localValue" class="input-color" />
+      <ColorPicker  v-else-if="inputType === 'color'" v-model="localValue" format="hex"  class="input-color z-10 w-full" />
+
+      <!-- <input v-else-if="inputType === 'color'" type="color" v-model="localValue" class="input-color" /> -->
       <InputNumber v-else-if="inputType === 'number'" v-model="localValue" class="w-full" />
       <div v-else-if="inputType === 'boolean'" class="flex items-center gap-2">
         <Checkbox v-model="localValue" :binary="true" />
@@ -101,7 +98,8 @@
         {{ displayKeyName }}
       </h4>
       <div v-for="(item, index) in localValue" :key="index" class="nested">
-        <ConfigEditor v-for="(v, k) in item" :key="k" :keyName="k" :value="v" @update:modelValue="nv => updateArrayItem(index, k, nv)" />
+        <ConfigEditor v-for="(v, k) in item" :key="k" :keyName="k" :value="v"
+          @update:modelValue="nv => updateArrayItem(index, k, nv)" />
       </div>
       <Button icon="pi pi-plus" label="Add Item" text @click="addArrayItem" />
     </div>
@@ -113,7 +111,8 @@
         {{ displayKeyName }}
       </h4>
       <div class="nested">
-        <ConfigEditor v-for="(v, k) in localValue" :key="k" :keyName="k" :value="v" @update:modelValue="nv => updateNestedValue(k, nv)" />
+        <ConfigEditor v-for="(v, k) in localValue" :key="k" :keyName="k" :value="v"
+          @update:modelValue="nv => updateNestedValue(k, nv)" />
       </div>
     </div>
   </div>
@@ -142,10 +141,10 @@ const displayKeyName = computed(() => {
 
 
 const isImageObject = (obj) => {
-  return obj && typeof obj === 'object' && 
-         'desktop' in obj && 'mobile' in obj &&
-         typeof obj.desktop === 'string' && 
-         typeof obj.mobile === 'string';
+  return obj && typeof obj === 'object' &&
+    'desktop' in obj && 'mobile' in obj &&
+    typeof obj.desktop === 'string' &&
+    typeof obj.mobile === 'string';
 };
 
 const fieldIcon = computed(() => {
@@ -232,8 +231,26 @@ const clearFile = () => {
   emit('update:modelValue', '')
 }
 
-watch(() => props.value, nv => { localValue.value = nv }, { deep: true })
-watch(localValue, nv => emit('update:modelValue', nv), { deep: true })
+// watch(() => props.value, nv => { localValue.value = nv }, { deep: true })
+watch(localValue, (nv) => {
+  if (inputType.value === 'color') {
+    if (typeof nv === 'string' && !nv.startsWith('#')) {
+      localValue.value = `#${nv}`;
+      return; // avoid double emit
+    }
+  }
+  emit('update:modelValue', localValue.value);
+}, { deep: true });
+
+// watch(localValue, nv => emit('update:modelValue', nv), { deep: true })
+watch(() => props.value, (nv) => {
+  if (inputType.value === 'color' && typeof nv === 'string') {
+    localValue.value = nv.startsWith('#') ? nv : `#${nv}`;
+  } else {
+    localValue.value = nv;
+  }
+}, { deep: true });
+
 </script>
 
 <style scoped>
@@ -245,6 +262,7 @@ watch(localValue, nv => emit('update:modelValue', nv), { deep: true })
   border-radius: 0.375rem;
   cursor: pointer;
 }
+
 .nested {
   padding-left: 1rem;
   border-left: 2px solid #ccc;
@@ -262,11 +280,13 @@ watch(localValue, nv => emit('update:modelValue', nv), { deep: true })
   border-radius: 0.375rem;
   background-color: white;
 }
+
 .input:focus {
   outline: none;
   border-color: #6366f1;
   box-shadow: 0 0 0 1px #6366f1;
 }
+
 .input-color {
   width: 3rem;
   height: 2rem;
@@ -275,6 +295,7 @@ watch(localValue, nv => emit('update:modelValue', nv), { deep: true })
   border-radius: 0.375rem;
   cursor: pointer;
 }
+
 .preview-img {
   max-width: 200px;
   max-height: 150px;
@@ -282,14 +303,17 @@ watch(localValue, nv => emit('update:modelValue', nv), { deep: true })
   border-radius: 0.25rem;
   border: 1px solid #eee;
 }
+
 .nested {
   padding-left: 1rem;
   border-left: 2px solid #ccc;
   margin-bottom: 1rem;
 }
+
 button {
   transition: all 0.2s ease;
 }
+
 button:hover {
   transform: translateY(-1px);
 }

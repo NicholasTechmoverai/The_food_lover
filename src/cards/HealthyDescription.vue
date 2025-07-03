@@ -3,11 +3,11 @@
     <!-- Header with PrimeVue icon -->
     <div class="flex items-center gap-3 mb-4">
       <i class="pi pi-heart-fill text-green-600 text-6xl"></i>
-      <h2 class="text-5xl font-extrabold  font-cursive drop-shadow-sm text-purple-700 font-serif">{{ healthyCard.title }}</h2>
+      <h2 :style="{ fontFamily: siteConfig.welcomeMessage.fontFamily }" class="text-5xl font-extrabold  font-cursive drop-shadow-sm text-purple-700 font-serif animate-text-gradient">{{ healthyCard.title }}</h2>
     </div>
 
     <!-- Benefit Points -->
-    <ul class="text-purple-500 text-md space-y-3 font-light">
+    <ul :style="{ color: siteConfig.colors.text.secondary }"  class="text-purple-500 text-md space-y-3 font-light">
       <li v-for="(point, index) in healthyCard.points" :key="index" class="flex items-start gap-2">
         <i class="pi pi-check-circle text-purple-600 pt-1"></i>
         <span>{{ point }}</span>
@@ -23,6 +23,10 @@
 </template>
 
 <script setup>
+import { useSiteStore } from '../config/siteConfig.js'
+
+const { siteConfig, getResponsiveValue } = useSiteStore()
+
 const healthyCard = {
   title: 'Healthy Tips!Healthy Meals, stay Healthy!',
   points: [

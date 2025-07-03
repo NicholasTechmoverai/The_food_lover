@@ -11,7 +11,7 @@
             <DishCard class="z-30 relative" />
             <ServicesOffered class="z-50 w-full mt-auto flex items-end justify-end p-8 lg:p-[50px]" />
         </section>
-        <div class="flex relative flex-col justify-around gap-2 lg:flex-row bg-amber-300 p-5 z-60">
+        <div class="flex relative flex-col justify-around gap-2 lg:flex-row p-5 z-60" :style="backgroundStyle">
             <TiltedRecipeCard />
             <CookingCard class="relative z-50" />
         </div>
@@ -26,6 +26,7 @@
 </template>
 
 <script setup>
+import { computed } from 'vue'
 import WelcomeMessage from './WelcomeNote.vue';
 import ServicesOffered from './ServicesOffered.vue';
 import SplitterCard from '../cards/Splitter.vue';
@@ -48,7 +49,22 @@ const isMobile = useIsMobile();
 const servicesImage = isMobile
     ? siteConfig.servicesOffred.image.mobile
     : siteConfig.servicesOffred.image.desktop;
+
+// Convert hex to rgba with optional alpha
+function hexToRgba(hex, alpha = 1) {
+  const bigint = parseInt(hex.replace('#', ''), 16)
+  const r = (bigint >> 16) & 255
+  const g = (bigint >> 8) & 255
+  const b = bigint & 255
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`
+}
+
+const backgroundStyle = computed(() => ({
+  background: hexToRgba(siteConfig.colors.primary, 0.7),
+}))    
 </script>
+
+
 
 <style scoped>
 .nav {

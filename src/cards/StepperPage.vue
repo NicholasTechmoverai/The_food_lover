@@ -3,10 +3,10 @@
     <div class="max-w-3xl mx-auto">
       <!-- Header with animated emoji -->
     <div class="text-center mb-8">
-      <h1 class="text-5xl font-extrabold text-purple-800 font-cursive drop-shadow-sm">
+      <h1  :style="{ fontFamily: siteConfig.welcomeMessage.fontFamily }" class="text-5xl font-extrabold text-purple-800 font-cursive drop-shadow-sm animate-text-gradient" >
         {{ timely_headline }}
       </h1>
-      <p class="text-lg text-purple-600 italic mt-2">
+      <p :style="{ color: siteConfig.colors.text.secondary }" class="text-lg text-purple-600 italic mt-2">
         {{ timely_motto }}
       </p>
     </div>
@@ -104,6 +104,9 @@
 
 <script setup>
 import { ref, onMounted, onBeforeUnmount } from 'vue';
+import { useSiteStore } from '../config/siteConfig.js'
+
+const { siteConfig, getResponsiveValue } = useSiteStore()
 
 // Step configuration with more playful content
 const steps = ref([

@@ -6,8 +6,9 @@
 
         <div ref="healthCards"
             class="custom-scrollbar absolute bg-amber-800/10 backdrop-blur-sm left-[39.5%] top-[11.5%] w-[43.5%] h-[58.5%] overflow-y-auto border border-amber-800/20 p-3 space-y-4">
-        
+
             <div v-for="(benefit, index) in healthBenefits" :key="index"
+                :style="currentIndex === index ? { backgroundColor:  `${siteConfig.colors.secondary}75`} : {}"
                 class="card relative group flex items-center gap-3 bg-white/80 rounded-lg p-3 shadow-sm overflow-hidden transition-all duration-300">
                 <component :is="benefit.icon" class="w-6 h-6 text-amber-800 z-10" />
                 <div class="z-10">
@@ -15,6 +16,7 @@
                     <p class="text-xs text-gray-700">{{ benefit.description }}</p>
                 </div>
             </div>
+
         </div>
     </div>
 </template>
@@ -70,7 +72,7 @@ const updateActiveCardOnScroll = () => {
 };
 
 
-let currentIndex = 0;
+const currentIndex = ref(0);
 let scrollDirection = 'down';
 
 const scrollByOneCard = (direction = 'down') => {
@@ -97,10 +99,10 @@ onMounted(() => {
             }
 
             // Set current active
-            const currentCard = cards[currentIndex];
+            const currentCard = cards[currentIndex.value];
             currentCard.classList.add('active');
 
-            currentIndex = (currentIndex + 1) % cards.length;
+            currentIndex.value = (currentIndex.value + 1) % cards.length;
 
             // Handle scroll
             scrollByOneCard(scrollDirection);
@@ -126,7 +128,7 @@ onMounted(() => {
 
 .card.active {
     transform: scale(1.05);
-    background-color: rgba(163, 21, 163, 0.397);
+    /* background-color: rgba(163, 21, 163, 0.397); */
     /* subtle purple highlight */
 }
 

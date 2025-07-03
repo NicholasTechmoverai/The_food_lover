@@ -1,7 +1,8 @@
 <template>
     <div class=" font-[Gill Sans]">
         <MegaMenu :model="menuItems" class="p-4 border-0 rounded-none"
-            style="z-index: 1000; position: fixed ; width: 100%; top: 0; border: 0; border-radius: 0%; background: linear-gradient(to right, #d97706 10%, gray, purple);">
+            style="z-index: 1000; width: 100%; top: 0; border: 0; border-radius: 0%;"
+            :style="{ background: `linear-gradient(to right, ${siteConfig?.colors?.secondary || '#f97316'} 10%, transparent)` }">
 
             <!-- Logo -->
             <template #start>
@@ -11,7 +12,7 @@
                     <span
                         class="hidden md:block text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-purple-300 to-gray-200 dark:from-yellow-400 dark:to-gray-100"
                         style="font-family: 'Caprasimo', sans-serif;">
-                        {{siteConfig.meta.siteName}}
+                        {{ siteConfig.meta.siteName }}
                     </span>
                 </div>
             </template>
@@ -120,8 +121,8 @@
                         <TieredMenu ref="noty_menu" id="overlay_tmenu" :model="noty_menu_items" popup />
                     </div>
                     <div class="card flex justify-center">
-                        <Avatar :image="user.profilePic" aria-haspopup="true"
-                            @click="toggle" shape="circle" size="large"
+                        <Avatar :image="user.profilePic" aria-haspopup="true" @click="toggle" shape="circle"
+                            size="large"
                             class="border-2 border-amber-500 dark:border-amber-400 cursor-pointer hover:scale-105 transition-transform" />
                         <TieredMenu ref="menu" id="overlay_tmenu" :model="Menu_items" popup />
                     </div>
@@ -149,9 +150,9 @@ const messageCount = ref(9);
 const mentionCount = ref(3);
 
 const user = ref({
-    profilePic:'https://cdn-icons-png.flaticon.com/512/3135/3135715.png',
-    id:null,
-    name:null
+    profilePic: 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png',
+    id: null,
+    name: null
 })
 
 const noty_menu_items = ref([

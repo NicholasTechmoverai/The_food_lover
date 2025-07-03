@@ -48,7 +48,7 @@
                 </div>
             </div>
         </div>
-        <div :style="{ backgroundColor: siteConfig.colors.primary }" class="rotate-y-20 -rotate-x-5 absolute left-[15%] -bottom-10 rounded-2xl shadow-2xl w-[90%] h-[100px]">
+        <div :style="{ backgroundColor: siteConfig.colors.secondary }" class="rotate-y-20 -rotate-x-5 absolute left-[15%] -bottom-10 rounded-2xl shadow-2xl w-[90%] h-[100px]">
             <img  class="w-full h-full object-contain" :src="imageLogo" alt="" srcset="">
         </div>
     </div>

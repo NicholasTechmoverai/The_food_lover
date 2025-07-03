@@ -23,18 +23,13 @@ onMounted(() => {
 
 <template>
   <div class="min-h-screen flex flex-col transition-colors duration-300">
-    <Menubar />
-    <router-view class="mt-15"/>
+    <div class="sticky top-0 z-100 backdrop-blur-sm">
+      <Menubar />
+    </div>
+    <router-view class="mt-0" />
     <Footer />
   </div>
 </template>
 
 
-<style scoped>
-.nav {
-  /* position: fixed !important; */
-  top: 0;
-  width: 100%;
-  border-radius: 0 !important;
-}
-</style>
+
