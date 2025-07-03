@@ -23,7 +23,7 @@ onMounted(() => {
 
 <template>
   <div class="min-h-screen flex flex-col transition-colors duration-300">
-    <div class="sticky top-0 z-100 backdrop-blur-sm">
+    <div class="sticky top-0 z-400 backdrop-blur-sm">
       <Menubar />
     </div>
     <router-view class="mt-0" />
