@@ -1,10 +1,11 @@
 <template>
-    <div class=" relative flex-col p-10 py-25 bg-gray-100 flex items-center justify-center bg-cover bg-center bg-fixed" :style="{ backgroundImage: `url(${background_image})`}">
+    <div class="relative flex-col p-10 py-25 bg-gray-100 flex items-center justify-center bg-cover bg-center bg-fixed" :style="{ backgroundImage: `url(${background_image})`}">
         <h2
-            class="text-4xl md:text-6xl lg:text-7xl font-extrabold  font-cursive drop-shadow-sm text-purple-700 font-serif">
+        :style="{ fontFamily: siteConfig.welcomeMessage.fontFamily }" 
+            class="px-4 backdrop-blur-[5px] text-4xl md:text-6xl lg:text-7xl font-extrabold  font-cursive drop-shadow-sm text-purple-700 font-serif animate-text-gradient">
             {{ who_are_we }}
         </h2>
-            from <p class=" b-0 left-[90%] text-gray-500">{{ siteConfig.meta.by }}</p>
+            from <p :style="{ color: siteConfig.colors.text.secondary }"   class=" b-0 left-[90%] text-gray-500">{{ siteConfig.meta.by }}</p>
     </div>
 </template>
 <script setup>
