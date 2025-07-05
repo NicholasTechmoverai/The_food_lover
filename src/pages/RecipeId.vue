@@ -1,6 +1,6 @@
 <template>
     <div
-        class="min-h-screen bg-gradient-to-br  mt-5 md:mt-9 lg:mt-10 from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 p-4 md:p-8 overflow-auto">
+        class="min-h-screen bg-gradient-to-br   from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 p-4 md:p-8 overflow-auto">
         <div class="max-w-6xl mx-auto">
 
             <!-- Recipe Header -->
@@ -121,7 +121,7 @@
 
                 <!-- Recipe Meta Footer -->
                 <footer
-                    class="mt-10 sticky bottom-0 z-10 backdrop-blur-md border-t border-gray-200 dark:border-gray-700 rounded-t-xl  px-0 md:px-6 py-1 md:py-4 shadow-lg"
+                    class="mt-0 sticky bottom-0 z-10 backdrop-blur-md border-t border-gray-200 dark:border-gray-700 rounded-t-xl  px-0 md:px-6 py-1 md:py-4 shadow-lg"
                     :style="{ borderTop: `4px solid ${recipe?.repiceColor || '#f59e0b'}` }">
                     <div class="flex flex-col md:flex-row justify-between items-center gap-1 md:gap-4">
                         <!-- Actions (Like, Save, Share) -->

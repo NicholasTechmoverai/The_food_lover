@@ -5,7 +5,7 @@ const B_URl = 'http://localhost:8000'
 const BACKEND_URL = `${B_URl}/api`
 
 
-export const recipes = ref([
+ const data = [
     {
         id: 1,
         recipeName: 'Beef, Potato, minji stew paired with chapati',
@@ -238,7 +238,7 @@ Stew Procedure step by step `,
             isVerified: false
         }
     }
-]);
+];
 
 export const recipesSteps = ref([
     {
@@ -651,12 +651,12 @@ Stew Procedure step by step ',
     }
 ]);
 
-export const fetchRecipes = () => {
-    return recipes;
+export const fetchRecipes = async () => {
+    return data;
 }
 
 export const fetchRecipeSteps = (ID) => {
-    const cover = recipes.value.find(f => f.id === Number(ID))
+    const cover = data.find(f => f.id === Number(ID))
     const steps = recipesSteps.value.find(f => f.id === Number(ID))
     return [cover, steps]
 }

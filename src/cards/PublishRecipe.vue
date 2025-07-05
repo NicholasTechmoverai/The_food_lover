@@ -49,7 +49,7 @@
       </header>
 
       <!-- Recipe Settings Card -->
-      <div class="bg-white dark:bg-gray-700 rounded-xl shadow-sm p-6">
+      <div class=" bg-white dark:bg-gray-700 rounded-xl shadow-sm p-6">
         <h2 class="text-xl font-semibold mb-4 text-gray-800 dark:text-white">Recipe Settings</h2>
         
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -94,9 +94,9 @@
       </div>
 
       <!-- Recipe Preview Grid -->
-      <div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
+      <div class="relative grid grid-cols-1 xl:grid-cols-2 gap-8">
         <!-- Cover Preview -->
-        <section class="bg-white dark:bg-gray-700 rounded-xl shadow-sm p-6 h-fit xl:sticky xl:top-28">
+        <section  class="sticky top-1 bg-white dark:bg-gray-700 rounded-xl shadow-sm p-6 h-fit xl:sticky xl:top-28">
           <div class="flex justify-between items-center mb-4">
             <h2 class="text-xl font-semibold text-gray-800 dark:text-white">Recipe Cover</h2>
             <Button 

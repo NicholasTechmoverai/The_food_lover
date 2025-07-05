@@ -1,7 +1,7 @@
 <template>
   <div
     class="rounded-2xl overflow-hidden shadow-md transition-transform duration-300 hover:-translate-y-1 hover:shadow-xl bg-white dark:bg-gray-900"
-    :style="{ '--theme-color': recipe.repiceColor || '#f97316' }"
+    :style="{ '--theme-color': recipe?.repiceColor || '#f97316' }"
   >
     <!-- User Profile -->
     <div class="flex justify-between items-center border-b px-4 py-3 dark:border-gray-700">
@@ -31,10 +31,10 @@
       />
       <div class="absolute bottom-2 left-2 flex gap-2">
         <span class="text-xs px-2 py-1 rounded-full bg-black/70 text-white backdrop-blur-sm">
-          {{ recipe.complexityLevel.name }}
+          {{ recipe?.complexityLevel?.name }}
         </span>
         <span class="text-xs px-2 py-1 rounded-full bg-black/70 text-white backdrop-blur-sm flex items-center gap-1">
-          <ClockIcon class="w-4 h-4" /> {{ formatCookTime(recipe.cookTime) }}
+          <ClockIcon class="w-4 h-4" /> {{ formatCookTime(recipe?.cookTime) }}
         </span>
       </div>
     </div>

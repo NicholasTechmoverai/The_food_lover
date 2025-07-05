@@ -3,6 +3,8 @@ import Menubar from './components/menubar.vue';
 import Footer from './pages/MainFooter.vue';
 import { applyTheme } from './reusables'
 import { onMounted } from 'vue'
+import { useControl } from './store/control.js';
+const control = useControl()
 
 // Theme application on app mount
 onMounted(() => {
@@ -23,10 +25,13 @@ onMounted(() => {
 
 <template>
   <div class="min-h-screen flex flex-col transition-colors duration-300">
-    <div class="sticky top-0 z-400 backdrop-blur-sm">
+    <div v-if="control.showNav" class="sticky top-0 z-400 backdrop-blur-sm">
       <Menubar />
     </div>
-    <router-view class="mt-0" />
+    <div class="relative w-full overflow-x-hidden max-w-[2500px] mx-auto">
+    <router-view  />
+
+    </div>
     <Footer />
   </div>
 </template>

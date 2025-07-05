@@ -79,21 +79,20 @@ export const useSiteStore = defineStore('site', () => {
       logoMaxWidth: '300px',
     },
     colors: {
- 
-  primary: '#800000',       // Maroon (core brand color)
-  secondary: '#A52A2A',     // Brownish maroon (warm supporting)
-  accent: '#D2691E',        // Chocolate (for subtle emphasis)
-  highlight: '#B22222',     // Firebrick (vibrant highlight)
-  info: '#8B0000',          // Dark red (alerts, links, etc.)
-  light: '#FBEAEA',         // Light pink background shade
-  dark: '#330000',          // Deep maroon-black
-  background: '#FFF5F5',    // Very light rose for backgrounds
-  surface: '#FAF0F0',       // Surface card color
-  text: {
-    primary: '#2C0A0A',
-    secondary: '#5A3A3A',
-    inverted: '#FAFAFA',
-  },
+      primary: '#800000',       // Maroon (core brand color)
+      secondary: '#A52A2A',     // Brownish maroon (warm supporting)
+      accent: '#D2691E',        // Chocolate (for subtle emphasis)
+      highlight: '#B22222',     // Firebrick (vibrant highlight)
+      info: '#8B0000',          // Dark red (alerts, links, etc.)
+      light: '#FBEAEA',         // Light pink background shade
+      dark: '#330000',          // Deep maroon-black
+      background: '#FFF5F5',    // Very light rose for backgrounds
+      surface: '#FAF0F0',       // Surface card color
+      text: {
+        primary: '#2C0A0A',
+        secondary: '#5A3A3A',
+        inverted: '#FAFAFA',
+      },
 
       gradients: {
         primary: 'linear-gradient(135deg, #007BFF 0%, #00BFFF 100%)',

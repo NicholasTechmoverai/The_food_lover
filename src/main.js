@@ -48,6 +48,10 @@ import ConfirmationService from 'primevue/confirmationservice';
 import SplitButton from 'primevue/splitbutton';
 import ToggleButton from 'primevue/togglebutton';
 import Dropdown from 'primevue/dropdown'
+import Password from 'primevue/password';
+import IconField from 'primevue/iconfield';
+import InputIcon from 'primevue/inputicon';
+
 
 
 import '@fortawesome/fontawesome-free/css/all.min.css';
@@ -105,6 +109,9 @@ app.component('ConfirmDialog',ConfirmDialog)
 app.component('SplitButton',SplitButton)
 app.component('ToggleButton',ToggleButton)
 app.component('Dropdown',Dropdown)
+app.component('Password', Password)
+app.component('IconField', IconField)
+app.component('InputIcon', InputIcon)
 app.use(router)
 app.use(ToastService);
 app.use(ConfirmationService);

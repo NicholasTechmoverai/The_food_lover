@@ -12,6 +12,9 @@ import RecipeId from '../pages/RecipeId.vue'
 import CoverInfo from '../pages/CoverInfo.vue'
 import NewRecipeUploads from '../cards/NewRecipeUploads.vue'
 import PublishRecipe from '../cards/PublishRecipe.vue'
+import RegisterPage from '../pages/RegisterPage.vue'
+import LoginPage from '../cards/LoginCard.vue'
+import SignupPage from '../cards/SignupCard.vue'
 const routes = [
   {
     path: '/',
@@ -73,6 +76,38 @@ const routes = [
       },
     ],
   },
+  {
+    path: '/register',
+    name: 'RegisterPage',
+    component: RegisterPage,
+    children: [
+      {
+        path: '',
+        redirect: '/register/login',
+      },
+      {
+        path: 'login',
+        name: 'LoginPage',
+        component: LoginPage,
+      },
+      {
+        path: 'signup',
+        name: 'SignupPage',
+        component: SignupPage,
+      },
+      {
+        path: 'recover-password',
+        name: 'SignupPage',
+        component: SignupPage,
+      },
+      {
+        path: 'verify',
+        name: 'SignupPage',
+        component: SignupPage,
+      },
+    ],
+  },
+
   {
     path: '/settings',
     name: 'SettingsPage',
