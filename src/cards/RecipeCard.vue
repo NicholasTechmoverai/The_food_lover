@@ -1,6 +1,6 @@
 <template>
   <div
-    class="rounded-2xl overflow-hidden shadow-md transition-transform duration-300 hover:-translate-y-1 hover:shadow-xl bg-white dark:bg-gray-900"
+    class="min-w-[300px] rounded-2xl overflow-hidden shadow-md transition-transform duration-300 hover:-translate-y-1 hover:shadow-xl bg-white dark:bg-gray-900"
     :style="{ '--theme-color': recipe?.repiceColor || '#f97316' }"
   >
     <!-- User Profile -->
@@ -84,10 +84,8 @@
       </div>
       <router-link
         :to="recipeUrl(recipe.recipeName,recipe.id)"
-        class="text-sm bg-[color:var(--theme-color)] text-white px-4 py-1.5 rounded-full flex items-center gap-2 hover:bg-[color:var(--theme-color-dark)]"
       >
-        View Recipe
-        <ArrowRightIcon class="w-4 h-4" />
+        <RecipeButton :theme="recipe.repiceColor" />
       </router-link>
     </div>
 
@@ -110,7 +108,7 @@
 <script setup>
 import { ref, computed } from 'vue';
 // import { ClockIcon, GlobeIcon, ArrowRightIcon } from 'your-icon-library';
-
+import RecipeButton from './RecipeViewButton.vue'
 const props = defineProps({
   recipe: {
     type: Object,

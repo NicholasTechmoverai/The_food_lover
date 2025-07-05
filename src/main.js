@@ -52,6 +52,7 @@ import Password from 'primevue/password';
 import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
 import InputOtp from 'primevue/inputotp';
+import Carousel from 'primevue/carousel';
 
 
 import '@fortawesome/fontawesome-free/css/all.min.css';
@@ -66,6 +67,7 @@ import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
 const app = createApp(App);
 const pinia = createPinia()
 pinia.use(piniaPluginPersistedstate)
+
 
 app.component('Button', Button)
 app.component('Panel', Panel)
@@ -113,6 +115,8 @@ app.component('Password', Password)
 app.component('IconField', IconField)
 app.component('InputIcon', InputIcon)
 app.component('InputOtp',InputOtp)
+app.component('Carousel', Carousel)
+
 app.use(router)
 app.use(ToastService);
 app.use(ConfirmationService);
