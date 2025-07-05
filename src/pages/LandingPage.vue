@@ -24,7 +24,7 @@
             <CookingCard class="relative z-50" />
         </div>
         <TimePage />
-        <div class="flex relative flex-col justify-around md:flex-row bg-gray-100  z-50 pt-5">
+        <div class="flex relative flex-col justify-around lg:flex-row bg-gray-100  z-50 pt-5">
             <InhandPhone class=" max-h-[400px] w-full max-w-[600px]" />
             <HealthyDescription class="m-5" />
         </div>

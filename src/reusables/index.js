@@ -16,6 +16,8 @@ export const copyToClipboard = async (msg) => {
 }
 
 export const applyTheme = (theme) => {
+      console.log("Applying theme", theme)
+
   const root = document.documentElement;
   root.classList.remove('dark', 'my-app-dark'); // Clear all first
 

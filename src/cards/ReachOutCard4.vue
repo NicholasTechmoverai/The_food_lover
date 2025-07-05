@@ -1,8 +1,14 @@
 <template>
-  <div class="bg-[#0f0f1a] p-10 md:p-14 rounded-2xl border border-[#1f1f3a] shadow-2xl relative overflow-hidden">
-    <!-- Header -->
+  <div
+    class="p-8 md:p-12 relative overflow-hidden rounded-3xl"
+    :style="{ backgroundColor: `${siteConfig.colors.secondary}15` }"
+  >
+    <!-- Header (unchanged) -->
     <div class="text-center mb-12 relative z-10">
-      <h2 class="text-4xl font-bold font-cursive drop-shadow-sm text-purple-700 tracking-widest">
+      <h2
+        :style="{ fontFamily: siteConfig.welcomeMessage.fontFamily }"
+        class="text-5xl font-extrabold font-cursive drop-shadow-sm text-purple-700 font-serif animate-text-gradient"
+      >
         {{ siteConfig.reachOut.title }}
       </h2>
       <p class="text-gray-300 mt-4 max-w-2xl mx-auto">
@@ -11,31 +17,70 @@
     </div>
 
     <!-- Card Grid -->
-    <ul class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 relative z-10">
+    <ul class="grid gap-8 sm:grid-cols-2 lg:grid-cols-3 relative z-10">
       <li
         v-for="tool in siteConfig.reachOut.tools"
         :key="tool.name"
-        class="group bg-[#1a1a2e] border border-purple-600/40 hover:border-purple-400 rounded-xl p-6 shadow-lg hover:shadow-purple-500/30 transition-all duration-300 relative"
+        class="group relative"
       >
-        <div class="absolute -inset-1 bg-gradient-to-r from-purple-600 to-blue-600 opacity-20 blur-xl rounded-xl group-hover:opacity-40 transition-all duration-500"></div>
-        <div class="relative flex items-start gap-4">
-          <div class="bg-purple-800/30 p-3 rounded-lg">
-            <i :class="[tool.icon, 'text-xl text-purple-300']"></i>
+        <div
+          class="h-full flex flex-col rounded-2xl overflow-hidden backdrop-blur-md transition-all duration-300 shadow-lg"
+          :style="{
+            background: `linear-gradient(135deg, ${siteConfig.colors.primary}10, ${siteConfig.colors.secondary}30)`,
+            border: `1px solid ${siteConfig.colors.primary}30`
+          }"
+        >
+          <!-- Card Header -->
+          <div class="p-6 pb-0 flex items-center gap-4">
+            <div
+              class="flex items-center justify-center w-12 h-12 rounded-xl"
+              :style="{
+                background: `linear-gradient(135deg, ${siteConfig.colors.primary}10, ${siteConfig.colors.secondary}20)`,
+                border: `1px solid ${siteConfig.colors.primary}20`
+              }"
+            >
+              <i :class="[tool.icon, 'text-xl']" :style="{ color: siteConfig.colors.secondary }" />
+            </div>
+            <h3
+              class="text-lg font-semibold text-gray-700 dark:text-gray-300"
+            >
+              {{ tool.name }}
+            </h3>
           </div>
-          <div>
-            <h3 class="text-lg font-semibold text-white">{{ tool.name }}</h3>
-            <p class="text-sm text-purple-200 mt-1">
+
+          <!-- Card Body -->
+          <div class="p-6 pt-4 flex-grow">
+            <p
+              class="text-sm leading-relaxed"
+              :style="{ color: siteConfig.colors.text.secondary }"
+            >
               {{ tool.description }}
             </p>
+          </div>
+
+          <!-- Card Footer -->
+          <div class="px-6 pb-6 pt-2" v-if="tool.link">
             <a
-              v-if="tool.link"
               :href="tool.link"
-              class="inline-flex mt-3 text-sm text-purple-400 hover:underline"
+              class="inline-flex items-center gap-1 text-sm font-medium transition-all hover:underline"
+              :style="{ color: siteConfig.colors.secondary }"
             >
-              Access →
+              <span>Get Started</span>
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                :stroke="siteConfig.colors.secondary" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M5 12h14M12 5l7 7-7 7" />
+              </svg>
             </a>
           </div>
         </div>
+
+        <!-- Subtle Hover Glow -->
+        <div
+          class="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+          :style="{
+            boxShadow: `0 10px 50px ${siteConfig.colors.secondary}40`
+          }"
+        />
       </li>
     </ul>
   </div>
@@ -44,7 +89,5 @@
 <script setup>
 import { useSiteStore } from '../config/siteConfig.js'
 
-const { siteConfig, getResponsiveValue } = useSiteStore()
-
-;
+const { siteConfig } = useSiteStore()
 </script>

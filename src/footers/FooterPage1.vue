@@ -1,113 +1,162 @@
 <template>
-  <footer class="bg-gray-950 text-gray-100 border-t border-gray-800">
+  <footer
+    class="border-t backdrop-blur-xl text-white dark:text-gray-300"
+    :style="{
+      backgroundColor: siteConfig.colors.secondary + '70',
+      borderColor: siteConfig.colors.secondary + '30'
+    }"
+  >
     <!-- Main Footer Content -->
     <div class="container mx-auto px-4 py-12 grid grid-cols-1 lg:grid-cols-4 gap-10">
+      
       <!-- Brand Column -->
       <div class="space-y-5">
         <RouterLink to="/" class="flex items-center gap-3 group" aria-label="Return to homepage">
-          <div
-            class="h-10 w-10 bg-gradient-to-br from-amber-400 to-orange-500 rounded-lg flex items-center justify-center text-white font-bold text-xl transition-transform group-hover:scale-105">
-            <i class="pi pi-utensils"></i>
-          </div>
-          <span class="text-2xl font-bold bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent">
-            {{ brand.name }}
+         <img @click="goHome" :src="siteConfig.assets.logo" :alt="siteConfig.assets.logoAlt"
+                        class="w-14 h-14 object-contain cursor-pointer" />
+          <span
+            class="text-2xl font-bold bg-clip-text text-transparent"
+            :style="{ backgroundImage: `linear-gradient(to right, ${siteConfig.colors.primary}, ${siteConfig.colors.secondary})` }"
+          >
+            {{ siteConfig.meta.siteName }}
           </span>
         </RouterLink>
 
-        <p class="text-gray-400">{{ brand.description }}</p>
+        <p class="text-white dark:text-gray-400">{{ brand.description }}</p>
 
         <div class="flex gap-4">
-          <a v-for="social in socialLinks" :key="social.name" :href="social.url" :aria-label="social.name"
-            class="p-2 rounded-full bg-gray-800 hover:bg-gray-700 transition-all hover:-translate-y-1 hover:text-amber-400"
-            target="_blank" rel="noopener noreferrer">
-            <i :class="social.icon" class="text-lg"></i>
+          <a
+            v-for="social in socialLinks"
+            :key="social.name"
+            :href="social.url"
+            class="p-2 rounded-full transition-all hover:-translate-y-1 hover:bg-white/10"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <i :class="social.icon" class="text-lg text-white dark:text-gray-300"></i>
           </a>
         </div>
       </div>
 
       <!-- Quick Links -->
       <div v-for="(linkGroup, index) in footerLinks" :key="index">
-        <h3 class="text-lg font-semibold mb-5 flex items-center gap-2">
-          <i :class="linkGroup.icon" class="text-amber-400"></i>
+        <h3 class="text-lg font-semibold mb-5 flex items-center gap-2" :style="{ color: siteConfig.colors.primary }">
+          <i :class="linkGroup.icon"></i>
           {{ linkGroup.title }}
         </h3>
         <ul class="space-y-3">
           <li v-for="link in linkGroup.links" :key="link.name">
-            <RouterLink :to="link.path"
-              class="text-gray-400 hover:text-amber-300 transition-colors flex items-center gap-2 group"
-              active-class="text-amber-400 font-medium">
-              <span class="w-2 h-2 rounded-full bg-transparent group-hover:bg-amber-400 transition-all"></span>
-              {{ link.name }}
+            <RouterLink
+              :to="link.path"
+              class="flex items-center gap-2 group transition-colors"
+              active-class="font-medium"
+            >
+              <span class="w-2 h-2 rounded-full group-hover:scale-125 transition-all"
+                :style="{ backgroundColor: siteConfig.colors.primary + '70' }"
+              ></span>
+              <span class="text-white dark:text-gray-300 group-hover:text-white dark:group-hover:text-gray-100">
+                {{ link.name }}
+              </span>
             </RouterLink>
           </li>
         </ul>
       </div>
 
-      <!-- Hotel/Shop Location + Newsletter -->
+      <!-- Location & Newsletter -->
       <div class="space-y-8">
-        <!-- Animated Hotel/Shop Map Section -->
+        
+        <!-- Map & Address -->
         <div>
-          <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
-            <i class="pi pi-map-marker text-amber-400"></i>
+          <h3 class="text-lg font-semibold mb-4 flex items-center gap-2" :style="{ color: siteConfig.colors.primary }">
+            <i class="pi pi-map-marker"></i>
             Visit Our Food Haven
           </h3>
+
           <div
-            class="aspect-video rounded-xl overflow-hidden border border-gray-800 hover:border-amber-400 transition-colors relative"
-            @mouseenter="startMapAnimation" @mouseleave="stopMapAnimation">
-            <!-- Static preview of hotel/shop -->
-            <img v-if="!showInteractiveMap" :src="hotelPreviewImage" alt="Our food hotel/shop location"
-              class="w-full h-full object-cover brightness-90" :class="{ 'animate-pulse': mapAnimating }">
+            class="aspect-video rounded-xl overflow-hidden border relative transition-colors"
+            :style="{ borderColor: siteConfig.colors.primary + '30' }"
+            @mouseenter="startMapAnimation"
+            @mouseleave="stopMapAnimation"
+          >
+            <img
+              v-if="!showInteractiveMap"
+              :src="hotelPreviewImage"
+              class="w-full h-full object-cover"
+              :class="{ 'animate-pulse': mapAnimating }"
+            />
+            <iframe
+              v-if="showInteractiveMap"
+              :src="hotelMapEmbedUrl"
+              class="w-full h-full"
+              allowfullscreen
+              loading="lazy"
+            ></iframe>
 
-            <!-- Interactive map centered on hotel/shop -->
-            <iframe v-if="showInteractiveMap" :src="hotelMapEmbedUrl" class="w-full h-full"
-              title="Interactive map showing our food hotel/shop location"
-              aria-label="Interactive map of our establishment" allowfullscreen loading="lazy"
-              referrerpolicy="no-referrer-when-downgrade"></iframe>
-
-            <!-- Overlay with "Explore Location" text -->
-            <div v-if="!showInteractiveMap"
-              class="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center transition-opacity"
-              :class="{ 'opacity-0': mapAnimating }">
-              <span class="bg-amber-500 text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2">
-                <i class="pi pi-compass"></i>
-                Explore Location
+            <div
+              v-if="!showInteractiveMap"
+              class="absolute inset-0 flex items-center justify-center bg-black/30"
+              :class="{ 'opacity-0': mapAnimating }"
+            >
+              <span class="px-4 py-2 rounded-lg font-medium flex items-center gap-2 text-white"
+                :style="{ backgroundColor: siteConfig.colors.primary }"
+              >
+                <i class="pi pi-compass"></i> Explore Location
               </span>
             </div>
           </div>
-          <address class="mt-3 text-sm text-gray-400 not-italic">
+
+          <address class="mt-3 text-sm not-italic space-y-2">
             <div class="flex items-start gap-2">
-              <i class="pi pi-home mt-0.5 text-amber-400"></i>
-              {{ contactInfo.address }}
+              <i class="pi pi-home" :style="{ color: siteConfig.colors.primary }"></i>
+              <span class="text-white dark:text-gray-400">{{ contactInfo.address }}</span>
             </div>
-            <div class="mt-2 flex items-center gap-2 text-amber-400">
-              <i class="pi pi-phone"></i>
-              {{ contactInfo.phone }}
+            <div class="flex items-center gap-2">
+              <i class="pi pi-phone" :style="{ color: siteConfig.colors.primary }"></i>
+              <span class="text-white dark:text-gray-400">{{ contactInfo.phone }}</span>
             </div>
-            <div class="mt-2 flex items-center gap-2 text-amber-400">
-              <i class="pi pi-clock"></i>
-              {{ contactInfo.hours }}
+            <div class="flex items-center gap-2">
+              <i class="pi pi-clock" :style="{ color: siteConfig.colors.primary }"></i>
+              <span class="text-white dark:text-gray-400">{{ contactInfo.hours }}</span>
             </div>
           </address>
         </div>
 
-        <!-- Foodie Newsletter -->
+        <!-- Newsletter -->
         <div>
-          <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
-            <i class="pi pi-inbox text-amber-400"></i>
+          <h3 class="text-lg font-semibold mb-4 flex items-center gap-2" :style="{ color: siteConfig.colors.primary }">
+            <i class="pi pi-inbox"></i>
             Foodie Newsletter
           </h3>
-          <p class="text-gray-400 mb-4">Get weekly recipes, special offers, and dining tips</p>
-
+          <p class="text-white dark:text-gray-300 mb-4">
+            Get weekly recipes, special offers, and dining tips.
+          </p>
           <form @submit.prevent="subscribe" class="space-y-3">
-            <InputText v-model="email" type="email" required placeholder="Your email address"
-              aria-label="Email for food newsletter subscription"
-              class="w-full bg-gray-800 border-gray-700 placeholder-gray-500 focus:ring-2 focus:ring-amber-400 focus:border-transparent" />
-            <Button type="submit" :label="isSubmitting ? 'Subscribing...' : 'Get Food Updates'"
-              :icon="isSubmitting ? 'pi pi-spinner pi-spin' : 'pi pi-send'" iconPos="right" :disabled="isSubmitting"
-              class="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 border-none shadow-lg hover:shadow-amber-500/20 transition-all" />
+            <InputText
+              v-model="email"
+              type="email"
+              required
+              placeholder="Your email address"
+              class="w-full bg-white/5 border-gray-400/30 text-white dark:text-gray-200 placeholder-gray-400/70"
+            />
+            <Button
+              type="submit"
+              :label="isSubmitting ? 'Subscribing...' : 'Get Updates'"
+              :icon="isSubmitting ? 'pi pi-spinner pi-spin' : 'pi pi-send'"
+              iconPos="right"
+              :disabled="isSubmitting"
+              class="w-full"
+              :style="{
+                backgroundImage: `linear-gradient(to right, ${siteConfig.colors.primary}, ${siteConfig.colors.secondary})`,
+                border: 'none',
+                color: 'white',
+              }"
+            />
           </form>
-          <p v-if="subscriptionMessage" class="mt-2 text-sm animate-fade-in"
-            :class="subscriptionSuccess ? 'text-green-400' : 'text-red-400'">
+          <p
+            v-if="subscriptionMessage"
+            class="mt-2 text-sm animate-fade-in"
+            :class="subscriptionSuccess ? 'text-green-400' : 'text-red-400'"
+          >
             <i :class="subscriptionSuccess ? 'pi pi-check-circle' : 'pi pi-exclamation-circle'" class="mr-1"></i>
             {{ subscriptionMessage }}
           </p>
@@ -116,26 +165,33 @@
     </div>
 
     <!-- Footer Bottom -->
-    <div class="border-t border-gray-800 py-6 bg-gray-900/50">
+    <div class="py-6 border-t border-white/10 bg-white/5 dark:bg-black/10">
       <div class="container mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-4">
-        <p class="text-gray-500 text-sm">
+        <p class="text-sm text-white dark:text-gray-400">
           &copy; {{ new Date().getFullYear() }} {{ brand.name }}. All culinary rights reserved.
         </p>
-
         <div class="flex items-center gap-6">
-          <RouterLink v-for="legal in legalLinks" :key="legal.name" :to="legal.path"
-            class="text-gray-500 hover:text-gray-300 text-sm transition-colors hover:underline">
+          <RouterLink
+            v-for="legal in legalLinks"
+            :key="legal.name"
+            :to="legal.path"
+            class="text-sm hover:underline text-white dark:text-gray-400 hover:text-gray-200"
+          >
             {{ legal.name }}
           </RouterLink>
         </div>
-
         <div class="flex items-center gap-4">
-          <span class="text-gray-500 text-sm">Dine with us:</span>
-          <a v-for="reservation in reservationPlatforms" :key="reservation.name" :href="reservation.url"
-            class="hover:opacity-80 transition-opacity hover:-translate-y-0.5" target="_blank"
-            rel="noopener noreferrer">
+          <span class="text-sm text-white dark:text-gray-400">Dine with us:</span>
+          <a
+            v-for="reservation in reservationPlatforms"
+            :key="reservation.name"
+            :href="reservation.url"
+            target="_blank"
+            class="hover:opacity-80 transition-opacity hover:-translate-y-0.5"
+          >
             <div
-              class="h-8 px-3 bg-gray-800 rounded flex items-center justify-center text-xs font-medium text-gray-300 border border-gray-700">
+              class="h-8 px-3 rounded flex items-center justify-center text-xs font-medium border border-white/10 bg-white/10 dark:bg-black/10 text-white dark:text-gray-300"
+            >
               <i :class="reservation.icon" class="mr-1"></i>
               {{ reservation.name }}
             </div>

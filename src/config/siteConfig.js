@@ -12,7 +12,7 @@ import design_video from '../assets/3255109-uhd_3840_2160_25fps-compress.mp4'
 import design_image from '../assets/chips1.jpg'
 
 export const useSiteStore = defineStore('site', () => {
-  const defaultSiteName = "The Food Lover"
+  const defaultSiteName = "The Food Lovers"
   const defaultAuthor = "Ruth larry's Kitchen"
 
   const siteConfig = ref({
@@ -57,7 +57,7 @@ export const useSiteStore = defineStore('site', () => {
       ],
     },
     reachOut: {
-      card: 1,
+      card: 4,
       video: design_video,
       image: design_image,
       title: 'Join Our Flavorful Journey',

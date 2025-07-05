@@ -81,7 +81,7 @@
               <Checkbox id="remember" name="remember" binary />
               <label for="remember" class="ml-2 text-sm text-gray-600 dark:text-gray-400">Remember me</label>
             </div>
-            <router-link to="/recover-password"  class="text-sm text-primary-600 dark:text-primary-400 hover:underline">Forgot password?</router-link>
+            <router-link to="/register/recover-password"  class="text-sm text-primary-600 dark:text-primary-400 hover:underline">Forgot password?</router-link>
           </div>
 
           <!-- Submit Button -->

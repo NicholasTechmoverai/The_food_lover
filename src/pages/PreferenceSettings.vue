@@ -33,13 +33,13 @@
     <div class="grid grid-cols-2 gap-4 pt-4">
       <div>
         <label for="primarycolor" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Primary
-          Color {{ customColors.primary }}</label>
+          Color </label>
         <ColorPicker inputId="primarycolor" v-model="customColors.primary" format="hex" class="w-full" />
       </div>
 
       <div>
         <label for="secondarycolor" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Secondary
-          Color  {{ customColors.secondary }}</label>
+          Color </label>
 
         <ColorPicker inputId="secondarycolor" v-model="customColors.secondary" format="hex" class="w-full" />
       </div>
