@@ -126,7 +126,7 @@
 
                     <!-- Submit Button -->
                     <Button v-if="!loading"  type="submit" label="Sign Up"
-                        class="w-full py-3 bg-gradient-to-r from-primary-500 to-primary-600 dark:from-primary-600 dark:to-primary-700 hover:from-primary-600 hover:to-primary-700 dark:hover:from-primary-700 dark:hover:to-primary-800 text-white font-medium rounded-lg transition-all duration-200 shadow-md hover:shadow-lg mt-2" />
+                        class="w-full py-4 bg-gradient-to-r from-primary-500 to-primary-600 dark:from-primary-600 dark:to-primary-700 hover:from-primary-600 hover:to-primary-700 dark:hover:from-primary-700 dark:hover:to-primary-800 text-white font-medium rounded-lg transition-all duration-200 shadow-md hover:shadow-lg mt-2" />
                     <div v-if="loading" class="flex flex-row gap-3 items-center justify-center">
                         <Button :disabled="loading" label="Creating account..."
                             class="max-w-[200px] py-3 bg-primary-500 hover:bg-primary-600 dark:bg-primary-600 dark:hover:bg-primary-700 text-white font-medium rounded-lg transition-colors duration-200 shadow-md" />

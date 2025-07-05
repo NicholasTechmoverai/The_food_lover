@@ -59,10 +59,10 @@
           </div>
 
           <!-- Submit Button -->
-          <Button type="submit" v-if="!loading" :disabled="loading" :label="loading ? 'Signing in...' : 'Sign In'"
+          <Button type="submit" v-if="!loading" label="Sign In"
             class="w-full py-3 bg-primary-500 hover:bg-primary-600 dark:bg-primary-600 dark:hover:bg-primary-700 text-white font-medium rounded-lg transition-colors duration-200 shadow-md" />
 
-          <div v-if="loading" class="flex flex-row items-center justify-center">
+          <div v-if="loading" class="flex gap-4 flex-row items-center justify-center">
             <Button :disabled="loading" label="Signing in..."
               class="max-w-[200px] py-3 bg-primary-500 hover:bg-primary-600 dark:bg-primary-600 dark:hover:bg-primary-700 text-white font-medium rounded-lg transition-colors duration-200 shadow-md" />
             <Clock />
