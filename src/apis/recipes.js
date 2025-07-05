@@ -1,11 +1,11 @@
 import axios from 'axios'
 import { ref } from "vue";
 
-const B_URl = 'http://localhost:8000'
+import { B_URl } from './auth';
 const BACKEND_URL = `${B_URl}/api`
 
 
- const data = [
+const data = [
     {
         id: 1,
         recipeName: 'Beef, Potato, minji stew paired with chapati',
@@ -275,12 +275,12 @@ Stew Procedure step by step ',
                 no: 3,
                 timeRequired: { hr: 0, min: 15 },
                 tempRequired: 100,
-                ingredientsUsed: ['paprika','curry powder'],
+                ingredientsUsed: ['paprika', 'curry powder'],
                 instructions: `Add paprika,curry powder stir and let it cook until fragrant`,
                 image: 'https://scontent-mba2-1.xx.fbcdn.net/v/t39.30808-6/514688919_3827252700752132_5416736835830599229_n.jpg?stp=dst-jpg_tt6&cstp=mx2048x1761&ctp=s2048x1761&_nc_cat=103&ccb=1-7&_nc_sid=833d8c&_nc_ohc=C8JYkLirYoQQ7kNvwGRw5jq&_nc_oc=AdkPITfI7W3iEwdM-EsuyYWUrLNeuphhOtHrY_2KaYIhvsTx1lBV5oeDISxFzRgI-J9EeU4G_DOFsdVKznyke_XY&_nc_zt=23&_nc_ht=scontent-mba2-1.xx&_nc_gid=mdU1i0fEklY8x--AX9jOYA&oh=00_AfPL3-5QWxiQftT12AX-2tz0IwxK6K6q6pumR2b1RlGgdw&oe=686AE2DC',
                 videoUrl: ''
             },
-                    {
+            {
                 no: 4,
                 timeRequired: { hr: 0, min: 15 },
                 tempRequired: 100,
@@ -288,19 +288,19 @@ Stew Procedure step by step ',
                 instructions: `Add preboiled beef stir and let it cook until golden`,
                 image: 'https://scontent-mba2-1.xx.fbcdn.net/v/t39.30808-6/514530503_3827253807418688_7802296055289028848_n.jpg?_nc_cat=107&ccb=1-7&_nc_sid=833d8c&_nc_ohc=gfHkFkOCqBAQ7kNvwEu5xuC&_nc_oc=AdkzaihNSq8BgebFmb2Cvm3PTPH1W-dCqlj66G5THKtYhl3LPKB1BcuLOVffttR8n5cV5wddK-hCGqSiebk4QG2a&_nc_zt=23&_nc_ht=scontent-mba2-1.xx&_nc_gid=NjEwe_iB-KBn7LuoF2tHPg&oh=00_AfN_XA6XBcF6RyEDX551yY_wyPh5eu45R4Pe-_LK04UVxg&oe=686AF090',
                 videoUrl: ''
-            } ,   {
+            }, {
                 no: 5,
                 timeRequired: { hr: 0, min: 15 },
                 tempRequired: 10,
-                ingredientsUsed: ['paprika','curry powder'],
+                ingredientsUsed: ['paprika', 'curry powder'],
                 instructions: `Like so`,
                 image: 'https://scontent-mba2-1.xx.fbcdn.net/v/t39.30808-6/514534584_3827254644085271_7552588726397617678_n.jpg?_nc_cat=108&ccb=1-7&_nc_sid=833d8c&_nc_ohc=LFnozi3kc2EQ7kNvwER0Rrq&_nc_oc=Adm_u-OjSNSDInylVMhgMiz0ckFZv-W8KTFP2lBinvgN-xXv-MwiJLLX59OAkHALrTmNA7aQHnYuev9-U4kNhEKu&_nc_zt=23&_nc_ht=scontent-mba2-1.xx&_nc_gid=KT-ZPXOO1ZSFXStL1okW5A&oh=00_AfMKb98unI4gasdhF9BGDKgH0TdXtnACdzQA3yUJk41sNw&oe=686AE65E',
                 videoUrl: ''
-            }    ,    {
+            }, {
                 no: 6,
                 timeRequired: { hr: 0, min: 15 },
                 tempRequired: 100,
-                ingredientsUsed: ['paprika','curry powder'],
+                ingredientsUsed: ['paprika', 'curry powder'],
                 instructions: `Potato, beef,minji stew `,
                 image: 'https://scontent-mba2-1.xx.fbcdn.net/v/t39.30808-6/515046553_3827250017419067_1296367899331253428_n.jpg?_nc_cat=106&ccb=1-7&_nc_sid=833d8c&_nc_ohc=HY21yfQJ75EQ7kNvwGhOHz9&_nc_oc=AdnjJE9MSEtInLj07TkwBkEDoA1xFNVd07tBmaCuT7m7tmXVLZFA0TBLmJQk0gPXmGMcJvx8eBZE3HJSnxvN91HP&_nc_zt=23&_nc_ht=scontent-mba2-1.xx&_nc_gid=FAU8dW_8ieK4iM3o2y_gwg&oh=00_AfMQ3zL95OuTRdM2B5qDdAwD1Ri4rjdfExIKRF1fG6Xrpw&oe=686AFFE8',
                 videoUrl: ''
