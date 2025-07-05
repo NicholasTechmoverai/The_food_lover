@@ -83,7 +83,7 @@
         </span>
       </div>
       <router-link
-        :to="`/recipes/${recipe.recipeName}/${recipe.id}`"
+        :to="recipeUrl(recipe.recipeName,recipe.id)"
         class="text-sm bg-[color:var(--theme-color)] text-white px-4 py-1.5 rounded-full flex items-center gap-2 hover:bg-[color:var(--theme-color-dark)]"
       >
         View Recipe
@@ -158,4 +158,9 @@ const truncateDescription = (desc) => {
 const shouldShowMore = computed(() => {
   return props.recipe.description?.replace(/<[^>]*>/g, '').length > 100;
 });
+
+const recipeUrl = (name, id) => {
+  return `/recipes/${name.replace(/\s+/g, '-').toLowerCase()}/${id}`;
+};
+
 </script>

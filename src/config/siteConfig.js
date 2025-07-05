@@ -186,7 +186,45 @@ export const useSiteStore = defineStore('site', () => {
     return config[key]?.desktop || config[key]
   }
 
+const adjustThemesColor = (colors) => {
+  if (!colors) return
+
+  const target = siteConfig.value.colors
+
+  // Top-level color fields
+  if (colors.primary) target.primary = polishColor(colors.primary)
+  if (colors.secondary) target.secondary = polishColor(colors.secondary)
+  if (colors.accent) target.accent = colors.accent
+  if (colors.highlight) target.highlight = colors.highlight
+  if (colors.info) target.info = colors.info
+  if (colors.light) target.light = colors.light
+  if (colors.dark) target.dark = colors.dark
+  if (colors.background) target.background = colors.background
+  if (colors.surface) target.surface = colors.surface
+
+  // Nested text colors
+  if (colors.text) {
+    if (colors.text.primary) target.text.primary = colors.text.primary
+    if (colors.text.secondary) target.text.secondary = colors.text.secondary
+    if (colors.text.inverted) target.text.inverted = colors.text.inverted
+  }
+
+  // Nested gradient colors
+  if (colors.gradients) {
+    if (colors.gradients.primary) target.gradients.primary = colors.gradients.primary
+    if (colors.gradients.wave) target.gradients.wave = colors.gradients.wave
+  }
+
+  console.log('Updated theme colors:', colors ,'updated to',target)
+}
+
+const  polishColor = (nv) =>{
+  return nv.startsWith('#') ? nv : `#${nv}`;
+}
+
+
   return {
+    adjustThemesColor,
     siteConfig,
     getResponsiveValue,
   }

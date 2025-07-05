@@ -6,7 +6,7 @@
             <!-- Recipe Header -->
             <header class="mb-10 animate-fade-in">
                 <!-- Main Hero Container -->
-                <div class="relative overflow-hidden rounded-3xl shadow-xl bg-white dark:bg-gray-900 flex flex-col md:flex-row items-center gap-6 p-6 md:p-10"
+                <div class="relative overflow-hidden rounded-3xl p-1  flex flex-col md:flex-row items-center gap-6 "
                     :style="{ borderLeft: `6px solid ${recipe?.repiceColor || '#f97316'}` }">
                     <!-- Dish Image -->
                     <img v-if="recipe?.image" :src="recipe.image" :alt="recipe.recipeName || 'Meal cover'"
@@ -121,7 +121,7 @@
 
                 <!-- Recipe Meta Footer -->
                 <footer
-                    class="mt-0 sticky bottom-0 z-10 backdrop-blur-md border-t border-gray-200 dark:border-gray-700 rounded-t-xl  px-0 md:px-6 py-1 md:py-4 shadow-lg"
+                    class="mt-10 sticky bottom-0 z-10 backdrop-blur-md border-t border-gray-200 dark:border-gray-700 rounded-t-xl  px-0 md:px-6 py-1 md:py-4 shadow-lg"
                     :style="{ borderTop: `4px solid ${recipe?.repiceColor || '#f59e0b'}` }">
                     <div class="flex flex-col md:flex-row justify-between items-center gap-1 md:gap-4">
                         <!-- Actions (Like, Save, Share) -->

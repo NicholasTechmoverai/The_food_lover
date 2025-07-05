@@ -51,7 +51,7 @@ import Dropdown from 'primevue/dropdown'
 import Password from 'primevue/password';
 import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
-
+import InputOtp from 'primevue/inputotp';
 
 
 import '@fortawesome/fontawesome-free/css/all.min.css';
@@ -112,6 +112,7 @@ app.component('Dropdown',Dropdown)
 app.component('Password', Password)
 app.component('IconField', IconField)
 app.component('InputIcon', InputIcon)
+app.component('InputOtp',InputOtp)
 app.use(router)
 app.use(ToastService);
 app.use(ConfirmationService);

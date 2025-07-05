@@ -15,6 +15,7 @@ import PublishRecipe from '../cards/PublishRecipe.vue'
 import RegisterPage from '../pages/RegisterPage.vue'
 import LoginPage from '../cards/LoginCard.vue'
 import SignupPage from '../cards/SignupCard.vue'
+import RecoverPassword from '../cards/RecoverPassword.vue'
 const routes = [
   {
     path: '/',
@@ -97,14 +98,14 @@ const routes = [
       },
       {
         path: 'recover-password',
-        name: 'SignupPage',
-        component: SignupPage,
+        name: 'RecoverPassword',
+        component: RecoverPassword,
       },
-      {
-        path: 'verify',
-        name: 'SignupPage',
-        component: SignupPage,
-      },
+      // {
+      //   path: 'verify',
+      //   name: 'SignupVerifyPage', // ✅ renamed
+      //   component: SignupPage,
+      // },
     ],
   },
 

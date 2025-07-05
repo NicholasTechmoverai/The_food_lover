@@ -1,20 +1,24 @@
 <template>
   <div>
-    <component :is="MenuBar"/>
+    <component :is="MenuBar" :user="user" />
   </div>
 </template>
 
 <script setup>
+import { computed } from 'vue'
 import { useSiteStore } from '../config/siteConfig.js'
+import { useAuthStore } from '../store/user.js'
 
-const { siteConfig, getResponsiveValue } = useSiteStore();
-import { computed } from 'vue';
-import MenuBar1 from "../menubars/menubar1.vue";
+import MenuBar1 from "../menubars/menubar1.vue"
+
+const { siteConfig } = useSiteStore()
+const auth = useAuthStore()
+
+const user = computed(() => auth.user)
 
 const MenuBar = computed(() => {
-  const card = siteConfig.components.menuBar;
-
-  if (card === 1) return MenuBar1;
-  else return MenuBar1; // Fallback
-});
+  const bar = siteConfig.components.menuBar
+  if (bar === 1) return MenuBar1
+  return MenuBar1 
+})
 </script>

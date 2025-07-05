@@ -107,7 +107,7 @@
 
             <!-- Right Icons -->
             <template #end>
-                <div class="flex items-center gap-3">
+                <div v-if="user && user.id" class="flex items-center gap-3">
                     <Button icon="pi pi-bookmark" severity="secondary" rounded aria-label="Saved"
                         class="border-purple-400 dark:border-purple-300 text-purple-400 dark:text-purple-300 hover:bg-purple-400/10 dark:hover:bg-purple-300/10 w-10 h-10" />
                     <div class="relative">
@@ -127,7 +127,25 @@
                         <TieredMenu ref="menu" id="overlay_tmenu" :model="Menu_items" popup />
                     </div>
                 </div>
+                <div v-else class="flex items-center space-x-3 shrink-0">
+                    <router-link to="/register/login">
+                        <component :is="LoginButton" :theme="siteConfig.colors.secondary"
+                            class="transition duration-150 ease-in-out hover:opacity-90" aria-label="Login" />
+                    </router-link>
+
+                    <router-link to="/register/signup">
+                        <component :is="SignupButton" :theme="siteConfig.colors.secondary"
+                            class="transition duration-150 ease-in-out hover:opacity-90" aria-label="Sign up" />
+                    </router-link>
+
+
+                    <i class="pi pi-spin pi-cog" :style="{ color: siteConfig.colors.secondary }"
+                        @click="router.push('/settings/preferences')" style="font-size: 1rem; cursor: pointer;"></i>
+
+                </div>
+
             </template>
+            \
         </MegaMenu>
 
     </div>
@@ -138,13 +156,24 @@
 import { ref } from "vue";
 // import {  useIsMobile } from '../reusables';
 import { useSiteStore } from '../config/siteConfig.js'
+import SignupButton from "../cards/SignupButton.vue";
+import LoginButton from "../cards/LoginButton.vue";
 
 const { siteConfig, getResponsiveValue } = useSiteStore()
 import router from "../router/index.js";
 import { goHome } from "../reusables/index.js"
 const menu = ref();
 const noty_menu = ref();
+const props = defineProps({
+    user: {
+        type: Object,
+        required: true,
+        default: () => ({
+            user: null
+        })
+    },
 
+});
 const likeCount = ref(150);
 const messageCount = ref(9);
 const mentionCount = ref(3);

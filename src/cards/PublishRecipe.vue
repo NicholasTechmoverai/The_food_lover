@@ -259,8 +259,13 @@ const listTypeOptions = [
 
 const recipeUrl = computed(() => {
   if (!recipeCover.value.id) return '';
-  return `${window.location.origin}/recipes/${recipeCover.value.recipeName}/${recipeCover.value.id}`;
+  return `${window.location.origin}/recipes/${recipeCover.value.recipeName.replace(/\s+/g, '-').toLowerCase()}/${recipeCover.value.id}`;
 });
+
+// const recipeUrl = (name, id) => {
+//   return `/recipes/${name.replace(/\s+/g, '-').toLowerCase()}/${id}`;
+// };
+
 
 const getContrastColor = (hexColor) => {
   if (!hexColor) return '#ffffff';
