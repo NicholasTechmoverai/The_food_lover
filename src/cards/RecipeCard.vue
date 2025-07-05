@@ -1,6 +1,6 @@
 <template>
   <div
-    class="min-w-[300px] rounded-2xl overflow-hidden shadow-md transition-transform duration-300 hover:-translate-y-1 hover:shadow-xl bg-white dark:bg-gray-900"
+    class="min-w-[300px] overflow-hidden shadow-md transition-transform duration-300 hover:-translate-y-1 hover:shadow-xl bg-white dark:bg-gray-900"
     :style="{ '--theme-color': recipe?.repiceColor || '#f97316' }"
   >
     <!-- User Profile -->

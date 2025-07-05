@@ -36,7 +36,7 @@
         </h2>
 
 
-        <div class="grid gap-6 grid-cols-1 sm:grid-cols-2">
+        <div class="grid gap-3 grid-cols-1 sm:grid-cols-2">
           <RecipeCard v-for="recipe in recipes.slice(0, 4)" :key="recipe.id" :recipe="recipe" />
           <button class="underlined cursor-pointer">Show more <i class="pi pi-arrow-right"></i></button>
         </div>
