@@ -90,7 +90,7 @@
                     </div>
 
                     <!-- Confirm Password Field -->
-                    <div  v-if="$form.password?.value && !$form.password?.invalid" class="space-y-1">
+                    <div v-if="$form.password?.value && !$form.password?.invalid" class="space-y-1">
                         <FloatLabel variant="on">
                             <IconField class="relative">
                                 <InputIcon class="pi pi-lock " />
@@ -125,9 +125,13 @@
 
 
                     <!-- Submit Button -->
-                    <Button type="submit" label="Sign Up"
+                    <Button v-if="!loading"  type="submit" label="Sign Up"
                         class="w-full py-3 bg-gradient-to-r from-primary-500 to-primary-600 dark:from-primary-600 dark:to-primary-700 hover:from-primary-600 hover:to-primary-700 dark:hover:from-primary-700 dark:hover:to-primary-800 text-white font-medium rounded-lg transition-all duration-200 shadow-md hover:shadow-lg mt-2" />
-
+                    <div v-if="loading" class="flex flex-row gap-3 items-center justify-center">
+                        <Button :disabled="loading" label="Creating account..."
+                            class="max-w-[200px] py-3 bg-primary-500 hover:bg-primary-600 dark:bg-primary-600 dark:hover:bg-primary-700 text-white font-medium rounded-lg transition-colors duration-200 shadow-md" />
+                        <Clock />
+                    </div>
                     <!-- Login Link -->
                     <div class="text-center text-sm text-gray-600 dark:text-gray-400 mt-4">
                         Already have an account?
@@ -157,9 +161,12 @@ import { zodResolver } from '@primevue/forms/resolvers/zod'
 import { useToast } from 'primevue/usetoast'
 import { z } from 'zod'
 import { useSiteStore } from '../config/siteConfig'
+import { Signup } from '../apis/auth'
+import Clock from '../loaders/Clock.vue'
 
 const { siteConfig } = useSiteStore()
 const toast = useToast()
+const loading = ref(false)
 
 const initialValues = ref({
     email: '',
@@ -200,14 +207,25 @@ const loginWithFacebook = () => {
     // Implement Facebook login logic
     console.log('Logging in with Facebook');
 };
-const onFormSubmit = ({ valid, values }) => {
+const onFormSubmit = async ({ valid, values }) => {
     if (valid) {
-        toast.add({
-            severity: 'success',
-            summary: 'Sign up successful',
-            detail: `Welcome, ${values.email}`,
-            life: 3000
-        })
+        loading.value = true
+        const res = await Signup(values);
+        if (res) {
+            loading.value = false
+            if (res.message) {
+                toast.add({
+                    severity: res.success ? 'success' : 'error',
+                    summary: res.success ? 'Login successful' : 'Error logging in!',
+                    detail: `${res.message}`,
+                    life: 5000
+                });
+            }
+            if (res.success) {
+                router.push('/recipes')
+            }
+        }
+
     }
-}
+};
 </script>
