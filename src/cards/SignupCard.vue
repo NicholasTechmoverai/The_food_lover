@@ -162,7 +162,7 @@ import { useToast } from 'primevue/usetoast'
 import { z } from 'zod'
 import { useSiteStore } from '../config/siteConfig'
 import { Signup } from '../apis/auth'
-import Clock from '../loaders/Clock.vue'
+import Clock from '../loaders/ClockLoad.vue'
 
 const { siteConfig } = useSiteStore()
 const toast = useToast()

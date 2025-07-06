@@ -83,7 +83,7 @@
 <script setup>
 import { ref } from 'vue';
 import { Form } from '@primevue/forms';
-import Clock from '../loaders/Clock.vue';
+import Clock from '../loaders/ClockLoad.vue';
 import FloatLabel from 'primevue/floatlabel';
 import Button from 'primevue/button';
 import Message from 'primevue/message';
