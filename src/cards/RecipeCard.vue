@@ -1,10 +1,10 @@
 <template>
   <div
-    class="min-w-[300px] overflow-hidden shadow-md transition-transform duration-300 hover:-translate-y-1 hover:shadow-xl bg-white dark:bg-gray-900"
+    class="min-w-[300px] overflow-hidden shadow-md  transition-transform duration-300 hover:-translate-y-1 hover:shadow-xl bg-white dark:bg-gray-900"
     :style="{ '--theme-color': recipe?.repiceColor || '#f97316' }"
   >
     <!-- User Profile -->
-    <div class="flex justify-between items-center border-b px-4 py-3 dark:border-gray-700">
+    <div class="flex justify-between items-center border-b px-4 py-3 border-gray-300 dark:border-gray-700">
       <div class="flex items-center gap-3">
         <img
           :src="recipe.user?.profilePic || defaultAvatar"
@@ -72,7 +72,7 @@
     </div>
 
     <!-- Footer -->
-    <div class="flex justify-between items-center px-4 py-3 border-t dark:border-gray-700">
+    <div class="flex justify-between items-center px-4 py-3 border-t border-gray-300 dark:border-gray-700">
       <div class="flex gap-2 flex-wrap">
         <span
           v-for="cat in recipe.category"

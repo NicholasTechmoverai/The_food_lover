@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen relative bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-100">
+  <div class="min-h-screen overflow-hidden relative bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-100">
     <!-- Hero Section -->
     <section class="relative h-96 overflow-hidden">
       <img
@@ -35,31 +35,34 @@
           Browse Recipes
         </h2>
 
-
-        <div class="grid gap-3 grid-cols-1 sm:grid-cols-2">
-          <RecipeCard v-for="recipe in recipes.slice(0, 4)" :key="recipe.id" :recipe="recipe" />
-          <button class="underlined cursor-pointer">Show more <i class="pi pi-arrow-right"></i></button>
+        <div class="grid gap-2 grid-cols-1 sm:grid-cols-2 ">
+          <RecipeCard v-for="recipe in recipes.slice(0, 4)" :key="recipe.id" :recipe="recipe"
+            class="border border-gray-300 dark:border-gray-700/50" />
+          <button class="underlined cursor-pointer ">Show more <i class="pi pi-arrow-right"></i></button>
         </div>
       </section>
 
       <!-- Right: Sidebar with Tips and Video -->
-      <aside class="space-y-12 lg:sticky lg:top-20">
+      <aside class="space-y-12 lg:sticky lg:top-20 flex flex-col ">
+
         <!-- Cooking Tips Section -->
         <section>
-          <h2 class="text-xl font-semibold mb-4">Quick Cooking Tips</h2>
+          <h2 class="text-xl font-semibold mb-4">Live recipes & live in the kitcen</h2>
           <RevolveCards />
         </section>
 
         <!-- Featured Video Section -->
-        <section>
-          <h2 class="text-xl font-semibold mb-4">Watch & Learn</h2>
-          <VideoPage />
+        <section class="w-full bg-amber-500/0">
+          <h2 class=" text-xl font-semibold mb-4">Watch & Learn</h2>
+          <VideoPage  />
+        </section>
+        <section >
+          <h2 class="text-xl font-semibold mb-4">Trending recipes this week</h2>
+          <TrendingDishesCard class="mt-0 mb-80" />
         </section>
       </aside>
 
     </div>
-
-
 
     <!-- Router View for Dynamic Pages -->
     <router-view v-if="isRouterViewActive"
@@ -72,6 +75,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import RecipeCard from '../cards/RecipeCard.vue'
 import RevolveCards from '../cards/RevolveCards.vue'
+import TrendingDishesCard from '../cards/TrendingDishesCard.vue'
 import { fetchRecipes } from '../apis/recipes.js'
 import VideoPage from './VideoPage.vue'
 import CookingTips from './CookingTips.vue'// Track route
