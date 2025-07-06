@@ -1,3 +1,11 @@
+<template>
+  <div class="loader">
+    <span class="hour"></span>
+    <span class="min"></span>
+    <span class="circel"></span>
+  </div>
+</template>
+
 <style scoped>
   .loader {
    width: 65px;
@@ -49,10 +57,4 @@
   }
 </style>
 
-<template>
-  <div class="loader">
-    <span class="hour"></span>
-    <span class="min"></span>
-    <span class="circel"></span>
-  </div>
-</template>
+
