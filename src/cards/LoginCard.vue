@@ -33,12 +33,13 @@
           </div>
 
           <!-- Password Field -->
-          <div class="space-y-1">
+          <div class="space-y-1 w-full">
             <FloatLabel variant="on">
               <IconField class="relative">
                 <InputIcon class="pi pi-lock" />
-                <Password id="password" name="password" placeholder="Password" toggleMask :feedback="false"
-                  inputClass="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-white" />
+                <Password style="width: 100%;" id="password" name="password" placeholder="Password" toggleMask
+                  :feedback="false"
+                  inputClass="w-[100%] pl-10 pr-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-white" />
               </IconField>
               <label for="password" class="text-gray-700 dark:text-gray-300">Password</label>
             </FloatLabel>
@@ -74,7 +75,30 @@
               class="text-primary-600 dark:text-primary-400 font-medium hover:underline ml-1">Sign up</router-link>
           </div>
         </Form>
+        <!-- Divider -->
+        <div class="flex items-center my-4">
+          <div class="flex-1 border-t border-gray-300 dark:border-gray-600"></div>
+          <span class="px-3 text-gray-500 dark:text-gray-400 text-sm">OR</span>
+          <div class="flex-1 border-t border-gray-300 dark:border-gray-600"></div>
+        </div>
+        <div class="flex flex-col gap-3 mb-6">
+          <Button @click="loginWithGoogle" severity="secondary" outlined
+            class="w-full py-3 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+            <span class="flex items-center justify-center gap-2">
+              <img src="https://www.google.com/favicon.ico" alt="Google" class="w-5 h-5" />
+              <span>Continue with Google</span>
+            </span>
+          </Button>
+          <Button @click="loginWithFacebook" severity="secondary" outlined
+            class="w-full py-3 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+            <span class="flex items-center justify-center gap-2">
+              <img src="https://www.facebook.com/favicon.ico" alt="Facebook" class="w-5 h-5" />
+              <span>Continue with Facebook</span>
+            </span>
+          </Button>
+        </div>
       </div>
+
     </div>
     <Toast />
   </div>

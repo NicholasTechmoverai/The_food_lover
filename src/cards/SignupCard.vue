@@ -77,7 +77,7 @@
                         <FloatLabel variant="on">
                             <IconField class="relative">
                                 <InputIcon class="pi pi-lock " />
-                                <Password id="password" name="password" placeholder="Password" toggleMask
+                                <Password style="width: 100%;"  id="password" name="password" placeholder="Password" toggleMask
                                     :feedback="false"
                                     inputClass="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-white" />
                             </IconField>
@@ -94,7 +94,7 @@
                         <FloatLabel variant="on">
                             <IconField class="relative">
                                 <InputIcon class="pi pi-lock " />
-                                <Password id="confirm_password" name="confirm_password" placeholder="Confirm Password"
+                                <Password style="width: 100%;"  id="confirm_password" name="confirm_password" placeholder="Confirm Password"
                                     toggleMask :feedback="false"
                                     inputClass="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-white" />
                             </IconField>
