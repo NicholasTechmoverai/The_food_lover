@@ -161,7 +161,7 @@ import LoginButton from "../cards/LoginButton.vue";
 
 const { siteConfig, getResponsiveValue } = useSiteStore()
 import router from "../router/index.js";
-import { goHome } from "../reusables/index.js"
+import { goHome, polishUrlName } from "../reusables/index.js"
 const menu = ref();
 const noty_menu = ref();
 const props = defineProps({
@@ -276,8 +276,9 @@ const Notytoggle = (event) => {
     noty_menu.value.toggle(event);
 };
 
+
 // Recipe categories
-const recipes = {
+const rawRecipes = {
     label: 'Recipes',
     root: true,
     items: [
@@ -290,7 +291,11 @@ const recipes = {
                         subtext: 'Authentic pasta & pizza recipes',
                         color: '#7e22ce',
                         tip: 'Use 00 flour for perfect pizza dough',
-                        titleColor: '#7e22ce'
+                        titleColor: '#7e22ce',
+                        command: () => {
+                            console.log(`opening ${label}`);
+                            router.push(`/recipes/${polishUrlName(label)}`)
+                        }
                     },
                     {
                         label: 'Asian Delights',
@@ -378,8 +383,32 @@ const recipes = {
     ]
 };
 
+
+function enhanceRecipeItems(data) {
+  return {
+    ...data,
+    items: data.items.map(group =>
+      group.map(section => ({
+        ...section,
+        items: section.items.map(item => ({
+          ...item,
+          command: item.label
+            ? () => {
+                const url = `/recipes/${polishUrlName(item.label)}`;
+                url.includes('view-all-recipes')?router.push('/recipes'):router.push(url);
+              }
+            : undefined
+        }))
+      }))
+    )
+  };
+}
+
+const recipes = enhanceRecipeItems(rawRecipes);
+
+
 // Cooking Tips
-const cookingTips = {
+const rawCookingTips = {
     label: 'Cooking Tips',
     root: true,
     items: [
@@ -457,6 +486,28 @@ const cookingTips = {
     ]
 };
 
+function enhanceCookingTipsItems(data) {
+  return {
+    ...data,
+    items: data.items.map(group =>
+      group.map(section => ({
+        ...section,
+        items: section.items.map(item => ({
+          ...item,
+          command: item.label
+            ? () => {
+                const url = `/cooking-tips/${polishUrlName(item.label)}`;
+                url.includes('more-tips')?router.push('/cooking-tips'):router.push(url);
+              }
+            : undefined
+        }))
+      }))
+    )
+  };
+}
+
+const cookingTips = enhanceCookingTipsItems(rawCookingTips);
+
 // For Food Lovers
 const foodLovers = {
     label: 'For Food Lovers',
@@ -467,16 +518,16 @@ const foodLovers = {
             {
                 label: 'Featured Recipes',
                 items: [
-                    {
-                        image: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c',
-                        label: 'VIEW RECIPE',
-                        subtext: 'Rainbow Buddha Bowl with Tahini Dressing',
-                        rating: 4.8,
-                        reviews: 5243,
-                        time: '25 mins',
-                        difficulty: 'Easy',
-                        calories: 420
-                    },
+                    // {
+                    //     image: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c',
+                    //     label: 'VIEW RECIPE',
+                    //     subtext: 'Rainbow Buddha Bowl with Tahini Dressing',
+                    //     rating: 4.8,
+                    //     reviews: 5243,
+                    //     time: '25 mins',
+                    //     difficulty: 'Easy',
+                    //     calories: 420
+                    // },
                     {
                         image: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd',
                         label: 'LEARN TECHNIQUE',
@@ -550,16 +601,16 @@ const foodLovers = {
             {
                 label: 'Seasonal Picks',
                 items: [
-                    {
-                        image: 'https://images.unsplash.com/photo-1490645935967-10de6ba17061',
-                        label: 'COOK NOW',
-                        subtext: 'Summer Berry Pavlova with Whipped Cream',
-                        rating: 4.9,
-                        reviews: 2104,
-                        time: '1.5 hrs',
-                        difficulty: 'Medium',
-                        calories: 280
-                    },
+                    // {
+                    //     image: 'https://images.unsplash.com/photo-1490645935967-10de6ba17061',
+                    //     label: 'COOK NOW',
+                    //     subtext: 'Summer Berry Pavlova with Whipped Cream',
+                    //     rating: 4.9,
+                    //     reviews: 2104,
+                    //     time: '1.5 hrs',
+                    //     difficulty: 'Medium',
+                    //     calories: 280
+                    // },
                     {
                         image: 'https://images.unsplash.com/photo-1473093295043-cdd812d0e601',
                         label: 'SAVE RECIPE',

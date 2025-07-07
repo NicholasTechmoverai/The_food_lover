@@ -62,3 +62,11 @@ export const generateUUID = () => {
         return v.toString(16)
     })
 }
+
+
+export const polishUrlName =  (name,id='') => {
+  console.log(name)
+  return `${name.replace(/\s+/g, '-').toLowerCase()}/${id}`;
+}
+
+ 

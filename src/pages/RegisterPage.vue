@@ -1,37 +1,49 @@
 <template>
-  <div class="grid grid-cols-1 md:grid-cols-2 h-fit ">
-    
-    <!-- Left: Horizontally Scrollable Card Column -->
-    <div class="hidden md:flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-800 h-full w-full overflow-hidden">
-      <h4 @click="router.push('/')" class="mb-4 cursor-pointer text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-purple-300 to-gray-200 dark:from-yellow-400 dark:to-gray-100"
-          style="font-family: 'Caprasimo', sans-serif;">
-        {{ siteConfig.meta.siteName }}
-      </h4>
+  <div class="grid grid-cols-1 md:grid-cols-2  overflow-hidden bg-white dark:bg-gray-900">
 
-      <div class="relative w-[500px] h-[600px] overflow-hidden ">
+    <!-- Left Pane: Scrollable Card Section (Desktop Only) -->
+    <div class="hidden md:flex flex-col items-center justify-center px-6 py-8 bg-gray-50 dark:bg-gray-800">
+      <!-- Site Title -->
+      <h1 @click="router.push('/')" class="text-4xl font-extrabold cursor-pointer text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-purple-300 to-gray-200 dark:from-yellow-400 dark:to-gray-100 mb-6" style="font-family: 'Caprasimo', sans-serif;">
+        {{ siteConfig.meta.siteName }}
+      </h1>
+
+      <!-- Scrollable Card Container -->
+      <div class="relative w-[500px] h-[600px] overflow-hidden rounded-2xl ">
         <div
           ref="scrollContainer"
-          class="absolute inset-0 flex overflow-hidden snap-x snap-mandatory px-4 py-6 gap-4 scroll-smooth scrollbar-thin scrollbar-thumb-gray-400 dark:scrollbar-thumb-gray-600"
+          class="absolute inset-0 flex snap-x snap-mandatory gap-6 scroll-smooth px-4 py-6 overflow-hidden"
         >
           <div
             v-for="(card, index) in cards"
             :key="index"
             :ref="el => cardRefs[index] = el"
-            class="flex-shrink-0 w-[500px] h-full snap-start"
+            class="flex-shrink-0 w-[500px] h-full snap-start rounded-xl overflow-hidden transition-transform hover:scale-[1.02]"
           >
-            <component :is="card" class=" " />
+            <component :is="card" />
           </div>
         </div>
       </div>
+
+      <!-- Footer -->
+      <footer class="mt-8 text-sm text-gray-500 dark:text-gray-400">
+        &copy; 2025 All rights reserved. <a href="/terms" class="underline hover:text-gray-700 dark:hover:text-white">Terms & Conditions</a>
+      </footer>
     </div>
 
-    <!-- Right: Dynamic View -->
-    <div class="  bg-white dark:bg-gray-800 overflow-y-auto h-full border-l border-gray-200 dark:border-gray-700">
-            <h4 @click="router.push('/')" class="absolute md:hidden right-1/2 mb-4 cursor-pointer text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-purple-300 to-gray-200 dark:from-yellow-400 dark:to-gray-100"
-          style="font-family: 'Caprasimo', sans-serif;">
+    <!-- Right Pane: Dynamic View / Mobile View -->
+    <div class="relative h-full w-full overflow-y-auto border-l border-gray-200 dark:border-gray-700">
+      <!-- Mobile Site Title -->
+      <h1
+        @click="router.push('/')"
+        class="md:hidden sticky top-0 z-10 bg-white dark:bg-gray-800 px-4 py-3 text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-purple-300 to-gray-200 dark:from-yellow-400 dark:to-gray-100 shadow"
+        style="font-family: 'Caprasimo', sans-serif;"
+      >
         {{ siteConfig.meta.siteName }}
-      </h4>
-      <router-view />
+      </h1>
+
+      <!-- Route Content -->
+      <router-view class="px-4 py-6" />
     </div>
   </div>
 </template>
@@ -51,7 +63,7 @@ const control = useControl()
 const scrollContainer = ref(null)
 const cardRefs = ref([])
 
-const cards = [TiltedRecipeCard, DishCard ,StepperPage ] 
+const cards = [TiltedRecipeCard, DishCard, StepperPage]
 const currentCard = ref(0)
 let interval
 

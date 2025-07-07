@@ -32,7 +32,7 @@ onMounted(() => {
     <router-view  />
 
     </div>
-    <Footer />
+    <Footer v-if="control.showNav" />
   </div>
 </template>
 
