@@ -5,9 +5,11 @@ from slowapi.errors import RateLimitExceeded
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, EmailStr
 
-from .auth import get_current_user
+from .auth import get_current_user,AuthError
 from utils.limiter import limiter  
 from utils.recipes import RecipeService,RecipeRequest
+
+from tortoise.expressions import Q
 
 from models import User as Users
 
@@ -29,7 +31,7 @@ async def create_recipe(
     #     raise HTTPException(status_code=403, detail="Only chefs can submit recipes")
 
    
-    recipe = await service.create_recipe(data, user.id)
+    recipe = await service.create_or_update_recipe(data, user.id)
     # return {"message": "Recipe created", "recipe_id": recipe.id}
 
 
@@ -40,3 +42,19 @@ async def create_recipe(
         "recipeName": data.recipeCover.recipeName
     })
 
+
+
+@recipe_router.get("/recipes")
+@limiter.limit("30/min")
+async def fetch_recipe(
+    request: Request,
+    limit: int = 10,
+    offset: int = 0,
+    public_only: bool = True,
+    service: RecipeService = Depends()
+):
+    try:
+        recipes = await service.list_recipes(limit=limit, offset=offset, public_only=public_only)
+        return recipes
+    except AuthError as e:
+        raise HTTPException(status_code=400, detail=str(e))

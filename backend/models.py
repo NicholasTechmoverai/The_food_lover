@@ -105,12 +105,12 @@ class Recipe(Model):
     cuisine = fields.CharField(max_length=255, index=True)
 
     difficulty_level = fields.CharEnumField(Difficulty, default=Difficulty.easy, index=True)
+    cook_time_minutes = fields.IntField()
 
     user = fields.ForeignKeyField("models.User", related_name="recipes")
     category = fields.ManyToManyField("models.Category", related_name="recipes") 
     tags = fields.ManyToManyField("models.Tag", related_name="recipes")          
 
-    cook_time_minutes = fields.IntField()
 
     created_at = fields.DatetimeField(auto_now_add=True)
     updated_at = fields.DatetimeField(auto_now=True)
@@ -150,7 +150,7 @@ class RecipeStep(Model):
 
 class Ingredient(Model):
     id = fields.IntField(pk=True)
-    name = fields.CharField(max_length=255)
+    name = fields.CharField(max_length=255,index=True)
     quantity = fields.CharField(max_length=100,null=True)  # renamed from "amount"
     unit = fields.CharField(max_length=50,null=True)
     

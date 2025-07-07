@@ -815,7 +815,7 @@ export const fetchRecipes = async (token = null, filters = null) => {
     try {
         const response = await axios.get(`${BACKEND_URL}/recipes/`, {
             headers: token ? { Authorization: `Bearer ${token}` } : {},
-            params: filters || {},
+            params: filters || {},  // filters = { limit: 10, offset: 0 }
         })
 
         if (response.status === 200 || response.status === 201) {

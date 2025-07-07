@@ -311,14 +311,14 @@ const recipeCover = ref({
     },
     description: '',
     cuisine: { name: 'Kenyan', region: 'East Africa' },
-    complexityLevel: { name: 'Easy', value: 1 },
+    complexityLevel: { name: 'Easy', value: 'easy' },
     category: []
 });
 
 const complexityLevels = ref([
-    { name: 'Easy', value: 1 },
-    { name: 'Medium', value: 2 },
-    { name: 'Hard', value: 3 }
+    { name: 'Easy', value: 'easy' },
+    { name: 'Medium', value: 'medium' },
+    { name: 'Hard', value: 'hard' }
 ]);
 const instructionsInputList = ref([
     { label: 'Text', value: 'text_area' },

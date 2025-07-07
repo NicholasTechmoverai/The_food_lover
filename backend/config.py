@@ -24,6 +24,7 @@ TORTOISE_ORM = {
         }
     },
 #aerich init -t config.TORTOISE_ORM  -> to initiliaze aerich
+#aerich init-db
 #aerich migrate -> to create migration files
 #aerich upgrade -> to apply the migration files
 #aerich downgrade -> to revert the migration files

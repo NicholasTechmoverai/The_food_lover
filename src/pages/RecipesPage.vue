@@ -130,7 +130,7 @@ const liveRecipes = ref([])
 const getRecipes = async () => {
   recipes_loading.value = true
   const token = auth.token
-  const res = await fetchRecipes(token, null)
+  const res = await fetchRecipes(token, { limit: 10, offset: 0 })
   if (res) {
     recipes_loading.value = false
     if (res.message && !res.success) {

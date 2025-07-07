@@ -276,9 +276,9 @@ const onSave = async () => {
     });
 
     setTimeout(() => {
-      // ongoingStore.clearCoverRecipe();
-      // ongoingStore.clearRecipeSteps();
-      // router.push('/recipes');
+      ongoingStore.clearCoverRecipe();
+      ongoingStore.clearRecipeSteps();
+      router.push('/recipes');
     }, 2500);
   } else {
     toast.add({
