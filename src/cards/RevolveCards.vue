@@ -109,131 +109,42 @@
 
 <template>
   <div class="card-3d grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 p-4">
-    <div
-      v-for="(c, i) in staff"
-      :key="i"
-      class="bg-white dark:bg-gray-800 shadow-md rounded-xl p-2 flex flex-col items-center text-center text-[10px] whitespace-nowrap overflow-hidden"
-    >
-      <p v-if="c.live" class="text-green-500 font-semibold text-[9px] mb-1 uppercase tracking-wide">Live</p>
-      <img
-        :src="c.chef.profilePic || 'https://via.placeholder.com/40'"
-        :alt="c.chef.name || 'Chef'"
-        class="w-10 h-10 rounded-full object-cover mb-1"
-      />
-      <p class="font-medium text-gray-800 truncate w-full">{{ c.meal }}</p>
-      <p class="text-gray-500  text-[9px] mt-0.5">{{formatDate( c.date) }}</p>
+    <div v-for="(c, i) in loop_through" :key="i"
+      class="cursor-pointer bg-white dark:bg-gray-800 shadow-md rounded-xl p-2  text-[10px] whitespace-nowrap overflow-hidden">
+      <a :href="opentype(c.meal, c.chef.name, i)" target="_blank" rel="noopener"
+        class="flex flex-col items-center text-center">
+        <p v-if="c.live" class="text-green-500 font-semibold text-[9px] mb-1 uppercase tracking-wide">Live</p>
+        <img :src="c.chef.profilePic || 'https://via.placeholder.com/40'" :alt="c.chef.name || 'Chef'"
+          class="w-10 h-10 rounded-full object-cover mb-1" />
+        <p class="font-medium text-gray-800 truncate w-full">{{ c.meal }}</p>
+        <p class="text-gray-500  text-[9px] mt-0.5">{{ formatDate(c.date) }}</p>
+      </a>
     </div>
   </div>
 </template>
 
 <script setup>
 import { ref } from 'vue';
+import router from '../router';
+import { polishUrlName } from '../reusables';
 
 const formatDate = (date) => {
   if (typeof date === 'string') return date;
   return new Date(date).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
 };
 
-const staff = ref([
-  {
-    live: true,
-    date: '2025-07-20',
-    meal: 'Ugali Pasta with Special Sauce and Extra Toppings',
-    chef: {
-      profilePic: '',
-      name: 'Chef John Doe',
-      id: '1',
-    }
-  },
-  {
-    live: true,
-    date: '2025-07-20',
-    meal: 'Chapati Beans',
-    chef: {
-      profilePic: 'https://randomuser.me/api/portraits/men/32.jpg',
-      name: 'Chef Maria',
-      id: '2',
-    }
-  },
-  {
-    live: false,
-    date: '2025-07-21',
-    meal: 'Pilau with Kachumbari',
-    chef: {
-      profilePic: 'https://randomuser.me/api/portraits/women/44.jpg',
-      name: 'Chef Amina',
-      id: '3',
-    }
-  },
-  {
-    live: true,
-    date: '2025-07-22',
-    meal: 'Nyama Choma Special',
-    chef: {
-      profilePic: 'https://randomuser.me/api/portraits/men/75.jpg',
-      name: 'Chef Kamau',
-      id: '4',
-    }
-  },
-  {
-    live: false,
-    date: '2025-07-23',
-    meal: 'Mukimo with Greens',
-    chef: {
-      profilePic: 'https://randomuser.me/api/portraits/women/68.jpg',
-      name: 'Chef Wanjiku',
-      id: '5',
-    }
-  },
-  {
-    live: true,
-    date: '2025-07-24',
-    meal: 'Fish Curry with Coconut Rice',
-    chef: {
-      profilePic: 'https://randomuser.me/api/portraits/men/90.jpg',
-      name: 'Chef Ali',
-      id: '6',
-    }
-  },
-  {
-    live: false,
-    date: '2025-07-25',
-    meal: 'Vegetable Stir Fry with Noodles',
-    chef: {
-      profilePic: 'https://randomuser.me/api/portraits/women/33.jpg',
-      name: 'Chef Lin',
-      id: '7',
-    }
-  },
-  {
-    live: true,
-    date: '2025-07-26',
-    meal: 'Mandazi with Chai',
-    chef: {
-      profilePic: 'https://randomuser.me/api/portraits/men/22.jpg',
-      name: 'Chef Bakari',
-      id: '8',
-    }
-  },
-  {
-    live: false,
-    date: '2025-07-27',
-    meal: 'Githeri Special',
-    chef: {
-      profilePic: 'https://randomuser.me/api/portraits/women/29.jpg',
-      name: 'Chef Njeri',
-      id: '9',
-    }
-  },
-  {
-    live: true,
-    date: '2025-07-28',
-    meal: 'Bhajia with Tamarind Sauce',
-    chef: {
-      profilePic: 'https://randomuser.me/api/portraits/men/45.jpg',
-      name: 'Chef Raj',
-      id: '10',
-    }
+const props = defineProps({
+  render: String,
+  loop_through: {
+    type: Object,
+    required: true,
+    default: () => ({})
   }
-]);
+})
+
+const opentype = (name, author, id) => {
+  return (`/${props.render}/${polishUrlName(name)}/${polishUrlName(author, id)}`)
+}
+
+
 </script>

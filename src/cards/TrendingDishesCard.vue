@@ -1,37 +1,32 @@
 <template>
-  <div class="wrapper  flex justify-center items-center px-4">
-    <div class="carousel w-full max-w-md space-y-6">
-      <div
-        v-for="(dish, index) in dishes"
-        :key="index"
-        class="carousel__item  flex items-center  overflow-hidden"
-      >
-        <div class="carousel__item-head w-24 h-24 flex-shrink-0 m-2">
-          <img
-            :src="dish.image"
-            :alt="dish.name"
-            class="w-full h-full object-cover rounded-full border border-gray-200 dark:border-gray-700"
-            onerror="this.src='https://via.placeholder.com/300?text=Kenyan+Dish'"
-          />
+    <div class="wrapper  flex justify-center items-center px-4">
+        <div class="carousel w-full max-w-md space-y-6">
+            <div v-for="(dish, index) in dishes" :key="index"
+                class="carousel__item  flex items-center  overflow-hidden">
+                <div class="carousel__item-head w-24 h-24 flex-shrink-0 m-2">
+                    <img :src="dish.image" :alt="dish.name"
+                        class="w-full h-full object-cover rounded-full border border-gray-200 dark:border-gray-700"
+                        @error="(e) => e.target.src = onerrorImage" />
+                </div>
+                <div
+                    class="carousel__item-body hover:ring ring-gray-400/50 duration-300 bg-white dark:bg-gray-900 flex flex-col justify-center pr-4">
+                    <p class="title text-lg font-semibold text-gray-900 dark:text-white">
+                        {{ dish.name }}
+                    </p>
+                    <p class="cook-time text-sm text-gray-500 dark:text-gray-400">
+                        Cook Time: {{ dish.cookTime }}
+                    </p>
+                </div>
+            </div>
         </div>
-        <div class="carousel__item-body hover:ring ring-gray-400/50 duration-300 bg-white dark:bg-gray-900 flex flex-col justify-center pr-4">
-          <p class="title text-lg font-semibold text-gray-900 dark:text-white">
-            {{ dish.name }}
-          </p>
-          <p class="cook-time text-sm text-gray-500 dark:text-gray-400">
-            Cook Time: {{ dish.cookTime }}
-          </p>
-        </div>
-      </div>
     </div>
-  </div>
 </template>
 
 
 
 <script setup>
 import { ref } from 'vue';
-
+import onerrorImage from '../assets/onerrorimage.png'
 const dishes = ref([
     {
         name: "Ugali & Sukuma Wiki",

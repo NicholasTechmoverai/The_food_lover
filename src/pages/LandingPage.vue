@@ -49,7 +49,7 @@ import InhandPhone from '../cards/InHandPhone.vue'
 import HealthyDescription from '../cards/HealthyDescription.vue';
 import { useIsMobile } from '../reusables';
 import { useSiteStore } from '../config/siteConfig.js'
-
+import socket from '../a_websocket/index.js';
 const { siteConfig, getResponsiveValue } = useSiteStore()
 const recipe_message = ref('Access 1000+ recipes,250+ East African dishes')
 

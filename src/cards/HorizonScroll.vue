@@ -6,9 +6,10 @@
     >
       <div class="list">
         <div
-          v-for="(recipe, index) in recipeTypes"
+          v-for="(recipe, index) in loop_through"
           :key="index"
-          class="item"
+          class="item cursor-pointer"
+          @click="opentype(recipe.title)"
           :style="`--i: ${index}`"
         >
           <div
@@ -29,6 +30,25 @@
     </div>
   </div>
 </template>
+<script setup>
+import { polishUrlName } from '../reusables';
+import router from '../router';
+
+const props = defineProps({
+  render:String,
+  loop_through:{
+    type: Object,
+    required: true,
+    default: () => ({})
+  }
+})
+
+const opentype = (type) =>{
+  router.push(`/${props.render}/${polishUrlName(type)}`)
+}
+
+</script>
+
 <style scoped>
 .slider-wrapper {
   padding: 2rem 0;
@@ -151,62 +171,4 @@
 
 
 </style>
-<script setup>
-const recipeTypes = [
-  {
-    title: "Breakfast",
-    description: "Start your day right",
-    gradient: "#ff7e5f, #feb47b",
-    image: "https://images.unsplash.com/photo-1557142046-c704a3adf364?w=200&h=200&fit=crop",
-  },
-  {
-    title: "Vegan",
-    description: "Plant-powered goodness",
-    gradient: "#6a11cb, #2575fc",
-    image: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=200&h=200&fit=crop",
-  },
-  {
-    title: "Desserts",
-    description: "Sweet tooth treats",
-    gradient: "#00c6ff, #0072ff",
-    image: "https://images.unsplash.com/photo-1571115177098-24ec42ed204d?w=200&h=200&fit=crop",
-  },
-  {
-    title: "Grilled",
-    description: "Smoky & savory",
-    gradient: "#ff512f, #dd2476",
-    image: "https://images.unsplash.com/photo-1558030006-450675393462?w=200&h=200&fit=crop",
-  },
-  {
-    title: "Soups",
-    description: "Warm & comforting",
-    gradient: "#ffb6c1, #ff69b4",
-    image: "https://images.unsplash.com/photo-1547592180-85f173990554?w=200&h=200&fit=crop",
-  },
-  {
-    title: "Salads",
-    description: "Crisp & fresh",
-    gradient: "#ff9a8b, #ffc3a0",
-    image: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=200&h=200&fit=crop",
-  },
-  {
-    title: "Pasta",
-    description: "Italian favorites",
-    gradient: "#a1c4fd, #c2e9fb",
-    image: "https://images.unsplash.com/photo-1555949258-eb67b1ef0ceb?w=200&h=200&fit=crop",
-  },
-  {
-    title: "Seafood",
-    description: "Ocean delights",
-    gradient: "#fbc2eb, #a18cd1",
-    image: "https://images.unsplash.com/photo-1585238342024-78d387f4a707?w=200&h=200&fit=crop",
-  },
-  {
-    title: "Snacks",
-    description: "Quick bites",
-    gradient: "#84fab0, #8fd3f4",
-    image: "https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=200&h=200&fit=crop",
-  },
-];
-</script>
 

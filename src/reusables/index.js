@@ -64,9 +64,12 @@ export const generateUUID = () => {
 }
 
 
-export const polishUrlName =  (name,id='') => {
-  console.log(name)
-  return `${name.replace(/\s+/g, '-').toLowerCase()}/${id}`;
+export const polishUrlName =  (name,id=null) => {
+  // console.log(name)
+  return id? `${name.replace(/\s+/g, '-').toLowerCase()}/${id}`:`${name.replace(/\s+/g, '-').toLowerCase()}`;
 }
 
+export const formattedFromUrl = ((name) => {
+    return name ? name.replace(/-/g, ' ') : 'Untitled '
+})
  

@@ -145,7 +145,7 @@
                 </div>
 
             </template>
-            \
+
         </MegaMenu>
 
     </div>
@@ -158,31 +158,33 @@ import { ref } from "vue";
 import { useSiteStore } from '../config/siteConfig.js'
 import SignupButton from "../cards/SignupButton.vue";
 import LoginButton from "../cards/LoginButton.vue";
-
-const { siteConfig, getResponsiveValue } = useSiteStore()
+import { useAuthStore } from '../store/user.js'
 import router from "../router/index.js";
 import { goHome, polishUrlName } from "../reusables/index.js"
+import { Logout } from "../apis/auth.js";
+
+const auth = useAuthStore()
+const { siteConfig, getResponsiveValue } = useSiteStore()
+
 const menu = ref();
 const noty_menu = ref();
 const props = defineProps({
     user: {
         type: Object,
-        required: true,
         default: () => ({
-            user: null
+            profilePic: 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png',
+            id: null,
+            name: null
         })
-    },
+    }
+})
 
-});
+
 const likeCount = ref(150);
 const messageCount = ref(9);
 const mentionCount = ref(3);
 
-const user = ref({
-    profilePic: 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png',
-    id: null,
-    name: null
-})
+
 
 const noty_menu_items = ref([
     {
@@ -262,8 +264,10 @@ const Menu_items = ref([
     {
         label: 'Logout',
         icon: 'pi pi-sign-out',
-        command: () => {
-            console.log('🚪 Logging out user...');
+        command: async () => {
+            auth.setToken(null)
+            auth.setUser(null)
+            // await Logout()
         }
     }
 ]);
@@ -385,23 +389,23 @@ const rawRecipes = {
 
 
 function enhanceRecipeItems(data) {
-  return {
-    ...data,
-    items: data.items.map(group =>
-      group.map(section => ({
-        ...section,
-        items: section.items.map(item => ({
-          ...item,
-          command: item.label
-            ? () => {
-                const url = `/recipes/${polishUrlName(item.label)}`;
-                url.includes('view-all-recipes')?router.push('/recipes'):router.push(url);
-              }
-            : undefined
-        }))
-      }))
-    )
-  };
+    return {
+        ...data,
+        items: data.items.map(group =>
+            group.map(section => ({
+                ...section,
+                items: section.items.map(item => ({
+                    ...item,
+                    command: item.label
+                        ? () => {
+                            const url = `/recipes/${polishUrlName(item.label)}`;
+                            url.includes('view-all-recipes') ? router.push('/recipes') : router.push(url);
+                        }
+                        : undefined
+                }))
+            }))
+        )
+    };
 }
 
 const recipes = enhanceRecipeItems(rawRecipes);
@@ -487,23 +491,23 @@ const rawCookingTips = {
 };
 
 function enhanceCookingTipsItems(data) {
-  return {
-    ...data,
-    items: data.items.map(group =>
-      group.map(section => ({
-        ...section,
-        items: section.items.map(item => ({
-          ...item,
-          command: item.label
-            ? () => {
-                const url = `/cooking-tips/${polishUrlName(item.label)}`;
-                url.includes('more-tips')?router.push('/cooking-tips'):router.push(url);
-              }
-            : undefined
-        }))
-      }))
-    )
-  };
+    return {
+        ...data,
+        items: data.items.map(group =>
+            group.map(section => ({
+                ...section,
+                items: section.items.map(item => ({
+                    ...item,
+                    command: item.label
+                        ? () => {
+                            const url = `/cooking-tips/${polishUrlName(item.label)}`;
+                            url.includes('more-tips') ? router.push('/cooking-tips') : router.push(url);
+                        }
+                        : undefined
+                }))
+            }))
+        )
+    };
 }
 
 const cookingTips = enhanceCookingTipsItems(rawCookingTips);

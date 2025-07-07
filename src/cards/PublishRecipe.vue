@@ -6,7 +6,7 @@
       <header class="sticky top-0 z-20 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm p-4 rounded-lg shadow-sm mb-6">
         <div class="flex flex-wrap items-center justify-between gap-4">
           <h1 class="text-2xl font-bold text-gray-800 dark:text-white">Publish Your Recipe</h1>
-          
+
           <div class="flex flex-wrap gap-2">
             <!-- <Button 
               label="Cover" 
@@ -32,18 +32,13 @@
               }"
               outlined
             /> -->
-            <Button 
-              :label="isPublishing?'Publishing...':'Publish Recipe'" 
-              :icon="isPublishing?'pi pi-spin pi-spinner':'pi pi-send'" 
-              class="!text-sm p-button-success" 
-              :disabled="isPublishing"
-              @click="onSave"
-              :style="{ 
-                backgroundColor: recipeCover.repiceColor, 
+            <Button :label="isPublishing ? 'Publishing...' : 'Publish Recipe'"
+              :icon="isPublishing ? 'pi pi-spin pi-spinner' : 'pi pi-send'" class="!text-sm p-button-success"
+              :disabled="isPublishing" @click="onSave" :style="{
+                backgroundColor: recipeCover.repiceColor,
                 borderColor: recipeCover.repiceColor,
                 color: getContrastColor(recipeCover.repiceColor)
-              }"
-            />
+              }" />
           </div>
         </div>
       </header>
@@ -51,44 +46,27 @@
       <!-- Recipe Settings Card -->
       <div class=" bg-white dark:bg-gray-700 rounded-xl shadow-sm p-6">
         <h2 class="text-xl font-semibold mb-4 text-gray-800 dark:text-white">Recipe Settings</h2>
-        
+
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <!-- Visibility Toggle -->
           <div class="space-y-2">
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Recipe Visibility</label>
-            <ToggleButton 
-              v-model="isPublic" 
-              onLabel="Public" 
-              offLabel="Private" 
-              onIcon="pi pi-globe" 
-              offIcon="pi pi-lock" 
-              class="w-full"
-            />
+            <ToggleButton v-model="isPublic" onLabel="Public" offLabel="Private" onIcon="pi pi-globe"
+              offIcon="pi pi-lock" class="w-full" />
           </div>
-          
+
           <!-- Comments Toggle -->
           <div class="space-y-2">
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Allow Comments</label>
-            <ToggleButton 
-              v-model="allowComments" 
-              onLabel="Enabled" 
-              offLabel="Disabled" 
-              onIcon="pi pi-comments" 
-              offIcon="pi pi-comment-slash" 
-              class="w-full"
-            />
+            <ToggleButton v-model="allowComments" onLabel="Enabled" offLabel="Disabled" onIcon="pi pi-comments"
+              offIcon="pi pi-comment-slash" class="w-full" />
           </div>
-          
+
           <!-- Copy Protection -->
           <div class="space-y-2">
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Copy Protection</label>
-            <Dropdown 
-              v-model="copyProtection" 
-              :options="copyProtectionOptions" 
-              optionLabel="label" 
-              placeholder="Select protection level"
-              class="w-full"
-            />
+            <Dropdown v-model="copyProtection" :options="copyProtectionOptions" optionLabel="label"
+              placeholder="Select protection level" class="w-full" />
           </div>
         </div>
       </div>
@@ -96,16 +74,11 @@
       <!-- Recipe Preview Grid -->
       <div class="relative grid grid-cols-1 xl:grid-cols-2 gap-8">
         <!-- Cover Preview -->
-        <section  class="sticky top-1 bg-white dark:bg-gray-700 rounded-xl shadow-sm p-6 h-fit xl:sticky xl:top-28">
+        <section class="sticky top-1 bg-white dark:bg-gray-700 rounded-xl shadow-sm p-6 h-fit xl:sticky xl:top-28">
           <div class="flex justify-between items-center mb-4">
             <h2 class="text-xl font-semibold text-gray-800 dark:text-white">Recipe Cover</h2>
-            <Button 
-              label="Edit Cover" 
-              icon="pi pi-pencil" 
-              @click="router.push('/recipes/new/cover')"
-              text
-              size="small"
-            />
+            <Button label="Edit Cover" icon="pi pi-pencil" @click="router.push('/recipes/new/cover')" text
+              size="small" />
           </div>
           <RecipeCard :recipe="recipeCover" />
         </section>
@@ -114,26 +87,16 @@
         <section class="bg-white dark:bg-gray-700 rounded-xl shadow-sm p-6">
           <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4">
             <h2 class="text-xl font-semibold text-gray-800 dark:text-white">Steps Preview</h2>
-            
+
             <div class="flex items-center gap-4">
               <div class="space-y-2">
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Preview Layout</label>
-                <SelectButton 
-                  v-model="listType" 
-                  :options="listTypeOptions" 
-                  optionLabel="label" 
-                  optionValue="value"
-                  class="flex-wrap"
-                />
+                <SelectButton v-model="listType" :options="listTypeOptions" optionLabel="label" optionValue="value"
+                  class="flex-wrap" />
               </div>
-              
-              <Button 
-                label="Edit Steps" 
-                icon="pi pi-pencil" 
-                @click="router.push(`/recipes/new/e/${routeRecipeId}`)"
-                text
-                size="small"
-              />
+
+              <Button label="Edit Steps" icon="pi pi-pencil" @click="router.push(`/recipes/new/e/${routeRecipeId}`)"
+                text size="small" />
             </div>
           </div>
 
@@ -147,56 +110,25 @@
       <!-- Share Options (Below the grid) -->
       <section class="bg-white dark:bg-gray-700 rounded-xl shadow-sm p-6">
         <h2 class="text-xl font-semibold mb-4 text-gray-800 dark:text-white">Share Options</h2>
-        
+
         <div class="space-y-4">
           <div class="flex items-center gap-4">
-            <InputText 
-              v-model="recipeUrl" 
-              readonly 
-              class="flex-1" 
-              placeholder="Generating URL..."
-            />
-            <Button 
-              icon="pi pi-copy" 
-              @click="copyUrl"
-              severity="secondary"
-              :disabled="!recipeUrl"
-              v-tooltip="'Copy URL'"
-            />
+            <InputText v-model="recipeUrl" readonly class="flex-1" placeholder="Generating URL..." />
+            <Button icon="pi pi-copy" @click="copyUrl" severity="secondary" :disabled="!recipeUrl"
+              v-tooltip="'Copy URL'" />
           </div>
-          
+
           <div class="flex gap-2 flex-wrap">
-            <Button 
-              icon="pi pi-facebook" 
-              severity="secondary" 
-              outlined
-              @click="shareOnSocial('facebook')"
-            />
-            <Button 
-              icon="pi pi-twitter" 
-              severity="secondary" 
-              outlined
-              @click="shareOnSocial('twitter')"
-            />
-            <Button 
-              icon="pi pi-whatsapp" 
-              severity="secondary" 
-              outlined
-              @click="shareOnSocial('whatsapp')"
-            />
-            <Button 
-              icon="pi pi-link" 
-              severity="secondary" 
-              outlined
-              @click="copyUrl"
-              label="Copy Link"
-            />
+            <Button icon="pi pi-facebook" severity="secondary" outlined @click="shareOnSocial('facebook')" />
+            <Button icon="pi pi-twitter" severity="secondary" outlined @click="shareOnSocial('twitter')" />
+            <Button icon="pi pi-whatsapp" severity="secondary" outlined @click="shareOnSocial('whatsapp')" />
+            <Button icon="pi pi-link" severity="secondary" outlined @click="copyUrl" label="Copy Link" />
           </div>
         </div>
       </section>
     </div>
   </div>
-    <Toast />
+  <Toast />
   <ConfirmDialog />
 </template>
 
@@ -211,7 +143,11 @@ import GridStepsView from './GridStepsView.vue';
 import RecipeCard from './RecipeCard.vue';
 import { useOngoingStore } from '../store/ongoing';
 import { useIsMobile } from '../reusables';
+import { saveRecipe } from '../apis/recipes';
+import { useAuthStore } from '../store/user.js'
 
+
+const auth = useAuthStore()
 const router = useRouter();
 const route = useRoute();
 const confirm = useConfirm();
@@ -308,21 +244,50 @@ const shareOnSocial = (platform) => {
   window.open(url, '_blank', 'noopener,noreferrer');
 };
 
-const onSave = () => {
+const onSave = async () => {
   isPublishing.value = true;
-  toast.add({ severity: 'info', summary: 'Loading', detail: 'Recipe is being published...', life: 2000 });
 
-  // simulate saving process
-  setTimeout(() => {
+  toast.add({
+    severity: 'info',
+    summary: 'Publishing...',
+    detail: 'Your recipe is being published...',
+    life: 2000,
+  });
+
+  const token = auth.token;
+  const res = await saveRecipe(token, {
+    recipeCover: recipeCover.value,
+    recipeSteps: recipe_steps.value,
+    isPublic:isPublic.value,
+    allowComments:allowComments.value,
+    copyProtection:copyProtection.value,
+  });
+
+  isPublishing.value = false;
+
+  if (!res) return;
+
+  if (res.success) {
     toast.add({
       severity: 'success',
       summary: 'Published!',
-      detail: 'Your recipe is now live',
-      life: 3000
+      detail: 'Your recipe is now live.',
+      life: 3000,
     });
-    isPublishing.value = false;
-    router.push('/recipes')
-  }, 1500);
+
+    setTimeout(() => {
+      // ongoingStore.clearCoverRecipe();
+      // ongoingStore.clearRecipeSteps();
+      // router.push('/recipes');
+    }, 2500);
+  } else {
+    toast.add({
+      severity: 'error',
+      summary: 'Publish Failed!',
+      detail: `Failed: ${res.message}`,
+      life: 6000,
+    });
+  }
 };
 
 onMounted(() => {
@@ -388,10 +353,11 @@ function MissingRecipeId(id) {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr);
     gap: 2rem;
   }
-  
+
   .sticky-cover {
     position: sticky;
-    top: 7rem; /* Adjust based on your header height */
+    top: 7rem;
+    /* Adjust based on your header height */
     align-self: start;
   }
 }

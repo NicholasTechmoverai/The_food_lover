@@ -16,6 +16,10 @@ import RegisterPage from '../pages/RegisterPage.vue'
 import LoginPage from '../cards/LoginCard.vue'
 import SignupPage from '../cards/SignupCard.vue'
 import RecoverPassword from '../cards/RecoverPassword.vue'
+import RecipeType from '../pages/RecipeType.vue'
+import LivePage from '../pages/livePage.vue'
+import CookingTipCard from '../cards/CookingTipCard.vue'
+import CookingTipsPage from '../pages/CookingTipsPage.vue'
 const routes = [
   {
     path: '/',
@@ -70,6 +74,12 @@ const routes = [
         ],
       },
       {
+        path: ':recipe_type',
+        name: 'RecipeType',
+        component: RecipeType,
+        props: true,
+      },
+      {
         path: ':recipe_name/:recipe_id',
         name: 'RecipeId',
         component: RecipeId,
@@ -108,7 +118,32 @@ const routes = [
       // },
     ],
   },
-
+  {
+    path: '/live',
+    name: 'LivePage',
+    component: LivePage,
+    props: false, // parent route doesn’t need route props
+    children: [
+      {
+        path: ':name/:author/:id',
+        name: 'LiveIdPage',
+        component: LivePage,
+      }
+    ]
+  },
+  {
+    path: '/cooking-tips',
+    name: 'CookingTipsPage',
+    component: CookingTipsPage,
+    props: false, // parent route doesn’t need route props
+    children: [
+      {
+        path: ':tip/',
+        name: 'CookingTipCard',
+        component: CookingTipCard,
+      }
+    ]
+  },
   {
     path: '/settings',
     name: 'SettingsPage',

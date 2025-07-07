@@ -1,7 +1,7 @@
 <template>
   <div class="recipe-gallery">
     <!-- Grid Gallery with Enhanced Details -->
-<div class="grid grid-cols-[repeat(auto-fit,_minmax(230px,_1fr))] gap-2 p-4 bg-gray-600/20 w-full">
+    <div class="grid grid-cols-[repeat(auto-fit,_minmax(230px,_1fr))] gap-2 p-4 bg-gray-600/20 w-full">
       <article v-for="(step, index) in recipe.steps" :key="index"
         :aria-label="`Step ${step.no}: ${formatInstructions(step.instructions, true)}`"
         class="relative cursor-pointer min-w-[230px] group bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100 dark:border-gray-700 hover:-translate-y-1"
@@ -22,7 +22,7 @@
                 </div>
               </div>
               <img v-if="getVideoThumbnail(step.videoUrl)" :src="getVideoThumbnail(step.videoUrl)"
-                :alt="`Video thumbnail for step ${step.no}`"
+                @error="(e) => e.target.src = onerrorImage" :alt="`Video thumbnail for step ${step.no}`"
                 class="w-full h-full object-cover opacity-80 group-hover:opacity-60 transition-opacity duration-300"
                 loading="lazy" />
             </div>
@@ -30,6 +30,7 @@
 
           <!-- Image Thumbnail -->
           <img v-else-if="step.image" :src="step.image" :alt="`Step ${step.no} visual instruction`"
+            @error="(e) => e.target.src = onerrorImage"
             class="w-full h-full bg-gray-400/30 object-cover group-hover:scale-105 transition-transform duration-500"
             loading="lazy" />
 
@@ -108,6 +109,7 @@
 
             <!-- Image Viewer -->
             <img v-else-if="slotProps.item.image" :src="slotProps.item.image"
+              @error="(e) => e.target.src = onerrorImage"
               class="max-w-[500px] w-full min-w-[250px] min-h-[200px]max-h-[70vh] bg-gray-400/30 object-contain"
               :alt="`Step ${slotProps.item.no}`" loading="lazy" />
 
@@ -183,7 +185,7 @@
 
       <template #thumbnail="slotProps">
         <div class="relative w-20 h-20 overflow-hidden">
-          <img v-if="slotProps.item.image" :src="slotProps.item.image"
+          <img v-if="slotProps.item.image" :src="slotProps.item.image" @error="(e) => e.target.src = onerrorImage"
             class="w-full h-full object-cover rounded-lg transition-transform duration-300 hover:scale-110"
             :alt="`Step ${slotProps.index + 1}`" loading="lazy" />
           <div v-else-if="slotProps.item.videoUrl"
@@ -215,6 +217,7 @@
 <script setup>
 import Galleria from 'primevue/galleria';
 import { ref, computed } from 'vue';
+import onerrorImage from '../assets/onerrorimage.png'
 
 const props = defineProps({
   recipe: {

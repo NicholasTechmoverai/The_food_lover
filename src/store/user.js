@@ -12,8 +12,12 @@ export const useAuthStore = defineStore('auth', () => {
 
   // Actions
   const setUser = (u) => {
+    if (u && !u.profilePic) {
+      u.profilePic = 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png'
+    }
     user.value = u
   }
+
 
   const setToken = (t) => {
     token.value = t

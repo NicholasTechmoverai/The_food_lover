@@ -1,19 +1,8 @@
 <template>
   <div class="recipe-galleria">
-    <Galleria
-      ref="galleria"
-      :value="recipe.steps"
-      :numVisible="5"
-      :circular="true"
-      :autoPlay="isAutoPlay"
-      :transitionInterval="3000"
-      :activeIndex="activeIndex"
-      :showThumbnails="showThumbnails"
-      :showIndicators="true"
-      :showItemNavigators="true"
-      :responsiveOptions="responsiveOptions"
-      @activeIndexChange="onIndexChange"
-      :pt="{
+    <Galleria ref="galleria" :value="recipe.steps" :numVisible="5" :circular="true" :autoPlay="isAutoPlay"
+      :transitionInterval="3000" :activeIndex="activeIndex" :showThumbnails="showThumbnails" :showIndicators="true"
+      :showItemNavigators="true" :responsiveOptions="responsiveOptions" @activeIndexChange="onIndexChange" :pt="{
         root: {
           class: [{ 'flex flex-col': fullScreen }]
         },
@@ -21,8 +10,7 @@
           class: ['relative', { 'flex-1 justify-center': fullScreen }]
         },
         thumbnails: 'absolute w-full left-0 bottom-0'
-      }"
-    >
+      }">
       <!-- Slide Item View -->
       <template #item="{ item, index }">
         <div class="relative h-full flex flex-col md:flex-row gap-4 p-4">
@@ -30,28 +18,14 @@
           <div class="w-full md:w-1/2 h-96 flex-shrink-0">
             <!-- Media: YouTube / video / image -->
             <div v-if="item.videoUrl" class="media-container bg-black rounded-lg h-full">
-              <iframe
-                v-if="isYoutubeUrl(item.videoUrl)"
-                :src="getYoutubeEmbedUrl(item.videoUrl)"
-                frameborder="0"
-                allowfullscreen
-                class="w-full h-full"
-                title="Step Video"
-              ></iframe>
-              <video
-                v-else
-                :src="item.videoUrl"
-                controls
-                class="w-full h-full object-contain"
-              ></video>
+              <iframe v-if="isYoutubeUrl(item.videoUrl)" :src="getYoutubeEmbedUrl(item.videoUrl)" frameborder="0"
+                allowfullscreen class="w-full h-full" title="Step Video"></iframe>
+              <video v-else :src="item.videoUrl" controls class="w-full h-full object-contain"></video>
             </div>
 
             <div v-else-if="item.image" class="h-full">
-              <img
-                :src="item.image"
-                :alt="`Step ${item.no || index + 1} image`"
-                class="w-full h-full object-cover rounded-lg"
-              />
+              <img :src="item.image" :alt="`Step ${item.no || index + 1} image`"
+                class="w-full h-full object-cover rounded-lg" @error="(e) => e.target.src = onerrorImage" />
             </div>
 
             <div v-else class="w-full h-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center rounded-lg">
@@ -71,10 +45,12 @@
                   Step {{ item.no || index + 1 }}
                 </h3>
                 <div class="flex gap-2">
-                  <div v-if="getTotalTime(item.timeRequired) > 0" class="bg-primary-100 dark:bg-primary-900 text-primary-800 dark:text-primary-100 px-3 py-1 rounded-full text-sm">
+                  <div v-if="getTotalTime(item.timeRequired) > 0"
+                    class="bg-primary-100 dark:bg-primary-900 text-primary-800 dark:text-primary-100 px-3 py-1 rounded-full text-sm">
                     <i class="pi pi-clock mr-1"></i>{{ formatTime(item.timeRequired) }}
                   </div>
-                  <div v-if="item.tempRequired > 0" class="bg-amber-100 dark:bg-amber-900 text-amber-800 dark:text-amber-100 px-3 py-1 rounded-full text-sm">
+                  <div v-if="item.tempRequired > 0"
+                    class="bg-amber-100 dark:bg-amber-900 text-amber-800 dark:text-amber-100 px-3 py-1 rounded-full text-sm">
                     <i class="pi pi-thermometer mr-1"></i>{{ item.tempRequired }}°C
                   </div>
                 </div>
@@ -82,21 +58,17 @@
 
               <!-- Instructions -->
               <div class="flex-1 mb-4 overflow-y-auto">
-                <div 
-                  class="text-gray-700 dark:text-gray-300 break-words whitespace-pre-line leading-relaxed" 
-                  v-html="formatInstructions(item.instructions || 'No instructions provided')"
-                ></div>
+                <div class="text-gray-700 dark:text-gray-300 break-words whitespace-pre-line leading-relaxed"
+                  v-html="formatInstructions(item.instructions || 'No instructions provided')"></div>
               </div>
 
               <!-- Ingredients -->
-              <div v-if="item.ingredientsUsed?.length" class="mt-auto pt-4 border-t border-gray-200 dark:border-gray-700">
+              <div v-if="item.ingredientsUsed?.length"
+                class="mt-auto pt-4 border-t border-gray-200 dark:border-gray-700">
                 <h4 class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-2">INGREDIENTS FOR THIS STEP</h4>
                 <div class="flex flex-wrap gap-2">
-                  <span
-                    v-for="(ingredient, i) in item.ingredientsUsed"
-                    :key="i"
-                    class="text-xs bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 px-3 py-1.5 rounded-full flex items-center hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-                  >
+                  <span v-for="(ingredient, i) in item.ingredientsUsed" :key="i"
+                    class="text-xs bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 px-3 py-1.5 rounded-full flex items-center hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
                     <i class="pi pi-circle-fill text-[8px] mr-2 text-primary-500"></i>
                     {{ formatIngredient(ingredient) }}
                   </span>
@@ -109,23 +81,14 @@
 
       <!-- Thumbnail View -->
       <template #thumbnail="{ item, index }">
-        <div class="relative w-24 h-16 rounded-md overflow-hidden border-2 border-transparent hover:border-primary-400 transition-all">
-          <img
-            v-if="item.image"
-            :src="item.image"
-            :alt="`Step ${item.no || index + 1} thumbnail`"
-            class="w-full h-full object-cover"
-          />
-          <div
-            v-else-if="item.videoUrl"
-            class="w-full h-full bg-blue-900/80 flex items-center justify-center"
-          >
+        <div
+          class="relative w-24 h-16 rounded-md overflow-hidden border-2 border-transparent hover:border-primary-400 transition-all">
+          <img v-if="item.image" :src="item.image" :alt="`Step ${item.no || index + 1} thumbnail`"
+            class="w-full h-full object-cover" @error="(e) => e.target.src = onerrorImage" />
+          <div v-else-if="item.videoUrl" class="w-full h-full bg-blue-900/80 flex items-center justify-center">
             <i class="pi pi-video text-white text-lg"></i>
           </div>
-          <div
-            v-else
-            class="w-full h-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center"
-          >
+          <div v-else class="w-full h-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
             <i class="pi pi-image text-gray-500 dark:text-gray-400"></i>
           </div>
           <span class="absolute bottom-1 right-1 bg-black/80 text-white text-xs px-1.5 py-0.5 rounded-full">
@@ -150,32 +113,23 @@
       <!-- Footer with controls -->
       <template #footer>
         <div class="flex items-stretch bg-surface-900 text-gray-600 dark:text-white h-12 rounded-b-lg overflow-hidden">
-          <button 
-            type="button" 
-            @click="onThumbnailButtonClick" 
+          <button type="button" @click="onThumbnailButtonClick"
             class="bg-transparent border-none hover:bg-white/10  text-gray-600 dark:text-white inline-flex justify-center items-center cursor-pointer px-4 transition-colors"
-            :title="showThumbnails ? 'Hide thumbnails' : 'Show thumbnails'"
-          >
+            :title="showThumbnails ? 'Hide thumbnails' : 'Show thumbnails'">
             <i class="pi pi-th-large"></i>
           </button>
-          <button 
-            type="button" 
-            @click="toggleAutoSlide" 
+          <button type="button" @click="toggleAutoSlide"
             class="bg-transparent border-none hover:bg-white/10 text-gray-600 dark:text-white inline-flex justify-center items-center cursor-pointer px-4 transition-colors"
-            :title="isAutoPlay ? 'Pause slideshow' : 'Play slideshow'"
-          >
+            :title="isAutoPlay ? 'Pause slideshow' : 'Play slideshow'">
             <i :class="slideButtonIcon"></i>
           </button>
           <span v-if="recipe.steps" class="flex items-center gap-4 ml-3 text-sm">
             <span class="bg-white/10 px-3 py-1 rounded-full">{{ activeIndex + 1 }}/{{ recipe.steps.length }}</span>
             <span class="font-bold">Step {{ recipe.steps[activeIndex].no || activeIndex + 1 }}</span>
           </span>
-          <button 
-            type="button" 
-            @click="toggleFullScreen" 
+          <button type="button" @click="toggleFullScreen"
             class="bg-transparent border-none hover:bg-white/10  text-gray-600 dark:text-white inline-flex justify-center items-center cursor-pointer px-4 ml-auto transition-colors"
-            :title="fullScreen ? 'Exit fullscreen' : 'Enter fullscreen'"
-          >
+            :title="fullScreen ? 'Exit fullscreen' : 'Enter fullscreen'">
             <i :class="fullScreenIcon"></i>
           </button>
         </div>
@@ -186,7 +140,8 @@
 
 <script setup>
 import Galleria from 'primevue/galleria';
-import { ref, computed, onMounted ,onUnmounted} from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
+import onerrorImage from '../assets/onerrorimage.png'
 
 const props = defineProps({
   recipe: {
@@ -316,7 +271,7 @@ const getYoutubeEmbedUrl = (url) => {
 // Format instructions with basic HTML support
 const formatInstructions = (text) => {
   if (!text) return 'No instructions';
-  
+
   // Basic sanitization (in a real app, use a proper sanitizer library)
   const sanitized = text
     .replace(/</g, '&lt;')
@@ -330,7 +285,7 @@ const formatInstructions = (text) => {
     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
     .replace(/\*(.*?)\*/g, '<em>$1</em>')
     .replace(/_(.*?)_/g, '<u>$1</u>');
-    
+
   return sanitized;
 };
 
@@ -355,6 +310,7 @@ onUnmounted(() => {
   opacity: 0.7;
   transition: all 0.3s ease;
 }
+
 :deep(.p-galleria-thumbnail-item:hover),
 :deep(.p-galleria-thumbnail-item.p-highlight) {
   opacity: 1;
@@ -403,8 +359,8 @@ onUnmounted(() => {
   :deep(.p-galleria-item-wrapper) {
     flex-direction: column;
   }
-  
-  :deep(.p-galleria-item) > div {
+
+  :deep(.p-galleria-item)>div {
     width: 100% !important;
   }
 }

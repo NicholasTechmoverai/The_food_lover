@@ -19,6 +19,6 @@ const user = computed(() => auth.user)
 const MenuBar = computed(() => {
   const bar = siteConfig.components.menuBar
   if (bar === 1) return MenuBar1
-  return MenuBar1 
+  return MenuBar1
 })
 </script>

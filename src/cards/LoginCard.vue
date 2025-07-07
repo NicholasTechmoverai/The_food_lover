@@ -120,6 +120,10 @@ import { useSiteStore } from '../config/siteConfig';
 import { Login } from '../apis/auth';
 import router from '../router';
 
+import { useAuthStore } from '../store/user.js'
+
+const auth = useAuthStore()
+
 const { siteConfig } = useSiteStore()
 
 const toast = useToast();
@@ -159,6 +163,12 @@ const onFormSubmit = async ({ valid, values }) => {
       }
       if (res.success) {
         router.push('/recipes')
+        if (res.data){
+            // console.log("USER",res.data)
+            auth.setUser(res.data.user)
+            auth.setToken({token:res.data.access_token,expires_in:res.data.expires_in})
+            // console.log("USER",auth.user)
+        }
       }
     }
 

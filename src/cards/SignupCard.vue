@@ -77,8 +77,8 @@
                         <FloatLabel variant="on">
                             <IconField class="relative">
                                 <InputIcon class="pi pi-lock " />
-                                <Password style="width: 100%;"  id="password" name="password" placeholder="Password" toggleMask
-                                    :feedback="false"
+                                <Password style="width: 100%;" id="password" name="password" placeholder="Password"
+                                    toggleMask :feedback="false"
                                     inputClass="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-white" />
                             </IconField>
                             <label for="password">Password</label>
@@ -94,8 +94,8 @@
                         <FloatLabel variant="on">
                             <IconField class="relative">
                                 <InputIcon class="pi pi-lock " />
-                                <Password style="width: 100%;"  id="confirm_password" name="confirm_password" placeholder="Confirm Password"
-                                    toggleMask :feedback="false"
+                                <Password style="width: 100%;" id="confirm_password" name="confirm_password"
+                                    placeholder="Confirm Password" toggleMask :feedback="false"
                                     inputClass="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-white" />
                             </IconField>
                             <label for="confirm_password">Confirm
@@ -125,7 +125,7 @@
 
 
                     <!-- Submit Button -->
-                    <Button v-if="!loading"  type="submit" label="Sign Up"
+                    <Button v-if="!loading" type="submit" label="Sign Up"
                         class="w-full py-4 bg-gradient-to-r from-primary-500 to-primary-600 dark:from-primary-600 dark:to-primary-700 hover:from-primary-600 hover:to-primary-700 dark:hover:from-primary-700 dark:hover:to-primary-800 text-white font-medium rounded-lg transition-all duration-200 shadow-md hover:shadow-lg mt-2" />
                     <div v-if="loading" class="flex flex-row gap-3 items-center justify-center">
                         <Button :disabled="loading" label="Creating account..."
@@ -163,6 +163,7 @@ import { z } from 'zod'
 import { useSiteStore } from '../config/siteConfig'
 import { Signup } from '../apis/auth'
 import Clock from '../loaders/ClockLoad.vue'
+import router from '../router'
 
 const { siteConfig } = useSiteStore()
 const toast = useToast()
@@ -223,9 +224,16 @@ const onFormSubmit = async ({ valid, values }) => {
             }
             if (res.success) {
                 router.push('/recipes')
+                if (res.data) {
+                    // console.log("USER",res.data)
+                    auth.setUser(res.data.user)
+                    auth.setToken({ token: res.data.access_token, expires_in: res.data.expires_in })
+                    // console.log("USER",auth.user)
+                }
             }
         }
 
     }
 };
+
 </script>

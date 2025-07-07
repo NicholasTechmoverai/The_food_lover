@@ -5,7 +5,7 @@ import { B_URl } from './auth';
 const BACKEND_URL = `${B_URl}/api`
 
 
-const data = [
+const runtime_recipes = [
     {
         id: 1,
         recipeName: 'Beef, Potato, minji stew paired with chapati',
@@ -240,6 +240,164 @@ Stew Procedure step by step `,
     }
 ];
 
+const recipeTypes = [
+    {
+        title: "Breakfast",
+        description: "Start your day right",
+        gradient: "#ff7e5f, #feb47b",
+        image: "https://images.unsplash.com/photo-1557142046-c704a3adf364?w=200&h=200&fit=crop",
+    },
+    {
+        title: "Vegan",
+        description: "Plant-powered goodness",
+        gradient: "#6a11cb, #2575fc",
+        image: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=200&h=200&fit=crop",
+    },
+    {
+        title: "Desserts",
+        description: "Sweet tooth treats",
+        gradient: "#00c6ff, #0072ff",
+        image: "https://images.unsplash.com/photo-1571115177098-24ec42ed204d?w=200&h=200&fit=crop",
+    },
+    {
+        title: "Grilled",
+        description: "Smoky & savory",
+        gradient: "#ff512f, #dd2476",
+        image: "https://images.unsplash.com/photo-1558030006-450675393462?w=200&h=200&fit=crop",
+    },
+    {
+        title: "Soups",
+        description: "Warm & comforting",
+        gradient: "#ffb6c1, #ff69b4",
+        image: "https://images.unsplash.com/photo-1547592180-85f173990554?w=200&h=200&fit=crop",
+    },
+    {
+        title: "Salads",
+        description: "Crisp & fresh",
+        gradient: "#ff9a8b, #ffc3a0",
+        image: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=200&h=200&fit=crop",
+    },
+    {
+        title: "Pasta",
+        description: "Italian favorites",
+        gradient: "#a1c4fd, #c2e9fb",
+        image: "https://images.unsplash.com/photo-1555949258-eb67b1ef0ceb?w=200&h=200&fit=crop",
+    },
+    {
+        title: "Seafood",
+        description: "Ocean delights",
+        gradient: "#fbc2eb, #a18cd1",
+        image: "https://images.unsplash.com/photo-1585238342024-78d387f4a707?w=200&h=200&fit=crop",
+    },
+    {
+        title: "Snacks",
+        description: "Quick bites",
+        gradient: "#84fab0, #8fd3f4",
+        image: "https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=200&h=200&fit=crop",
+    },
+];
+const liveRecipes = [
+    {
+        live: true,
+        date: '2025-07-20',
+        meal: 'Ugali Pasta with Special Sauce and Extra Toppings',
+        chef: {
+            profilePic: '',
+            name: 'Chef John Doe',
+            id: '1',
+        }
+    },
+    {
+        live: true,
+        date: '2025-07-20',
+        meal: 'Chapati Beans',
+        chef: {
+            profilePic: 'https://randomuser.me/api/portraits/men/32.jpg',
+            name: 'Chef Maria',
+            id: '2',
+        }
+    },
+    {
+        live: false,
+        date: '2025-07-21',
+        meal: 'Pilau with Kachumbari',
+        chef: {
+            profilePic: 'https://randomuser.me/api/portraits/women/44.jpg',
+            name: 'Chef Amina',
+            id: '3',
+        }
+    },
+    {
+        live: true,
+        date: '2025-07-22',
+        meal: 'Nyama Choma Special',
+        chef: {
+            profilePic: 'https://randomuser.me/api/portraits/men/75.jpg',
+            name: 'Chef Kamau',
+            id: '4',
+        }
+    },
+    {
+        live: false,
+        date: '2025-07-23',
+        meal: 'Mukimo with Greens',
+        chef: {
+            profilePic: 'https://randomuser.me/api/portraits/women/68.jpg',
+            name: 'Chef Wanjiku',
+            id: '5',
+        }
+    },
+    {
+        live: true,
+        date: '2025-07-24',
+        meal: 'Fish Curry with Coconut Rice',
+        chef: {
+            profilePic: 'https://randomuser.me/api/portraits/men/90.jpg',
+            name: 'Chef Ali',
+            id: '6',
+        }
+    },
+    {
+        live: false,
+        date: '2025-07-25',
+        meal: 'Vegetable Stir Fry with Noodles',
+        chef: {
+            profilePic: 'https://randomuser.me/api/portraits/women/33.jpg',
+            name: 'Chef Lin',
+            id: '7',
+        }
+    },
+    {
+        live: true,
+        date: '2025-07-26',
+        meal: 'Mandazi with Chai',
+        chef: {
+            profilePic: 'https://randomuser.me/api/portraits/men/22.jpg',
+            name: 'Chef Bakari',
+            id: '8',
+        }
+    },
+    {
+        live: false,
+        date: '2025-07-27',
+        meal: 'Githeri Special',
+        chef: {
+            profilePic: 'https://randomuser.me/api/portraits/women/29.jpg',
+            name: 'Chef Njeri',
+            id: '9',
+        }
+    },
+    {
+        live: true,
+        date: '2025-07-28',
+        meal: 'Bhajia with Tamarind Sauce',
+        chef: {
+            profilePic: 'https://randomuser.me/api/portraits/men/45.jpg',
+            name: 'Chef Raj',
+            id: '10',
+        }
+    }
+];
 export const recipesSteps = ref([
     {
         id: 1,
@@ -651,9 +809,33 @@ Stew Procedure step by step ',
     }
 ]);
 
-export const fetchRecipes = async () => {
-    return data;
+
+
+export const fetchRecipes = async (token = null, filters = null) => {
+    try {
+        const response = await axios.get(`${BACKEND_URL}/recipes/`, {
+            headers: token ? { Authorization: `Bearer ${token}` } : {},
+            params: filters || {},
+        })
+
+        if (response.status === 200 || response.status === 201) {
+            return { success: true, data: response.data }
+        } else {
+            return {
+                success: false,
+                message: `Unexpected response status: ${response.status}`,
+                data: runtime_recipes,
+            }
+        }
+    } catch (error) {
+        return {
+            success: false,
+            message: error?.response?.data?.detail || error.message || 'An error occurred',
+            data: runtime_recipes,
+        }
+    }
 }
+
 
 export const fetchRecipeSteps = (ID) => {
     const cover = data.find(f => f.id === Number(ID))
@@ -661,34 +843,82 @@ export const fetchRecipeSteps = (ID) => {
     return [cover, steps]
 }
 
-/**
- * Save a new recipe to the backend
- * @param {Object} recipe - The recipe object to save
- * @returns {Promise<{ success: boolean, message?: string, data?: any }>}
- */
-
-export const saveRecipe = async (recipe) => {
-    if (!recipe || typeof recipe !== 'object') {
-        return { success: false, message: 'Invalid recipe data' }
-    }
-
+export const fetchRecipeTypes = async (token = null, filters = null) => {
     try {
-        const response = await axios.post(`${BACKEND_URL}/recipes/add`, recipe)
+        const response = await axios.get(`${BACKEND_URL}/recipes/types`, {
+            headers: token ? { Authorization: `Bearer ${token}` } : {},
+            params: filters || {},
+        })
 
         if (response.status === 200 || response.status === 201) {
             return { success: true, data: response.data }
         } else {
             return {
                 success: false,
-                message: `Unexpected response status: ${response.status}`
+                message: `Unexpected response status: ${response.status}`,
+                data: recipeTypes,
             }
         }
     } catch (error) {
         return {
             success: false,
-            message: error?.response?.data?.message || error.message || 'An error occurred',
-            data: error?.response?.data
+            message: error?.response?.data?.detail || error.message || 'An error occurred',
+            data: recipeTypes,
         }
     }
+
+}
+export const fetchLiveRecipes = async () => {
+    return liveRecipes;
+}
+/**
+ * Save a new recipe to the backend
+ * @param {Object} recipe - The recipe object to save
+ * @returns {Promise<{ success: boolean, message?: string, data?: any }>}
+ */
+
+export const saveRecipe = async (token = null, recipe) => {
+  if (!token) {
+    return {
+      success: false,
+      message: 'Failed to detect user. Please login and try publishing your recipe!',
+    }
+  }
+
+  console.log("TOKEN::",token)
+
+  if (!recipe || typeof recipe !== 'object') {
+    return { success: false, message: 'Invalid recipe data' }
+  }
+
+  try {
+    const response = await axios.post(
+      `${BACKEND_URL}/recipes/`,
+      recipe,
+      {
+        headers: {
+          Authorization: `Bearer ${token.token}`,
+        },
+      }
+    )
+
+    if (response.status === 200 || response.status === 201) {
+      return { success: true, data: response.data }
+    } else {
+      return {
+        success: false,
+        message: `Unexpected response status: ${response.status}`,
+      }
+    }
+  } catch (error) {
+    return {
+      success: false,
+      message:
+        error?.response?.data?.detail || // Most DRF/FastAPI backends use `detail`
+        error?.response?.data?.message || // Optional fallback
+        error.message ||
+        'An error occurred',
+    }
+  }
 }
 

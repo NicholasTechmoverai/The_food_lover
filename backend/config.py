@@ -1,0 +1,36 @@
+from tortoise import Tortoise
+
+WEB_SERVER = 'http://localhost:5173'
+
+db_url = "mysql://root:75223031@localhost/the_food_lovers"
+
+
+async def init_db(app):
+    await Tortoise.init(
+        db_url=db_url,
+        modules={"models": ["models"]},  
+    )
+    await Tortoise.generate_schemas()
+
+
+TORTOISE_ORM = {
+    "connections": {"default": db_url},
+    "apps": {
+        "models": {
+            "models": ["models", 
+                        # "models.admin_user",
+                       "aerich.models"],
+            "default_connection": "default",
+        }
+    },
+#aerich init -t config.TORTOISE_ORM  -> to initiliaze aerich
+#aerich migrate -> to create migration files
+#aerich upgrade -> to apply the migration files
+#aerich downgrade -> to revert the migration files
+
+}
+
+class Config:
+    SECRET_KEY = "75223031"  # 🔐 Use a strong random string in production
+    ALGORITHM = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES = 60

@@ -1,0 +1,50 @@
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+
+# Byte-compiled files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environment variables
+.env
+.env.*
+
+# IDE/editor settings
+.vscode/
+.idea/
+*.swp
+
+# macOS files
+.DS_Store
+
+# Migrations (optional, depending on project)
+migrations/
+*.sqlite3
+
+# Testing
+.coverage
+.pytest_cache/
+htmlcov/
+
+# Logs
+*.log
+
+# Compiled C extensions
+*.so
+
+# aerich migration cache
+.aerich/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# mypy type checker
+.mypy_cache/
+.dmypy.json
+
+# Tortoise ORM generated schemas (optional)
+schema.json
