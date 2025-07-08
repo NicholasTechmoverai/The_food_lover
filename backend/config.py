@@ -1,6 +1,7 @@
 from tortoise import Tortoise
 
 WEB_SERVER = 'http://localhost:5173'
+BASE_SERVER = 'http://localhost:8000'
 
 db_url = "mysql://root:75223031@localhost/the_food_lovers"
 
@@ -35,3 +36,5 @@ class Config:
     SECRET_KEY = "75223031"  # 🔐 Use a strong random string in production
     ALGORITHM = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES = 60
+    
+    

@@ -22,7 +22,8 @@
 
                         <!-- Fun Description -->
                         <p v-if="recipe?.description"
-                            class="text-gray-600 dark:text-gray-300 text-base leading-relaxed italic" v-html=" recipe.description">
+                            class="text-gray-600 dark:text-gray-300 text-base leading-relaxed italic"
+                            v-html="recipe.description">
                         </p>
 
                         <!-- Metadata: Time, Difficulty, Category -->
@@ -57,7 +58,7 @@
 
             <!-- Loading State -->
             <div v-if="isLoading" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <div v-for="i in 3" :key="i" class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
+                <div v-for="i in 2" :key="i" class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
                     <Skeleton class="w-full h-48 rounded-t-xl" />
                     <div class="p-4 space-y-3">
                         <Skeleton class="w-3/4 h-6" />
@@ -65,6 +66,9 @@
                         <Skeleton class="w-full h-4" />
                         <Skeleton class="w-1/2 h-4" />
                     </div>
+                </div>
+                <div v-for="i in 4">
+                    <RecipeStepCard />
                 </div>
             </div>
 
@@ -120,7 +124,7 @@
                 </div>
 
                 <!-- Recipe Meta Footer -->
-                <footer
+                <footer v-if="!isLoadingMeta"
                     class="mt-10 sticky bottom-0 z-10 backdrop-blur-md border-t border-gray-200 dark:border-gray-700 rounded-t-xl  px-0 md:px-6 py-1 md:py-4 shadow-lg"
                     :style="{ borderTop: `4px solid ${recipe?.repiceColor || '#f59e0b'}` }">
                     <div class="flex flex-col md:flex-row justify-between items-center gap-1 md:gap-4">
@@ -197,7 +201,7 @@
                     </div>
                 </footer>
 
-                <div>
+                <div v-if="!isLoadingComments">
                     comments
                     <div>
                         <ChatsPage />
@@ -217,18 +221,34 @@
                     </button>
                 </div>
             </div>
+            <div v-if="isLoadingMeta">
+                <div class="w-full h-[50px] bg-gray-400/30 animate-pulse">loading meta...</div>
+            </div>
+
+            <div v-if="isLoadingComments">
+                <div class="w-full h-[50px] bg-gray-400/30 animate-pulse">loading meta...</div>
+            </div>
+
         </div>
-        <Toast />
+        <Toast position="bottom-center" group="bc" />
+
     </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
+import { useAuthStore } from '../store/user.js'
 import { useToast } from 'primevue/usetoast'
 import FlowGalleryViewer from '../cards/FlowGalleryViewer.vue'
 import GridStepsView from '../cards/GridStepsView.vue'
-import { fetchRecipeSteps } from '../apis/recipes.js'
+import { fetchRecipeMeta, fetchRecipeSteps } from '../apis/recipes.js'
 import ChatsPage from '../cards/ChatsPage.vue'
+import { like_unlike, save_unsave_favourites } from '../apis/index.js'
+import RecipeStepCard from '../loaders/Skeleton1.vue'
+
+const auth = useAuthStore()
+
+
 const listType = ref('grid')
 const listTypeOptions = [
     { label: 'Step-by-Step', value: 'flow', icon: 'pi pi-list' },
@@ -236,14 +256,17 @@ const listTypeOptions = [
 ]
 
 const isLoading = ref(false)
+const isLoadingMeta = ref(false)
+const isLoadingComments = ref(false)
+
 const recipe = ref(null)
 const steps = ref(null)
 const recipeMeta = ref({
-    likeCount: 0,
+    likeCount: 10,
     isSaved: false,
     isLiked: false,
-    views: 24,
-    comments: 4,
+    views: 74,
+    comments: 12,
 })
 
 const defaultAvatar = 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png'
@@ -264,26 +287,83 @@ const recipeUrl = computed(() => {
     return `${window.location.origin}/recipes/${recipe.value.recipeName}/${recipe.value.id}`;
 });
 
+
 const fetchRecipe = async () => {
-    isLoading.value = true
+    isLoading.value = true;
+
     try {
-        const [recipeData, stepsData] = await fetchRecipeSteps(props.recipe_id)
-        recipe.value = recipeData
-        steps.value = stepsData
-        // Initialize like count from recipe data if available
-        if (recipeData?.likes) {
-            recipeMeta.value.likeCount = recipeData.likes
+        const res = await fetchRecipeSteps(auth.token, props.recipe_name, props.recipe_id);
+
+        if (res?.message && !res.success) {
+            toast.add({
+                severity: 'error',
+                summary: `Failed to load recipe`,
+                detail: res.message,
+                group: 'bc',
+                life: 5000,
+            });
+        }
+
+        if (res?.data) {
+            recipe.value = res.data.cover;
+            steps.value = res.data.steps;
         }
     } catch (error) {
-        console.error('Error fetching recipe:', error)
-        recipe.value = null
-        steps.value = null
+        console.error('Unexpected error fetching recipe:', error);
+        toast.add({
+            severity: 'error',
+            summary: 'Unexpected Error',
+            detail: 'An unexpected error occurred while fetching recipe details.',
+            group: 'bc',
+            life: 5000,
+        });
     } finally {
-        isLoading.value = false
+        isLoading.value = false;
     }
-}
+};
 
-onMounted(fetchRecipe)
+const fetchMeta = async () => {
+    isLoadingMeta.value = true;
+
+    try {
+        const res = await fetchRecipeMeta(
+            '/recipes/meta',
+            auth.token,
+            { name: props.recipe_name, recipe_id: props.recipe_id },
+            recipeMeta.value
+        );
+
+        if (res?.message && !res.success) {
+            toast.add({
+                severity: 'error',
+                summary: 'Failed to fetch meta info',
+                detail: res.message,
+                group: 'bc',
+                life: 5000,
+            });
+        }
+
+        if (res?.data) {
+            recipeMeta.value = res.data;
+        }
+    } catch (error) {
+        console.error('Unexpected error fetching meta:', error);
+        toast.add({
+            severity: 'error',
+            summary: 'Unexpected Error',
+            detail: 'An unexpected error occurred while fetching metadata.',
+            group: 'bc',
+            life: 5000,
+        });
+    } finally {
+        isLoadingMeta.value = false;
+    }
+};
+
+
+onMounted(async () => {
+    await Promise.all([fetchRecipe(), fetchMeta()]);
+});
 
 const op = ref();
 const shares = ref([
@@ -361,14 +441,50 @@ const copyUrl = () => {
     });
 };
 
-const toggleLike = () => {
-    recipeMeta.value.isLiked = !recipeMeta.value.isLiked
-    recipeMeta.value.likeCount += recipeMeta.value.isLiked ? 1 : -1
+const toggleLike = async () => {
+    const res = await like_unlike(auth.token, props.recipe_id)
+    if (res.success) {
+        recipeMeta.value.isLiked = !recipeMeta.value.isLiked
+        recipeMeta.value.likeCount += recipeMeta.value.isLiked ? 1 : -1
+    } else {
+        toast.add({
+            severity: 'error',
+            summary: 'Failed to like',
+            detail: `${res.message} || 'failed!!'`,
+            group: 'bc',
+            life: 2000
+        });
+    }
 }
 
-const toggleSave = () => {
-    recipeMeta.value.isSaved = !recipeMeta.value.isSaved
-}
+const toggleSave = async () => {
+    const res = await save_unsave_favourites(auth.token, props.recipe_id);
+
+    if (res.success) {
+        const isNowSaved = !recipeMeta.value.isSaved;
+
+        toast.add({
+            severity: isNowSaved ? 'success' : 'info',
+            summary: isNowSaved ? 'Recipe Saved' : 'Recipe Removed',
+            detail: isNowSaved
+                ? `You’ve saved “${props.recipe_name}” to your favorites.`
+                : `You’ve removed “${props.recipe_name}” from your favorites.`,
+            group: 'bc',
+            life: 2500,
+        });
+
+        recipeMeta.value.isSaved = isNowSaved;
+    } else {
+        toast.add({
+            severity: 'error',
+            summary: 'Action Failed',
+            detail: res.message || `Something went wrong while updating favorites.`,
+            group: 'bc',
+            life: 2500,
+        });
+    }
+};
+
 
 const formatDate = (dateString) => {
     if (!dateString) return 'Unknown date'

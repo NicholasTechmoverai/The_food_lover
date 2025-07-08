@@ -1,10 +1,17 @@
-from models import Recipe, RecipeStep, Tag, Category,Ingredient
+from models import Recipe, RecipeStep, Tag, Category,Ingredient,RecipeLike,RecipeComment,ShareRecipe,Favorite,RecipeView
 from reusables.main import sanitizeContents ,save_base64_image
 from uuid import  UUID
 from tortoise.expressions import Q
+from typing import Tuple
+from tortoise.exceptions import DoesNotExist
+from fastapi import HTTPException
+from typing import Any
 
 from pydantic import BaseModel, Field
 from typing import List, Optional, Union
+
+from config import Config,BASE_SERVER
+
 
 
 class CookTime(BaseModel):
@@ -163,9 +170,6 @@ class RecipeService:
 
         return recipe
 
-    async def get_recipe_by_id(self, recipe_id: UUID):
-        return await self.recipe_repo.get_or_none(id=recipe_id).prefetch_related("tags", "category", "steps__ingredients")
-
 
     async def list_recipes(self, public_only=True, limit: int = 10, offset: int = 0):
         query = self.recipe_repo.all().prefetch_related("tags", "category", "steps__ingredients", "user")
@@ -188,7 +192,7 @@ class RecipeService:
                 "id": str(r.id),
                 "recipeName": r.name,
                 "repiceColor": r.theme_color,
-                "image": r.cover_image_url,
+                "image": F"{BASE_SERVER}/{r.cover_image_url}",
                 "tags": [tag.name for tag in r.tags],
                 "cookTime": minutes_to_time(r.cook_time_minutes),
                 "description": r.description,
@@ -212,3 +216,222 @@ class RecipeService:
             result.append(recipe_dict)
 
         return result
+
+    async def get_recipe_by_id(self, name: str, recipe_id: UUID, user_id: UUID = None) -> Tuple[dict[str, Any], dict[str, Any]]:
+        recipe = await self.recipe_repo.get_or_none(id=recipe_id).prefetch_related(
+            "tags", "category", "steps__ingredients", "user"
+        )
+
+        if not recipe:
+            raise HTTPException(status_code=404, detail="Recipe not found")
+
+        def minutes_to_time(total: int):
+            return {"hr": total // 60, "min": total % 60}
+
+        recipe_cover = {
+            "id": str(recipe.id),
+            "recipeName": recipe.name,
+            "repiceColor": recipe.theme_color,
+            "image": f"{BASE_SERVER}/{recipe.cover_image_url}",
+            "tags": [tag.name for tag in recipe.tags],
+            "cookTime": minutes_to_time(recipe.cook_time_minutes),
+            "description": recipe.description,
+            "cuisine": {
+                "name": recipe.cuisine,
+                "region": "East Africa",  # Optional: adjust based on actual DB info
+            },
+            "complexityLevel": {
+                "name": recipe.difficulty_level.capitalize(),
+                "value": {"Easy": 1, "Medium": 2, "Hard": 3}.get(recipe.difficulty_level.capitalize(), 1),
+            },
+            "category": [cat.name for cat in recipe.category],
+            "user": {
+                "name": getattr(recipe.user, "name", "Unknown"),
+                "profilePic": getattr(recipe.user, "profile_pic", ""),
+                "id": str(recipe.user.id),
+                "totalRecipes": await self.recipe_repo.filter(user=recipe.user).count(),
+                "isVerified": getattr(recipe.user, "is_verified", False),
+            },
+        }
+
+        recipe_steps = {
+            "id": str(recipe.id),
+            "name": recipe.name,
+            "description": recipe.description,
+            "category": [cat.name for cat in recipe.category],
+            "tags": [tag.name for tag in recipe.tags],
+            "steps": [],
+        }
+
+        for step in sorted(recipe.steps, key=lambda s: s.step_number):
+            ingredients_used = [
+                {
+                    "name": ing.name,
+                    "amount": ing.quantity,
+                    "unit": ing.unit
+                }
+                for ing in step.ingredients
+            ]
+
+            step_entry = {
+                "no": step.step_number,
+                "timeRequired": minutes_to_time(step.cook_time_minutes or 0),
+                "tempRequired": step.temperature_celsius,
+                "instructions": step.description,
+                "image": f"{BASE_SERVER}/{step.image_url}",
+                "videoUrl": step.video_url,
+                "ingredientsUsed": ingredients_used,
+            }
+
+            recipe_steps["steps"].append(step_entry)
+
+        return recipe_cover, recipe_steps
+    
+    async def like_unlike(self, user_id: UUID, recipe_id: UUID) -> bool:
+        """
+        Toggle like/unlike for a given recipe by a user.
+        
+        Returns:
+            True if liked, False if unliked.
+        """
+        like, created = await RecipeLike.get_or_create(user_id=user_id, recipe_id=recipe_id)
+
+        if not created:
+            # Already liked → unlike it
+            await like.delete()
+            return False
+
+        # Liked just now
+        #TODO:send notifications to chef
+        return True
+    async def like_unlike_favourite(self, user_id: UUID, recipe_id: UUID) -> bool:
+        """
+        Toggle like/unlike for a given recipe by a user.
+        
+        Returns:
+            True if liked, False if unliked.
+        """
+        favourite, created = await Favorite.get_or_create(user_id=user_id, recipe_id=recipe_id)
+
+        if not created:
+            # Already liked → unlike it
+            await favourite.delete()
+            return False
+        return True
+    
+    async def get_recipe_meta(self, recipe_id: UUID, user_id: Optional[UUID] = None) -> dict:
+        """
+        Fetch recipe metadata like likes, views, comments, shares, and user-specific actions (isLiked, isSaved).
+
+        Args:
+            recipe_id (UUID): The ID of the recipe.
+            user_id (Optional[UUID]): The ID of the user, if authenticated.
+
+        Returns:
+            dict: Metadata dictionary.
+        """
+
+        # Aggregate counts
+        like_count = await RecipeLike.filter(recipe_id=recipe_id).count()
+        comment_count = await RecipeComment.filter(recipe_id=recipe_id, is_deleted=False).count()
+        view_count = await Favorite.filter(recipe_id=recipe_id).count()
+        share_count = await ShareRecipe.filter(recipe_id=recipe_id).count()
+
+        # Default user-specific flags
+        is_liked = False
+        is_saved = False
+
+        # Only check user-specific states if user_id is provided
+        if user_id:
+            is_liked = await RecipeLike.filter(recipe_id=recipe_id, user_id=user_id).exists()
+            is_saved = await Favorite.filter(recipe_id=recipe_id, user_id=user_id).exists()
+
+        return {
+            "likeCount": like_count,
+            "comments": comment_count,
+            "views": view_count,
+            "shareCount": share_count,
+            "isLiked": is_liked,
+            "isSaved": is_saved
+        }        
+    async def share(
+        self,
+        user_id: UUID,
+        recipe_id: UUID,
+        shared_to: str = None,
+        message: str = None
+    ) -> bool:
+        """
+        Create or update a share record for a given recipe.
+
+        If a record already exists for the same user, recipe, and shared_to target,
+        the message will be updated.
+
+        Returns:
+            True if the share was created or updated successfully.
+        """
+        share, created = await ShareRecipe.get_or_create(
+            user_id=user_id,
+            recipe_id=recipe_id,
+            shared_to=shared_to,
+            defaults={"message": message}
+        )
+
+        # If the record exists but message has changed, update it
+        if not created and message and share.message != message:
+            share.message = message
+            await share.save()
+
+        return True
+    
+    async def post_comment(self, user_id: UUID, recipe_id: UUID, comment: str) -> bool:
+        """
+        Post a new top-level comment on a recipe.
+        """
+        try:
+            await RecipeComment.create(
+                user_id=user_id,
+                recipe_id=recipe_id,
+                content=comment.strip()
+            )
+            # TODO: Optionally notify the recipe author
+            return True
+        except Exception as e:
+            print("Error posting comment:", e)
+            return False
+        
+    async def reply_to_comment(self, user_id: UUID, recipe_id: UUID, parent_comment_id: int, reply: str) -> bool:
+        """
+        Reply to an existing comment on a recipe.
+        """
+        try:
+            parent = await RecipeComment.get_or_none(id=parent_comment_id, recipe_id=recipe_id)
+            if not parent:
+                return False  # parent doesn't exist or wrong recipe
+
+            await RecipeComment.create(
+                user_id=user_id,
+                recipe_id=recipe_id,
+                content=reply.strip(),
+                parent_id=parent_comment_id
+            )
+            # TODO: Optionally notify the parent commenter
+            return True
+        except Exception as e:
+            print("Error posting reply:", e)
+            return False
+        
+    async def edit_comment(self, user_id: UUID, comment_id: int, new_content: str) -> bool:
+        """
+        Edit an existing comment if it belongs to the user.
+        """
+        comment = await RecipeComment.get_or_none(id=comment_id, user_id=user_id)
+        if not comment:
+            return False
+
+        if comment.content.strip() != new_content.strip():
+            comment.content = new_content.strip()
+            comment.is_edited = True
+            await comment.save()
+        
+        return True

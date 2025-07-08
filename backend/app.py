@@ -5,13 +5,14 @@ from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from tortoise import Tortoise  # Needed for shutdown
 import socketio
+from fastapi.staticfiles import StaticFiles
 
 from web_socket.main import MainNamespace
 from config import init_db  # Your DB init logic
 from routes.auth import auth_router,limiter
 from routes.recipes import recipe_router
 from utils.limiter import limiter  
-
+from routes.user import user_router
 
 
 ALLOWED_ORIGINS = [
@@ -38,9 +39,13 @@ sio = socketio.AsyncServer(
 )
 
 sio.register_namespace(MainNamespace("/main"))
+BASE_DIRECTORY = 'uploads'
+app.mount("/uploads", StaticFiles(directory=BASE_DIRECTORY), name="uploads")
+
 
 app.include_router(auth_router, prefix="/api")
 app.include_router(recipe_router,prefix="/api")
+app.include_router(user_router,prefix="/api")
 
 socket_app = socketio.ASGIApp(
     sio,

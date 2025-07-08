@@ -10,7 +10,7 @@ from utils.limiter import limiter
 from utils.recipes import RecipeService,RecipeRequest
 
 from tortoise.expressions import Q
-
+from uuid import UUID
 from models import User as Users
 
 recipe_router = APIRouter()
@@ -23,23 +23,22 @@ recipe_router = APIRouter()
 async def create_recipe(
     data: RecipeRequest,
     request: Request,
-    user: Users = Depends(get_current_user),  # Dependency injection works here!
+    user: Users = Depends(get_current_user),
     service: RecipeService = Depends()
 ):
  
-    # if not user.is_chef:
-    #     raise HTTPException(status_code=403, detail="Only chefs can submit recipes")
+    if not user.is_chef:
+        raise HTTPException(status_code=403, detail="Only chefs can submit recipes")
 
    
     recipe = await service.create_or_update_recipe(data, user.id)
-    # return {"message": "Recipe created", "recipe_id": recipe.id}
 
 
-    # Store to DB (if implemented)
     return JSONResponse({
         "message": "Recipe processed successfully",
         "user": user.name,
-        "recipeName": data.recipeCover.recipeName
+        "recipeName": data.recipeCover.recipeName,
+        "recipeId":recipe.id
     })
 
 
@@ -58,3 +57,99 @@ async def fetch_recipe(
         return recipes
     except AuthError as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+
+@recipe_router.get("/recipes/{name}/{id}")
+@limiter.limit("30/min")
+async def fetch_recipe_by_id(
+    request: Request,
+    name: str,
+    id: UUID,
+    public_only: bool = True,
+    user: Users = Depends(get_current_user),
+    service: RecipeService = Depends()
+):
+    """
+    Fetch a specific recipe by its name and UUID.
+    Rate-limited to 30 requests per minute.
+    """
+    try:
+        cover, steps = await service.get_recipe_by_id( name, id,user.id)
+        return {
+            "cover": cover,
+            "steps": steps
+        }
+    except AuthError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Failed to fetch recipe.")
+    
+    
+    
+@recipe_router.post("/recipes/{recipe_id}/like")
+@limiter.limit("30/min")
+async def like_unlike_recipe(
+    request: Request,
+    recipe_id: UUID,
+    user: Users = Depends(get_current_user),
+    service: RecipeService = Depends()
+):
+    """
+    Fetch a specific recipe by its name and UUID.
+    Rate-limited to 30 requests per minute.
+    """
+    try:
+        await service.like_unlike( user.id,recipe_id)
+        return {
+            "success": True,
+        }
+    except AuthError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Failed to fetch recipe.")    
+    
+    
+@recipe_router.post("/recipes/{recipe_id}/favourite-recipe")
+@limiter.limit("30/min")
+async def save_unsave_favourite_recipe(
+    request: Request,
+    recipe_id: UUID,
+    user: Users = Depends(get_current_user),
+    service: RecipeService = Depends()
+):
+    """
+    Fetch a specific recipe by its name and UUID.
+    Rate-limited to 30 requests per minute.
+    """
+    try:
+        await service.like_unlike_favourite( user.id,recipe_id)
+        return {
+            "success": True,
+        }
+    except AuthError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Failed to fetch recipe.")   
+    
+    
+    
+@recipe_router.get("/recipes/meta")
+@limiter.limit("30/min")
+async def recipe_meta(
+    request: Request,
+    recipe_id: UUID,
+    name:str,
+    user: Users = Depends(get_current_user),
+    service: RecipeService = Depends()
+):
+    """
+    Fetch a specific recipe by its name and UUID.
+    Rate-limited to 30 requests per minute.
+    """
+    try:
+        meta = await service.get_recipe_meta( recipe_id,user.id)
+        return meta
+    except AuthError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Failed to fetch recipe.")       

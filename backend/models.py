@@ -222,6 +222,23 @@ class Favorite(Model):
     def __str__(self):
         return f"{self.user.name} favorited {self.recipe.name}"
 
+class RecipeView(Model):
+    id = fields.IntField(pk=True)
+
+    user = fields.ForeignKeyField("models.User", related_name="recipe_views")
+    recipe = fields.ForeignKeyField("models.Recipe", related_name="views")
+
+    viewed_at = fields.DatetimeField(auto_now_add=True)
+    active_duration = fields.IntField(default=0)  # in seconds
+
+    class Meta:
+        table = "recipe_views"
+        unique_together = ("user", "recipe")
+        ordering = ["-viewed_at"]
+
+    def __str__(self):
+        return f"{self.user.name} viewed '{self.recipe.recipeName}'"
+
 
 class RecipeLike(Model):
     id = fields.IntField(pk=True)
@@ -267,22 +284,35 @@ class CookingTipLike(Model):
     def __str__(self):
         return f"{self.user.name} liked a tip"
 
-class ShareRecipe(Model):
+
+
+class ShareRecipe(models.Model):
     id = fields.IntField(pk=True)
+
     user = fields.ForeignKeyField("models.User", related_name="shared_recipes")
     recipe = fields.ForeignKeyField("models.Recipe", related_name="shares")
 
-    shared_to = fields.CharField(max_length=255, null=True)
-    message = fields.TextField(null=True)
+    shared_to = fields.CharField(
+        max_length=255,
+        null=True,
+        description="Target recipient (e.g., email, username, or platform)"
+    )
+
+    message = fields.TextField(
+        null=True,
+        description="Optional message included by the sharer"
+    )
+
     created_at = fields.DatetimeField(auto_now_add=True)
 
     class Meta:
         table = "recipe_shares"
         unique_together = ("user", "recipe", "shared_to")
+        ordering = ["-created_at"]
 
-    def __str__(self):
-        return f"{self.user.name} shared {self.recipe.name}"
-
+    def __str__(self) -> str:
+        to = self.shared_to if self.shared_to else "public"
+        return f"{self.user.name} shared '{self.recipe.name}' to {to} on {self.created_at.strftime('%Y-%m-%d %H:%M')}"
 
 class ShareCookingTip(Model):
     id = fields.IntField(pk=True)

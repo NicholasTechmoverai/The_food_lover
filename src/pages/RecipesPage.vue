@@ -45,7 +45,7 @@
           Browse Recipes
         </h2>
 
-        <div v-if="recipes_loading" class="grid grid-cols-1 md:grid-cols-2 gap-4 ">
+        <div v-if="recipes_loading" class="grid grid-cols-1 md:grid-cols-2 gap-4 m-auto">
           <RecipeLoader v-for="i in 2" :key="i" />
         </div>
 
@@ -165,11 +165,12 @@ const getRecipeTypes = async () => {
     }
   }
 }
-
 onMounted(async () => {
-  await getRecipes()
-  await getRecipeTypes()
+  recipes_types_loading.value = true
+  recipes_loading.value = true
   liveRecipes.value = await fetchLiveRecipes()
-  // console.log(recipes.value)
-})
+
+  await Promise.all([getRecipes(), getRecipeTypes()]);
+});
+
 </script>

@@ -6,9 +6,9 @@ from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, ExpiredSignatureError, jwt
 from passlib.context import CryptContext
 
-from models import User as Users  
+from models import User as Users,Follow
 from config import Config
-
+from uuid import UUID
 
 # Password hashing context
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -83,6 +83,24 @@ class AuthService:
         )
 
         return self.generate_token(user)
+    
+    async def follow_unfollow(self, user_id: UUID, chef_id: UUID) -> bool:
+        """
+        Toggle follow/unfollow for a given chef by a user.
+        
+        Returns:
+            True if liked, False if unliked.
+        """
+        follow, created = await Follow.get_or_create(follower_id=user_id, following_id=chef_id)
+
+        if not created:
+            # Already followed → infollw it
+            await follow.delete()
+            return False
+
+        # follwewd just now
+        #TODO:send notifications to chef
+        return True
 
     def verify_password(self, plain_password: str, hashed_password: str) -> bool:
         return pwd_context.verify(plain_password, hashed_password)

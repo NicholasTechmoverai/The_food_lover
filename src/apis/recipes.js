@@ -814,7 +814,7 @@ Stew Procedure step by step ',
 export const fetchRecipes = async (token = null, filters = null) => {
     try {
         const response = await axios.get(`${BACKEND_URL}/recipes/`, {
-            headers: token ? { Authorization: `Bearer ${token}` } : {},
+            headers: token ? { Authorization: `Bearer ${token.token}` } : {},
             params: filters || {},  // filters = { limit: 10, offset: 0 }
         })
 
@@ -836,17 +836,55 @@ export const fetchRecipes = async (token = null, filters = null) => {
     }
 }
 
+export const fetchRecipeSteps = async (token = null, name = null, id = null) => {
+    try {
+        const response = await axios.get(`${BACKEND_URL}/recipes/${name}/${id}`, {
+            headers: token ? { Authorization: `Bearer ${token.token}` } : {},
+        });
 
-export const fetchRecipeSteps = (ID) => {
-    const cover = data.find(f => f.id === Number(ID))
-    const steps = recipesSteps.value.find(f => f.id === Number(ID))
-    return [cover, steps]
-}
+        if ([200, 201].includes(response.status)) {
+            return {
+                success: true,
+                data: {
+                    cover: response.data.cover,
+                    steps: response.data.steps,
+                },
+            };
+        } else {
+            return handleFetchFallback(id, `Unexpected response status: ${response.status}`);
+        }
+    } catch (error) {
+        return handleFetchFallback(
+            id,
+            error?.response?.data?.detail || error.message || 'An error occurred while fetching the recipe.'
+        );
+    }
+};
+
+const handleFetchFallback = (id, message) => {
+    const { cover, steps } = getRuntimeRecipeSteps(id);
+    return {
+        success: false,
+        message,
+        data: {
+            cover,
+            steps,
+        },
+    };
+};
+
+const getRuntimeRecipeSteps = (id) => {
+    const cover = runtime_recipes.find(item => item.id === Number(id)) || {};
+    const steps = recipesSteps.value.find(item => item.id === Number(id)) || [];
+    return { cover, steps };
+};
+
+
 
 export const fetchRecipeTypes = async (token = null, filters = null) => {
     try {
         const response = await axios.get(`${BACKEND_URL}/recipes/types`, {
-            headers: token ? { Authorization: `Bearer ${token}` } : {},
+            headers: token ? { Authorization: `Bearer ${token.token}` } : {},
             params: filters || {},
         })
 
@@ -922,3 +960,27 @@ export const saveRecipe = async (token = null, recipe) => {
   }
 }
 
+export const fetchRecipeMeta = async (endpoint='/recipes/meta', token = null, queryParams = {}, fallback = []) => {
+  try {
+    const response = await axios.get(`${BACKEND_URL}${endpoint}`, {
+      headers: token ? { Authorization: `Bearer ${token.token}` } : {},
+      params: queryParams
+    });
+
+    if ([200, 201].includes(response.status)) {
+      return { success: true, data: response.data };
+    } else {
+      return {
+        success: false,
+        message: `Unexpected response status: ${response.status}`,
+        data: fallback
+      };
+    }
+  } catch (error) {
+    return {
+      success: false,
+      message: error?.response?.data?.detail || error.message || 'An error occurred',
+      data: fallback
+    };
+  }
+}
