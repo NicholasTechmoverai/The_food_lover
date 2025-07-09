@@ -36,7 +36,7 @@ export const fetchFollowers = async (token = null, recipeId, queryParams = {}) =
 
 // Fetch comments of a recipe
 export const fetchComments = async (token = null, recipeId, queryParams = {}) => {
-  return await fetchMeta(`/recipes/${recipeId}/comments`, token, queryParams, []);
+  return await fetchMeta(`/recipes/comments`, token, queryParams, []);
 };
 
 // Fetch likes of a recipe
@@ -148,3 +148,55 @@ export const folow_unfollow = async (token = null, chefId) => {
     };
   }
 };
+
+
+export const make_a_post = async (
+    endpoint = '',
+    token = null,
+    bodyContent = {},
+    fallback = []
+) => {
+    if (!token) {
+        return {
+            success: false,
+            message: 'Kindly login to make the request!',
+            data: fallback,
+        }
+    }
+
+    try {
+        const response = await axios.post(
+            `${BACKEND_URL}${endpoint}`,
+            bodyContent,
+            {
+                headers: {
+                    Authorization: `Bearer ${token.token}`,
+                    'Content-Type': 'application/json',
+                },
+            }
+        )
+
+        if ([200, 201].includes(response.status)) {
+            return {
+                success: true,
+                data: response.data,
+            }
+        } else {
+            return {
+                success: false,
+                message: `Unexpected response status: ${response.status}`,
+                data: fallback,
+            }
+        }
+    } catch (error) {
+        return {
+            success: false,
+            message:
+                error?.response?.data?.detail ||
+                error?.response?.data?.message ||
+                error.message ||
+                'An unexpected error occurred',
+            data: fallback,
+        }
+    }
+}

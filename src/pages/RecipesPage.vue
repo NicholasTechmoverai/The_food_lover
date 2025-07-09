@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen overflow-hidden relative bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-100">
+  <div  v-if="!isRouterViewActive" class="min-h-screen overflow-hidden relative bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-100">
     <!-- Hero Section -->
     <section class="relative h-96 overflow-hidden">
       <img
@@ -26,7 +26,7 @@
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 px-6 py-10">
 
       <!-- Left: Recipe List (2/3 width) -->
-      <section v-if="!isRouterViewActive" class="lg:col-span-2 space-y-6">
+      <section class="lg:col-span-2 space-y-6">
         <section>
           <h2 class="text-xl font-semibold mb-4">Explore Recipes type</h2>
           <div v-if="recipes_types_loading" class="flex flex-row gap-2">
@@ -79,10 +79,11 @@
 
     </div>
     <Toast />
+  
+  </div>
     <!-- Router View for Dynamic Pages -->
     <router-view v-if="isRouterViewActive"
-      class="absolute inset-0 bg-white dark:bg-gray-900 z-50 overflow-y-auto transition-all duration-300" />
-  </div>
+      class=" inset-0 bg-white dark:bg-gray-900 z-50 overflow-y-auto transition-all duration-300" />
 </template>
 
 <script setup>

@@ -916,71 +916,73 @@ export const fetchLiveRecipes = async () => {
  */
 
 export const saveRecipe = async (token = null, recipe) => {
-  if (!token) {
-    return {
-      success: false,
-      message: 'Failed to detect user. Please login and try publishing your recipe!',
+    if (!token) {
+        return {
+            success: false,
+            message: 'Failed to detect user. Please login and try publishing your recipe!',
+        }
     }
-  }
 
-  console.log("TOKEN::",token)
+    console.log("TOKEN::", token)
 
-  if (!recipe || typeof recipe !== 'object') {
-    return { success: false, message: 'Invalid recipe data' }
-  }
-
-  try {
-    const response = await axios.post(
-      `${BACKEND_URL}/recipes/`,
-      recipe,
-      {
-        headers: {
-          Authorization: `Bearer ${token.token}`,
-        },
-      }
-    )
-
-    if (response.status === 200 || response.status === 201) {
-      return { success: true, data: response.data }
-    } else {
-      return {
-        success: false,
-        message: `Unexpected response status: ${response.status}`,
-      }
+    if (!recipe || typeof recipe !== 'object') {
+        return { success: false, message: 'Invalid recipe data' }
     }
-  } catch (error) {
-    return {
-      success: false,
-      message:
-        error?.response?.data?.detail || // Most DRF/FastAPI backends use `detail`
-        error?.response?.data?.message || // Optional fallback
-        error.message ||
-        'An error occurred',
+
+    try {
+        const response = await axios.post(
+            `${BACKEND_URL}/recipes/`,
+            recipe,
+            {
+                headers: {
+                    Authorization: `Bearer ${token.token}`,
+                },
+            }
+        )
+
+        if (response.status === 200 || response.status === 201) {
+            return { success: true, data: response.data }
+        } else {
+            return {
+                success: false,
+                message: `Unexpected response status: ${response.status}`,
+            }
+        }
+    } catch (error) {
+        return {
+            success: false,
+            message:
+                error?.response?.data?.detail || // Most DRF/FastAPI backends use `detail`
+                error?.response?.data?.message || // Optional fallback
+                error.message ||
+                'An error occurred',
+        }
     }
-  }
 }
 
-export const fetchRecipeMeta = async (endpoint='/recipes/meta', token = null, queryParams = {}, fallback = []) => {
-  try {
-    const response = await axios.get(`${BACKEND_URL}${endpoint}`, {
-      headers: token ? { Authorization: `Bearer ${token.token}` } : {},
-      params: queryParams
-    });
+export const fetchRecipeMeta = async (endpoint = '/recipes/meta', token = null, queryParams = {}, fallback = []) => {
+    try {
+        const response = await axios.get(`${BACKEND_URL}${endpoint}`, {
+            headers: token ? { Authorization: `Bearer ${token.token}` } : {},
+            params: queryParams
+        });
 
-    if ([200, 201].includes(response.status)) {
-      return { success: true, data: response.data };
-    } else {
-      return {
-        success: false,
-        message: `Unexpected response status: ${response.status}`,
-        data: fallback
-      };
+        if ([200, 201].includes(response.status)) {
+            return { success: true, data: response.data };
+        } else {
+            return {
+                success: false,
+                message: `Unexpected response status: ${response.status}`,
+                data: fallback
+            };
+        }
+    } catch (error) {
+        return {
+            success: false,
+            message: error?.response?.data?.detail || error.message || 'An error occurred',
+            data: fallback
+        };
     }
-  } catch (error) {
-    return {
-      success: false,
-      message: error?.response?.data?.detail || error.message || 'An error occurred',
-      data: fallback
-    };
-  }
 }
+
+

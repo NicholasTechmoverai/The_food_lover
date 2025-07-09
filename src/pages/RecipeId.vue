@@ -1,6 +1,6 @@
 <template>
     <div
-        class="min-h-screen bg-gradient-to-br   from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 p-4 md:p-8 overflow-auto">
+        class="border min-h-screen bg-gradient-to-br   from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 p-4 md:p-8 overflow-auto">
         <div class="max-w-6xl mx-auto">
 
             <!-- Recipe Header -->
@@ -68,7 +68,7 @@
                     </div>
                 </div>
                 <div v-for="i in 4">
-                    <RecipeStepCard />
+                    <RecipeStepCard  />
                 </div>
             </div>
 
@@ -201,10 +201,10 @@
                     </div>
                 </footer>
 
-                <div v-if="!isLoadingComments">
+                <div >
                     comments
                     <div>
-                        <ChatsPage />
+                        <ChatsPage :theme="recipe?.repiceColor" :recipe_id="recipe_id"/>
                     </div>
                 </div>
 
@@ -225,9 +225,7 @@
                 <div class="w-full h-[50px] bg-gray-400/30 animate-pulse">loading meta...</div>
             </div>
 
-            <div v-if="isLoadingComments">
-                <div class="w-full h-[50px] bg-gray-400/30 animate-pulse">loading meta...</div>
-            </div>
+        
 
         </div>
         <Toast position="bottom-center" group="bc" />

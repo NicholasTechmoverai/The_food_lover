@@ -384,54 +384,315 @@ class RecipeService:
 
         return True
     
-    async def post_comment(self, user_id: UUID, recipe_id: UUID, comment: str) -> bool:
+    async def post_comment(self, user_id: UUID, recipe_id: UUID, comment: str) -> Union[RecipeComment, None]:
         """
         Post a new top-level comment on a recipe.
+
+        Returns:
+            RecipeComment object if created successfully, else None.
         """
         try:
-            await RecipeComment.create(
+            comment_obj = await RecipeComment.create(
                 user_id=user_id,
                 recipe_id=recipe_id,
                 content=comment.strip()
             )
-            # TODO: Optionally notify the recipe author
-            return True
+            # TODO: Notify recipe author
+            return comment_obj
         except Exception as e:
             print("Error posting comment:", e)
-            return False
-        
-    async def reply_to_comment(self, user_id: UUID, recipe_id: UUID, parent_comment_id: int, reply: str) -> bool:
+            return None
+    async def reply_to_comment(self, user_id: UUID, recipe_id: UUID, parent_comment_id: int, reply: str) -> Union[RecipeComment, None]:
         """
         Reply to an existing comment on a recipe.
         """
         try:
             parent = await RecipeComment.get_or_none(id=parent_comment_id, recipe_id=recipe_id)
             if not parent:
-                return False  # parent doesn't exist or wrong recipe
+                return None  # parent doesn't exist or wrong recipe
 
-            await RecipeComment.create(
+            comment_obj = await RecipeComment.create(
                 user_id=user_id,
                 recipe_id=recipe_id,
                 content=reply.strip(),
                 parent_id=parent_comment_id
             )
             # TODO: Optionally notify the parent commenter
-            return True
+            return comment_obj
         except Exception as e:
             print("Error posting reply:", e)
-            return False
+            return None
         
-    async def edit_comment(self, user_id: UUID, comment_id: int, new_content: str) -> bool:
+    async def edit_comment(self, user_id: UUID, comment_id: int, new_content: str) -> Union[RecipeComment, None]:
         """
         Edit an existing comment if it belongs to the user.
         """
         comment = await RecipeComment.get_or_none(id=comment_id, user_id=user_id)
         if not comment:
-            return False
+            return None
 
         if comment.content.strip() != new_content.strip():
             comment.content = new_content.strip()
             comment.is_edited = True
             await comment.save()
         
+        return comment
+    
+    async def delete_comment(self, user_id: UUID, comment_id: int) -> bool:
+        """
+        Soft delete a comment if it belongs to the user.
+        """
+        comment = await RecipeComment.get_or_none(id=comment_id, user_id=user_id)
+        if not comment:
+            return False
+
+        comment.is_deleted = True
+        await comment.save()
         return True
+
+        
+    async def delete_recipe(self, user_id: UUID, recipe_id: UUID) -> bool:
+        """
+        Delete a recipe if it belongs to the user, including steps, ingredients, comments, likes, etc.
+        """
+        recipe = await self.recipe_repo.get_or_none(id=recipe_id, user_id=user_id).prefetch_related(
+            "steps__ingredients", "tags", "category"
+        )
+        if not recipe:
+            return False
+
+        # Delete all related ingredients and steps
+        for step in recipe.steps:
+            await step.ingredients.all().delete()
+            await step.delete()
+
+        # Clear M2M fields
+        await recipe.tags.clear()
+        await recipe.category.clear()
+
+        # Delete related records
+        await RecipeComment.filter(recipe_id=recipe_id).delete()
+        await RecipeLike.filter(recipe_id=recipe_id).delete()
+        await Favorite.filter(recipe_id=recipe_id).delete()
+        await ShareRecipe.filter(recipe_id=recipe_id).delete()
+
+        # Finally delete the recipe
+        await recipe.delete()
+        return True
+
+    async def get_comments(self, recipe_id: UUID, parent: Optional[int] = None, limit: int = 10, offset: int = 0) -> dict:
+        """
+        Get recipe comments:
+        - If parent is None: top-level comments with 1 reply + reply count
+        - If parent is set: fetch full thread in flat structure
+        """
+
+        try:
+            print("recipe_id received:", recipe_id)
+            if parent is None:
+                print("parent is none")
+
+                # Fetch top-level comments
+                top_comments = await RecipeComment.filter(
+                    recipe_id=recipe_id,
+                    is_deleted=False,
+                    parent_id=None
+                ).prefetch_related("user").order_by("-created_at").offset(offset).limit(limit)
+
+                result = []
+
+                print("result", [f"{c.user.name}: {c.content}" for c in top_comments])
+
+                for comment in top_comments:
+                    print("this comment", f"{comment.user.name}: {comment.content}")
+
+                    # First reply (if exists)
+                    first_reply = await RecipeComment.filter(
+                        recipe_id=recipe_id,
+                        parent_id=comment.id,
+                        is_deleted=False
+                    ).prefetch_related("user").order_by("created_at").first()
+
+                    # Count of all replies
+                    reply_count = await RecipeComment.filter(
+                        recipe_id=recipe_id,
+                        parent_id=comment.id,
+                        is_deleted=False
+                    ).count()
+
+                    comment_dict = {
+                        "id": comment.id,
+                        "content": comment.content,
+                        "is_edited": comment.is_edited,
+                        "likes": 0,
+                        "created_at": comment.created_at.isoformat(),
+                        "parent_id": comment.parent_id,
+                        "attachments": list(comment.attachments) if isinstance(comment.attachments, (list, tuple)) else [],
+                        "user": {
+                            "id": str(comment.user.id),
+                            "name": getattr(comment.user, "name", "Unknown"),
+                            "profilePic": getattr(comment.user, "profile_pic", "")
+                        },
+                        "replies": [],
+                        "replyCount": reply_count
+                    }
+
+                    if first_reply:
+                        replied_to_name = getattr(comment.user, "name", "")
+                        reply_dict = {
+                            "id": first_reply.id,
+                            "content": f"@{replied_to_name} {first_reply.content}",
+                            "is_edited": first_reply.is_edited,
+                            "likes": 0,
+                            "created_at": first_reply.created_at.isoformat(),
+                            "parent_id": first_reply.parent_id,
+                            "attachments": list(first_reply.attachments) if isinstance(first_reply.attachments, (list, tuple)) else [],
+                            "user": {
+                                "id": str(first_reply.user.id),
+                                "name": getattr(first_reply.user, "name", "Unknown"),
+                                "profilePic": getattr(first_reply.user, "profile_pic", "")
+                            }
+                        }
+                        comment_dict["replies"].append(reply_dict)
+
+                    result.append(comment_dict)
+
+                total = await RecipeComment.filter(
+                    recipe_id=recipe_id,
+                    is_deleted=False,
+                    parent_id=None
+                ).count()
+
+                return {
+                    "comments": result,
+                    "total": total,
+                    "limit": limit,
+                    "offset": offset
+                }
+
+            else:
+                print("Fetching replies for parent:", parent)
+
+                all_replies = await RecipeComment.filter(
+                    recipe_id=recipe_id,
+                    is_deleted=False
+                ).prefetch_related("user").order_by("created_at")
+
+                parent_map = {}
+                user_map = {}
+
+                for c in all_replies:
+                    parent_map[c.id] = c.parent_id
+                    user_map[c.id] = getattr(c.user, "name", "Unknown")
+
+                def is_descendant(child_id):
+                    """Check if comment is a descendant of the parent"""
+                    pid = parent_map.get(child_id)
+                    while pid:
+                        if pid == parent:
+                            return True
+                        pid = parent_map.get(pid)
+                    return False
+
+                # Filter out actual descendants (excluding the parent itself)
+                filtered_replies = [c for c in all_replies if c.id != parent and is_descendant(c.id)]
+
+                total = len(filtered_replies)  # Total replies before pagination
+
+                # Apply pagination
+                paginated_replies = filtered_replies[offset:offset + limit]
+
+                replies = []
+                for c in paginated_replies:
+                    replied_to_name = user_map.get(parent_map.get(c.id))
+                    prefix = f"@{replied_to_name} " if replied_to_name else ""
+                    replies.append({
+                        "id": c.id,
+                        "content": f"{prefix}{c.content}",
+                        "is_edited": c.is_edited,
+                        "likes": 0,
+                        "created_at": c.created_at.isoformat(),
+                        "parent_id": c.parent_id,
+                        "attachments": list(c.attachments) if isinstance(c.attachments, (list, tuple)) else [],
+                        "user": {
+                            "id": str(c.user.id),
+                            "name": getattr(c.user, "name", "Unknown"),
+                            "profilePic": getattr(c.user, "profile_pic", "")
+                        }
+                    })
+
+                return {
+                    "replies": replies,
+                    "total": total,
+                    "limit": limit,
+                    "offset": offset
+                }
+
+
+        except Exception as e:
+            print("Error in get_comments:", str(e))
+            return {"error": "An unexpected error occurred."}
+
+
+#  {
+#         id: 1,
+#         content: 'This is a great recipe! I tried it with coconut milk and it was amazing. 😍',
+#         is_edited: false,
+#         likes: 5,
+#         parent_id: null,
+#         created_at: new Date(),
+#         user: {
+#             id: 456,
+#             name: 'Jane Doe',
+#             profilePic: defaultAvatar,
+#         },
+#         replies: [
+#             {
+#                 id: 2,
+#                 content: '@Jane Doe I\'ll definitely try that! Thanks Jane!',
+#                 is_edited: true,
+#                 likes: 2,
+#                 parent_id: 1,
+#                 created_at: new Date(),
+#                 user: {
+#                     id: 789,
+#                     name: 'John Smith',
+#                     profilePic: defaultAvatar,
+#                 },
+#             },
+#             {
+#                 id: 3,
+#                 content: 'Coconut milk is a great alternative! Did you use full-fat or light?',
+#                 is_edited: false,
+#                 likes: 0,
+#                 parent_id: 1,
+#                 created_at: new Date(Date.now() - 3600000),
+#                 user: {
+#                     id: 101,
+#                     name: 'Alex Johnson',
+#                     profilePic: defaultAvatar,
+#                 },
+#             },
+#         ],
+#     },
+#     {
+#         id: 4,
+#         content: 'Has anyone tried doubling the spices? I wonder if it would be too strong.',
+#         is_edited: false,
+#         likes: 1,
+#         parent_id: null,
+#         created_at: new Date(Date.now() - 86400000),
+#         user: {
+#             id: 112,
+#             name: 'Sam Wilson',
+#             profilePic: defaultAvatar,
+#         },
+#         replies: [],
+#         attachments: [
+#             {
+#                 name: 'recipe-variation.pdf',
+#                 url: '#',
+#                 type: 'file'
+#             }
+#         ]
+#     },

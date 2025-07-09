@@ -12,7 +12,8 @@ from utils.recipes import RecipeService,RecipeRequest
 from tortoise.expressions import Q
 from uuid import UUID
 from models import User as Users
-
+from typing import Optional
+from pydantic import BaseModel
 recipe_router = APIRouter()
 
 
@@ -153,3 +154,70 @@ async def recipe_meta(
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail="Failed to fetch recipe.")       
+    
+    
+@recipe_router.get("/recipes/comments")
+@limiter.limit("30/min")
+async def fetch_comments(
+    request: Request,
+    recipe_id: UUID,
+    parent:Optional[int]=None,
+    user: Users = Depends(get_current_user),
+    service: RecipeService = Depends()
+):
+    """
+    Fetch a specific recipe by its name and UUID.
+    Rate-limited to 30 requests per minute.
+    """
+    try:
+        print("recipe_id received:", recipe_id)
+        comments = await service.get_comments(recipe_id,parent,10,0)
+        return comments
+    except AuthError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Failed to fetch comments.")
+
+
+
+class RecipeCommentRequest(BaseModel):
+    comment_id: Optional[int] = None  # For editing
+    content: str
+    file: Optional[str] = None        # Assuming it's a file URL or base64 string
+    parent: Optional[int] = None   # For replying to a comment
+
+    
+@recipe_router.post("/recipes/{recipe_id}/comments")
+@limiter.limit("30/min")
+async def post_recipe_comments(
+    request: Request,
+    recipe_id: UUID,
+    data: RecipeCommentRequest,
+    user: Users = Depends(get_current_user),
+    service: RecipeService = Depends()
+):
+    """
+    Create, reply to, or edit a comment on a specific recipe.
+
+    - Rate-limited to 30 requests per minute.
+    - If `comment_id` is provided, the comment will be edited.
+    - If `parent_id` is provided (but not `comment_id`), it will be treated as a reply.
+    - Otherwise, a new top-level comment will be created.
+    """
+    try:
+        if data.comment_id:
+            # Edit existing comment
+            return await service.edit_comment(user.id, data.comment_id, data.content)
+
+        if data.parent:
+            # Reply to a comment
+            return await service.reply_to_comment(user.id, recipe_id, data.parent, data.content)
+
+        # Post a new top-level comment
+        return await service.post_comment(user.id, recipe_id, data.content)
+
+    except AuthError as e:
+        raise HTTPException(status_code=401, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Failed to process comment.")
+     

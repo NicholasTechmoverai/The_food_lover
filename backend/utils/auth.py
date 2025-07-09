@@ -121,7 +121,7 @@ class AuthService:
             "expires_in": Config.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
             "user": {
                 "id": str(user.id),
-                "email": user.email,
+                # "email": user.email,
                 "name": user.name
             }
         }

@@ -172,6 +172,7 @@ class RecipeComment(Model):
     user = fields.ForeignKeyField("models.User", related_name="comments")
     recipe = fields.ForeignKeyField("models.Recipe", related_name="comments")
     content = fields.TextField()
+    attachments = fields.JSONField(null=True)
 
     parent = fields.ForeignKeyField(
         "models.RecipeComment", related_name="replies", null=True
