@@ -142,31 +142,26 @@
                 </Form>
             </div>
         </div>
-        <Toast />
     </div>
+    <Toast />
+
 </template>
 
 <script setup>
 import { ref } from 'vue'
 import { Form } from '@primevue/forms'
-import FloatLabel from 'primevue/floatlabel'
-import Button from 'primevue/button'
-import Message from 'primevue/message'
-import IconField from 'primevue/iconfield'
-import InputIcon from 'primevue/inputicon'
-import InputText from 'primevue/inputtext'
-import Password from 'primevue/password'
-import Checkbox from 'primevue/checkbox'
 import { zodResolver } from '@primevue/forms/resolvers/zod'
-import { useToast } from 'primevue/usetoast'
 import { z } from 'zod'
+import { useToast } from 'primevue/usetoast'
+import { useConfirm } from 'primevue/useconfirm'
+import router from '../router'
 import { useSiteStore } from '../config/siteConfig'
 import { Signup } from '../apis/auth'
-import Clock from '../loaders/ClockLoad.vue'
-import router from '../router'
+import FloatLabel from 'primevue/floatlabel'
 
 const { siteConfig } = useSiteStore()
 const toast = useToast()
+const confirm = useConfirm()
 const loading = ref(false)
 
 const initialValues = ref({
@@ -174,66 +169,71 @@ const initialValues = ref({
     name: '',
     password: '',
     confirm_password: '',
-    terms: false,
-
+    terms: false
 })
 
 const resolver = zodResolver(
-    z
-        .object({
-            email: z.string().min(5, { message: 'Email is required.' }).email({ message: 'Invalid email address.' }),
-            name: z.string().min(3, { message: 'user name too short!' }),
-            password: z
-                .string()
-                .min(6, { message: 'Minimum 6 characters.' })
-                // .max(8, { message: 'Maximum 8 characters.' })
-                .refine((val) => /[a-z]/.test(val), { message: 'Must include a lowercase letter.' })
-                .refine((val) => /[A-Z]/.test(val), { message: 'Must include an uppercase letter.' })
-                .refine((val) => /\d/.test(val), { message: 'Must include a number.' }),
-            confirm_password: z.string(),
-            terms: z.literal(true, { errorMap: () => ({ message: 'Please accept terms' }) }),
-
-        })
-        .refine((data) => data.password === data.confirm_password, {
-            message: "Passwords don't match",
-            path: ['confirm_password']
-        })
+    z.object({
+        email: z.string().min(5, { message: 'Email is required.' }).email({ message: 'Invalid email address.' }),
+        name: z.string().min(3, { message: 'User name too short.' }),
+        password: z.string()
+            .min(6, { message: 'Minimum 6 characters.' })
+            .refine(val => /[a-z]/.test(val), { message: 'Must include a lowercase letter.' })
+            .refine(val => /[A-Z]/.test(val), { message: 'Must include an uppercase letter.' })
+            .refine(val => /\d/.test(val), { message: 'Must include a number.' }),
+        confirm_password: z.string(),
+        terms: z.literal(true, { errorMap: () => ({ message: 'Please accept terms.' }) })
+    }).refine(data => data.password === data.confirm_password, {
+        message: "Passwords don't match.",
+        path: ['confirm_password']
+    })
 )
-const loginWithGoogle = () => {
-    // Implement Google login logic
-    console.log('Logging in with Google');
-};
 
-const loginWithFacebook = () => {
-    // Implement Facebook login logic
-    console.log('Logging in with Facebook');
-};
+const verify_id = ref(null)
+const verify_type = ref(null)
+
 const onFormSubmit = async ({ valid, values }) => {
-    if (valid) {
-        loading.value = true
-        const res = await Signup(values);
-        if (res) {
-            loading.value = false
-            if (res.message) {
-                toast.add({
-                    severity: res.success ? 'success' : 'error',
-                    summary: res.success ? 'Login successful' : 'Error logging in!',
-                    detail: `${res.message}`,
-                    life: 5000
-                });
-            }
-            if (res.success) {
-                router.push('/recipes')
-                if (res.data) {
-                    // console.log("USER",res.data)
-                    auth.setUser(res.data.user)
-                    auth.setToken({ token: res.data.access_token, expires_in: res.data.expires_in })
-                    // console.log("USER",auth.user)
-                }
-            }
-        }
+    if (!valid) return
 
+    loading.value = true
+    const res = await Signup(values)
+
+    loading.value = false
+
+    if (res?.message) {
+        toast.add({
+            severity: res.success ? 'success' : 'error',
+            summary: res.success ? 'Account Created' : 'Signup Failed',
+            detail: res.message,
+            life: 5000
+        })
     }
+
+    if (res?.success) {
+        showVerificationPrompt(values.email)
+        verify_id.value = res.data.id
+        verify_type.value = res.data.type
+    }
+}
+
+
+const showVerificationPrompt = (email) => {
+    confirm.require({
+        group: 'headless',
+        header: 'Verify Your Email',
+        message: `We've sent a verification link to ${email}. Please check your inbox. _OR_`,
+        icon: 'pi pi-envelope',
+        acceptProps: {
+            label: 'Enter Code',
+            icon: 'pi pi-check',
+            size: 'small',
+            severity: 'secondary'
+        },
+        accept: () => router.push(`/register/verify?id=${verify_id.value}&code=&type=${verify_type.value}`)
+    });
 };
+
+
+
 
 </script>

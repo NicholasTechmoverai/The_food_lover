@@ -20,6 +20,9 @@ import RecipeType from '../pages/RecipeType.vue'
 import LivePage from '../pages/livePage.vue'
 import CookingTipCard from '../cards/CookingTipCard.vue'
 import CookingTipsPage from '../pages/CookingTipsPage.vue'
+import VerifyPage from '../cards/VerifyPage.vue'
+
+
 const routes = [
   {
     path: '/',
@@ -97,6 +100,11 @@ const routes = [
         redirect: '/register/login',
       },
       {
+        path: 'verify',
+        name: 'VerifyPage',
+        component: VerifyPage,
+      },
+      {
         path: 'login',
         name: 'LoginPage',
         component: LoginPage,
@@ -111,11 +119,7 @@ const routes = [
         name: 'RecoverPassword',
         component: RecoverPassword,
       },
-      // {
-      //   path: 'verify',
-      //   name: 'SignupVerifyPage', // ✅ renamed
-      //   component: SignupPage,
-      // },
+
     ],
   },
   {

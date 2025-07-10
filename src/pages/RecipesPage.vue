@@ -1,5 +1,6 @@
 <template>
-  <div  v-if="!isRouterViewActive" class="min-h-screen overflow-hidden relative bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-100">
+  <div v-if="!isRouterViewActive"
+    class="min-h-screen overflow-hidden relative bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-100">
     <!-- Hero Section -->
     <section class="relative h-96 overflow-hidden">
       <img
@@ -23,67 +24,74 @@
     </section>
 
     <!-- Recipe and Sidebar Layout -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 px-6 py-10">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 px-4 md:px-6 py-10">
 
-      <!-- Left: Recipe List (2/3 width) -->
-      <section class="lg:col-span-2 space-y-6">
+      <!-- Sidebar: Visible first on small screens, second on large screens -->
+      <aside class="order-1 lg:order-2 space-y-10 lg:sticky top-16 self-start">
+
+        <!-- Live Recipes -->
         <section>
-          <h2 class="text-xl font-semibold mb-4">Explore Recipes type</h2>
-          <div v-if="recipes_types_loading" class="flex flex-row gap-2">
-            <div v-for="i in 4">
-              <RecipeTypesLoader />
-            </div>
-          </div>
-          <div v-else>
-            <RecipeTypes :render="'recipes'" :loop_through="recipeTypes" />
-
-          </div>
-
-
-        </section>
-        <h2 class="text-3xl font-bold text-gray-800 dark:text-gray-100">
-          Browse Recipes
-        </h2>
-
-        <div v-if="recipes_loading" class="grid grid-cols-1 md:grid-cols-2 gap-4 m-auto">
-          <RecipeLoader v-for="i in 2" :key="i" />
-        </div>
-
-
-        <div v-else class="grid gap-2 grid-cols-1 sm:grid-cols-2 ">
-          <RecipeCard v-for="recipe in recipes.slice(0, 4)" :key="recipe.id" :recipe="recipe"
-            class="border border-gray-300 dark:border-gray-700/50" />
-          <button class="underlined cursor-pointer ">Show more <i class="pi pi-arrow-right"></i></button>
-        </div>
-      </section>
-
-      <!-- Right: Sidebar with Tips and Video -->
-      <aside class="space-y-12 lg:sticky lg:top-20 flex flex-col ">
-
-        <!-- Cooking Tips Section -->
-        <section>
-          <h2 class="text-xl font-semibold mb-4">Live recipes & live in the kitcen</h2>
+          <h2 class="text-xl font-semibold mb-4">Live Recipes & In the Kitchen</h2>
           <RevolveCards :render="'live'" :loop_through="liveRecipes" />
         </section>
 
-        <!-- Featured Video Section -->
-        <section class="w-full bg-amber-500/0">
+        <!-- Featured Video -->
+        <section>
           <h2 class=" text-xl font-semibold mb-4">Watch & Learn</h2>
           <VideoPage />
         </section>
+
+        <!-- Trending Recipes -->
         <section>
-          <h2 class="text-xl font-semibold mb-4">Trending recipes this week</h2>
-          <TrendingDishesCard class="mt-0 mb-80" />
+          <h2 class="text-xl font-semibold mb-4">Trending Recipes This Week</h2>
+          <TrendingDishesCard class="mt-45 mb-45" />
         </section>
       </aside>
 
+      <!-- Main Recipe List -->
+      <section class="order-2 lg:order-1 lg:col-span-2 space-y-8">
+
+        <!-- Recipe Types -->
+        <div>
+          <h2 class="text-xl font-semibold mb-4">Explore Recipe Types</h2>
+          <div v-if="recipes_types_loading" class="flex flex-wrap gap-3">
+            <RecipeTypesLoader v-for="i in 4" :key="i" />
+          </div>
+          <div v-else>
+            <RecipeTypes :render="'recipes'" :loop_through="recipeTypes" />
+          </div>
+        </div>
+
+        <!-- Recipe Cards -->
+        <div>
+          <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-4">Browse Recipes</h2>
+
+          <div v-if="recipes_loading" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <RecipeLoader v-for="i in 2" :key="i" />
+          </div>
+
+          <div v-else class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <RecipeCard v-for="recipe in recipes.slice(0, 4)" :key="recipe.id" :recipe="recipe"
+              class="border border-gray-300 dark:border-gray-700/50 rounded-md" />
+          </div>
+
+          <div class="pt-4">
+            <button @click="getRecipes(limit + 10, offset + 10)"
+              class="inline-flex items-center gap-2 text-primary-600 hover:underline text-sm font-medium">
+              Show more <i class="pi pi-arrow-right"></i>
+            </button>
+          </div>
+        </div>
+
+      </section>
     </div>
+
     <Toast />
-  
+
   </div>
-    <!-- Router View for Dynamic Pages -->
-    <router-view v-if="isRouterViewActive"
-      class=" inset-0 bg-white dark:bg-gray-900 z-50 overflow-y-auto transition-all duration-300" />
+  <!-- Router View for Dynamic Pages -->
+  <router-view v-if="isRouterViewActive"
+    class=" inset-0 bg-white dark:bg-gray-900 z-50 overflow-y-auto transition-all duration-300" />
 </template>
 
 <script setup>
@@ -104,7 +112,8 @@ const auth = useAuthStore()
 const toast = useToast()
 const recipes_loading = ref(false)
 const recipes_types_loading = ref(false)
-
+const offset = ref(0)
+const limit = ref(10)
 
 const route = useRoute()
 
@@ -128,29 +137,44 @@ const recipes = ref([])
 const recipeTypes = ref([])
 const liveRecipes = ref([])
 
-const getRecipes = async () => {
+const getRecipes = async (
+  pageLimit = 10,
+  pageOffset = 0
+) => {
   recipes_loading.value = true
   const token = auth.token
-  const res = await fetchRecipes(token, { limit: 10, offset: 0 })
+  const res = await fetchRecipes(token, { limit: pageLimit, offset: pageOffset })
+
   if (res) {
     recipes_loading.value = false
     if (res.message && !res.success) {
       toast.add({
         severity: 'error',
-        summary: 'Error fetcing Recipes !',
+        summary: 'Error fetching Recipes!',
         detail: `${res.message}`,
         life: 5000
-      });
+      })
     }
+
     if (res.data) {
-      recipes.value = res.data
+      if (res.data.recipes) {
+        // recipes.value = [...res.data.recipes]
+        recipes.value.push(...res.data.recipes);
+        offset.value = res.data.offset ?? pageOffset
+        limit.value = res.data.limit ?? pageLimit
+      } else {
+        recipes.value = res.data
+      }
     }
   }
 }
-const getRecipeTypes = async () => {
+
+
+
+const getRecipeTypes = async (params = null) => {
   recipes_types_loading.value = true
   const token = auth.token
-  const res = await fetchRecipeTypes(token, null)
+  const res = await fetchRecipeTypes(token, params)
   if (res) {
     recipes_types_loading.value = false
     if (res.message && !res.success) {

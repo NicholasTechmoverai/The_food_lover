@@ -53,6 +53,7 @@ import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
 import InputOtp from 'primevue/inputotp';
 import Carousel from 'primevue/carousel';
+import BlockUI from 'primevue/blockui';
 
 
 import '@fortawesome/fontawesome-free/css/all.min.css';
@@ -63,6 +64,7 @@ import '@fontsource/inter/900.css'; // Black
 
 import './style.css';
 import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
+
 
 const app = createApp(App);
 const pinia = createPinia()
@@ -116,6 +118,10 @@ app.component('IconField', IconField)
 app.component('InputIcon', InputIcon)
 app.component('InputOtp',InputOtp)
 app.component('Carousel', Carousel)
+app.component('BlockUI', BlockUI)
+
+
+
 
 app.use(router)
 app.use(ToastService);
@@ -133,4 +139,12 @@ app.use(PrimeVue, {
         }
     }
  });
+
+// import { useAuthStore } from './store/user';
+// import { initializeSession, isTokenExpired } from './apis/auth';
+// const auth = useAuthStore()
+
+// if (auth.token && isTokenExpired(auth.token)) {
+//   await initializeSession(auth.token, auth.user?.id)
+// }
 app.mount('#app');

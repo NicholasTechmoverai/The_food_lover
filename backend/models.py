@@ -59,6 +59,29 @@ class User(Model):
 
 
 
+class VerificationCode(models.Model):
+    id = fields.UUIDField(pk=True, default=uuid.uuid4)
+    
+    user = fields.ForeignKeyField("models.User", related_name="verification_codes")
+    
+    code = fields.CharField(max_length=255)
+    verification_type = fields.CharField(max_length=50)  # e.g., email, reset_password, etc.
+    
+    expires_at = fields.DatetimeField()
+    is_used = fields.BooleanField(default=False)
+    
+    created_at = fields.DatetimeField(auto_now_add=True)
+
+    class Meta:
+        table = "verification_codes"
+        unique_together = ("user", "code", "verification_type")
+        indexes = [("user", "verification_type","code")]
+
+    def __str__(self):
+        return f"{self.verification_type.upper()} Code({self.code}) for User({self.user_id})"
+
+
+
 class Category(Model):
     id = fields.IntField(pk=True)
     name = fields.CharField(max_length=100, unique=True,index=True)

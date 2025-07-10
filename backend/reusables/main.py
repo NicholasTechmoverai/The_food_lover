@@ -85,3 +85,7 @@ async def save_base64_image(base64_str: str, folder: str = "uploads",filename:st
     except Exception as e:
         print(f"[Image Save Error]: {e}")
         return None
+
+
+async def sanitize_name (name):
+    return re.sub(r'[^a-zA-Z0-9_-]', '', name.replace(" ", "_").lower())

@@ -1,5 +1,5 @@
 from models import Recipe, RecipeStep, Tag, Category,Ingredient,RecipeLike,RecipeComment,ShareRecipe,Favorite,RecipeView
-from reusables.main import sanitizeContents ,save_base64_image
+from reusables.main import sanitizeContents ,save_base64_image,sanitize_name
 from uuid import  UUID
 from tortoise.expressions import Q
 from typing import Tuple
@@ -84,7 +84,8 @@ class RecipeService:
         self.recipe_repo = recipe_repo
         self.step_repo = step_repo
 
-    async def create_or_update_recipe(self, data: RecipeRequest, user_id: UUID):
+    async def create_or_update_recipe(self, data: RecipeRequest, user_id: UUID,user_name):
+        upload_path = f"{Config.CHEF_PATH}/{await sanitize_name(user_name)}"
         # 1. Sanitize input
         data.recipeCover.description = sanitizeContents(data.recipeCover.description)
         data.recipeSteps.description = sanitizeContents(data.recipeSteps.description)
@@ -102,7 +103,7 @@ class RecipeService:
             recipe.name = data.recipeCover.recipeName
             recipe.description = data.recipeCover.description
             recipe.theme_color = data.recipeCover.repiceColor
-            recipe.cover_image_url = await save_base64_image(data.recipeCover.image, 'uploads')
+            recipe.cover_image_url = await save_base64_image(data.recipeCover.image, upload_path)
             recipe.cuisine = data.recipeCover.cuisine.name
             recipe.difficulty_level = data.recipeCover.complexityLevel.value
             recipe.cook_time_minutes = data.recipeCover.cookTime.hr * 60 + data.recipeCover.cookTime.min
@@ -128,7 +129,7 @@ class RecipeService:
                 name=data.recipeCover.recipeName,
                 description=data.recipeCover.description,
                 theme_color=data.recipeCover.repiceColor,
-                cover_image_url=await save_base64_image(data.recipeCover.image, 'uploads'),
+                cover_image_url=await save_base64_image(data.recipeCover.image, upload_path),
                 cuisine=data.recipeCover.cuisine.name,
                 difficulty_level=data.recipeCover.complexityLevel.value,
                 cook_time_minutes=data.recipeCover.cookTime.hr * 60 + data.recipeCover.cookTime.min,
@@ -156,7 +157,7 @@ class RecipeService:
                 cook_time_minutes=step_data.timeRequired.hr * 60 + step_data.timeRequired.min,
                 temperature_celsius=step_data.tempRequired,
                 description=step_data.instructions,
-                image_url=await save_base64_image(step_data.image, 'uploads'),
+                image_url=await save_base64_image(step_data.image,upload_path),
                 video_url=step_data.videoUrl
             )
 
@@ -215,7 +216,10 @@ class RecipeService:
             }
             result.append(recipe_dict)
 
-        return result
+        return {"recipes":result,
+                "limit":limit,
+                "offset":offset
+                }
 
     async def get_recipe_by_id(self, name: str, recipe_id: UUID, user_id: UUID = None) -> Tuple[dict[str, Any], dict[str, Any]]:
         recipe = await self.recipe_repo.get_or_none(id=recipe_id).prefetch_related(

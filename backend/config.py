@@ -6,6 +6,7 @@ BASE_SERVER = 'http://localhost:8000'
 db_url = "mysql://root:75223031@localhost/the_food_lovers"
 
 
+
 async def init_db(app):
     await Tortoise.init(
         db_url=db_url,
@@ -35,6 +36,10 @@ TORTOISE_ORM = {
 class Config:
     SECRET_KEY = "75223031"  # 🔐 Use a strong random string in production
     ALGORITHM = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES = 60
+    ACCESS_TOKEN_EXPIRE_MINUTES = 30
     
+    
+    SITE_NAME = 'The Food Lovers'
+    SITE_LOGO = f"{BASE_SERVER}/uploads/logo.ico"
+    CHEF_PATH = "/uploads/chefs"
     
