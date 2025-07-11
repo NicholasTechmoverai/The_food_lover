@@ -1,7 +1,7 @@
 import { io } from "socket.io-client";
+import { B_URl } from "../apis/auth";
 
-
-const socket = io("http://localhost:8000/main", {
+const socket = io(`${B_URl}/main`, {
     path: "/ws/socket.io",
     transports: ["websocket"],
     withCredentials: true,

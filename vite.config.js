@@ -4,9 +4,12 @@ import tailwindcss from '@tailwindcss/vite'
 import path from 'path';
 
 // https://vite.dev/config/
+
+
 export default defineConfig({
-  plugins: [vue(),tailwindcss()],
-    resolve: {
+  // base: '/static/',
+  plugins: [vue(), tailwindcss()],
+  resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
     },

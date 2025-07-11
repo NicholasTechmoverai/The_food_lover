@@ -1,0 +1,7 @@
+tunnel: be50a1b1-3f7d-47ae-8615-bbf804e47342
+credentials-file: C:\Users\Nicholas\.cloudflared\the-food-lovers.json
+
+ingress:
+  - hostname: api.yourdomain.com
+    service: http://localhost:8000
+  - service: http_status:404

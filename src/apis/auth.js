@@ -3,7 +3,7 @@ import { ref } from "vue";
 
 
 // export const B_URl = 'http://localhost:8000'
-export const B_URl = 'https://dragon-brief-mayfly.ngrok-free.app'
+export const B_URl = 'https://usd-excellent-effective-rf.trycloudflare.com'
 
 const BACKEND_URL = `${B_URl}/api`
 

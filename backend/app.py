@@ -1,4 +1,6 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
+from fastapi.staticfiles import StaticFiles
+from starlette.responses import FileResponse
 from fastapi import FastAPI, Request
 from slowapi.errors import RateLimitExceeded
 from fastapi.responses import JSONResponse
@@ -13,13 +15,13 @@ from routes.auth import auth_router,limiter
 from routes.recipes import recipe_router
 from utils.limiter import limiter  
 from routes.user import user_router
-
-
+import os
+from config import Config,BASE_SERVER
 ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "http://localhost:8080",
     "https://yourfrontend.com",
-    "https://the-food-lovers.netlify.app"
+    f"{BASE_SERVER}"
 ]
 
 
@@ -40,8 +42,7 @@ sio = socketio.AsyncServer(
 )
 
 sio.register_namespace(MainNamespace("/main"))
-BASE_DIRECTORY = 'uploads'
-app.mount("/uploads", StaticFiles(directory=BASE_DIRECTORY), name="uploads")
+
 
 
 app.include_router(auth_router, prefix="/api")
@@ -63,6 +64,29 @@ async def rate_limit_handler(request: Request, exc: RateLimitExceeded):
         status_code=429,
         content={"detail": "Rate limit exceeded. Please wait."}
     )
+
+
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+VUE_DIST_DIR = os.path.abspath(os.path.join(BASE_DIR, "..", "dist"))
+BASE_DIRECTORY = 'uploads'
+app.mount("/uploads", StaticFiles(directory=BASE_DIRECTORY), name="uploads")
+# app.mount("/static", StaticFiles(directory=VUE_DIST_DIR), name="static")
+# @app.get("/", include_in_schema=False)
+# async def serve_root():
+#     return FileResponse(os.path.join(VUE_DIST_DIR, "index.html"))
+
+
+# @app.get("/{full_path:path}", include_in_schema=False)
+# async def serve_vue(full_path: str):
+#     # Let FastAPI serve actual static files (favicon, manifest, etc.)
+#     file_path = os.path.join(VUE_DIST_DIR, full_path)
+#     if os.path.exists(file_path) and os.path.isfile(file_path):
+#         return FileResponse(file_path)
+
+#     # Fallback to index.html for SPA routing
+#     return FileResponse(os.path.join(VUE_DIST_DIR, "index.html"))
+ 
     
 @app.on_event("startup")
 async def startup():
