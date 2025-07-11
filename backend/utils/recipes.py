@@ -225,6 +225,41 @@ class RecipeService:
                 "offset":offset
                 }
 
+
+
+    async def update_view_activity(
+        self, 
+        user_id: UUID, 
+        recipe_id: UUID, 
+        active_time: Optional[float] = None
+    ) -> bool:
+        """
+        Create or update a user's view activity for a specific recipe.
+
+        - If a view already exists, update its `active_duration`.
+        - Otherwise, create a new view record.
+
+        Args:
+            user_id (UUID): ID of the viewing user.
+            recipe_id (UUID): ID of the recipe being viewed.
+            active_time (float, optional): Time in seconds the user was active on the recipe.
+
+        Returns:
+            bool: True if the view was created or updated successfully.
+        """
+        view_record, _created = await RecipeView.get_or_create(
+            user_id=user_id,
+            recipe_id=recipe_id,
+        )
+
+        if active_time is not None:
+            view_record.active_time = int(active_time)
+
+        await view_record.save()
+        return True
+
+
+      
     async def get_recipe_by_id(self, name: str, recipe_id: UUID, user_id: UUID = None) -> Tuple[dict[str, Any], dict[str, Any]]:
         recipe = await self.recipe_repo.get_or_none(id=recipe_id).prefetch_related(
             "tags", "category", "steps__ingredients", "user"
@@ -342,7 +377,7 @@ class RecipeService:
         # Aggregate counts
         like_count = await RecipeLike.filter(recipe_id=recipe_id).count()
         comment_count = await RecipeComment.filter(recipe_id=recipe_id, is_deleted=False).count()
-        view_count = await Favorite.filter(recipe_id=recipe_id).count()
+        view_count = await RecipeView.filter(recipe_id=recipe_id).count()
         share_count = await ShareRecipe.filter(recipe_id=recipe_id).count()
 
         # Default user-specific flags

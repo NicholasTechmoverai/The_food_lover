@@ -1,26 +1,39 @@
+// a_websocket/index.js
 import { io } from "socket.io-client";
 import { B_URl } from "../apis/auth";
 
-const socket = io(`${B_URl}/main`, {
-    path: "/ws/socket.io",
-    transports: ["websocket"],
-    withCredentials: true,
+export const mainSocket = io(`${B_URl}/main`, {
+  path: "/ws/socket.io",
+  transports: ["websocket"],
+  withCredentials: true,
 });
 
-
-socket.on("connect", () => {
-    console.log("✅ Connected to WebSocket server");
-
+export const recipesSocket = io(`${B_URl}/recipes`, {
+  path: "/ws/socket.io",
+  transports: ["websocket"],
+  withCredentials: true,
 });
 
-socket.on("disconnect", () => {
-    console.log("❌ Disconnected from WebSocket server");
-
+export const usersSocket = io(`${B_URl}/users`, {
+  path: "/ws/socket.io",
+  transports: ["websocket"],
+  withCredentials: true,
 });
 
-socket.on("message", (data) => {
-    console.log("📩 Received:", data);
-
+export const notificationsSocket = io(`${B_URl}/notifications`, {
+  path: "/ws/socket.io",
+  transports: ["websocket"],
+  withCredentials: true,
 });
 
-export default socket;
+mainSocket.on("connect", () => {
+  console.log("✅ Connected to WebSocket server");
+});
+
+mainSocket.on("disconnect", () => {
+  console.log("❌ Disconnected from WebSocket server");
+});
+
+mainSocket.on("message", (data) => {
+  console.log("📩 Received:", data);
+});

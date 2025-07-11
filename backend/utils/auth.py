@@ -31,7 +31,7 @@ defaultAvatar = 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-pi
 # Dependency: Extracts user from token
 async def get_current_user(token: str = Depends(oauth2_scheme)) -> Users:
     try:
-        print("Token::",token)
+        # print("Token::",token)
         payload = jwt.decode(token, Config.SECRET_KEY, algorithms=[Config.ALGORITHM])
         user_id: str = payload.get("sub")
         if not user_id:

@@ -252,16 +252,17 @@ class RecipeView(Model):
     user = fields.ForeignKeyField("models.User", related_name="recipe_views")
     recipe = fields.ForeignKeyField("models.Recipe", related_name="views")
 
-    viewed_at = fields.DatetimeField(auto_now_add=True)
-    active_duration = fields.IntField(default=0)  # in seconds
+    viewed_on = fields.DatetimeField(auto_now_add=True)
+    active_time = fields.IntField(default=0)  # Duration in seconds
 
     class Meta:
         table = "recipe_views"
         unique_together = ("user", "recipe")
-        ordering = ["-viewed_at"]
+        ordering = ["-viewed_on"]
 
     def __str__(self):
         return f"{self.user.name} viewed '{self.recipe.recipeName}'"
+
 
 
 class RecipeLike(Model):

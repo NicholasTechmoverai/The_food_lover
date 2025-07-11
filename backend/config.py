@@ -2,6 +2,7 @@ from tortoise import Tortoise
 import os
 WEB_SERVER = 'http://localhost:5173'
 BASE_SERVER = 'https://usd-excellent-effective-rf.trycloudflare.com'
+# BASE_SERVER = 'http://localhost:8000'
 
 db_url = "mysql://root:75223031@localhost/the_food_lovers"
 
@@ -36,11 +37,12 @@ TORTOISE_ORM = {
 class Config:
     SECRET_KEY = "75223031"  # 🔐 Use a strong random string in production
     ALGORITHM = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES = 30
+    ACCESS_TOKEN_EXPIRE_MINUTES = 60  # 60 minutes
     
     
     SITE_NAME = 'The Food Lovers'
-    SITE_LOGO = f"{BASE_SERVER}/uploads/logo.ico"
+    # SITE_LOGO = f"{BASE_SERVER}/uploads/logo.ico"
+    SITE_LOGO = "https://the-food-lovers.netlify.app/assets/logo-DuL6grKj.ico"
     BASE_DIR = os.path.abspath(os.path.dirname(__file__))
     CHEF_PATH = os.path.join('uploads', 'chefs')
 

@@ -68,7 +68,7 @@
                     </div>
                 </div>
                 <div v-for="i in 4">
-                    <RecipeStepCard  />
+                    <RecipeStepCard />
                 </div>
             </div>
 
@@ -201,10 +201,10 @@
                     </div>
                 </footer>
 
-                <div >
+                <div>
                     comments
                     <div>
-                        <ChatsPage :theme="recipe?.repiceColor" :recipe_id="recipe_id"/>
+                        <ChatsPage :theme="recipe?.repiceColor" :recipe_id="recipe_id" />
                     </div>
                 </div>
 
@@ -225,7 +225,7 @@
                 <div class="w-full h-[50px] bg-gray-400/30 animate-pulse">loading meta...</div>
             </div>
 
-        
+
 
         </div>
         <Toast position="bottom-center" group="bc" />
@@ -234,7 +234,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch, onUnmounted } from 'vue'
 import { useAuthStore } from '../store/user.js'
 import { useToast } from 'primevue/usetoast'
 import FlowGalleryViewer from '../cards/FlowGalleryViewer.vue'
@@ -243,6 +243,7 @@ import { fetchRecipeMeta, fetchRecipeSteps } from '../apis/recipes.js'
 import ChatsPage from '../cards/ChatsPage.vue'
 import { like_unlike, save_unsave_favourites } from '../apis/index.js'
 import RecipeStepCard from '../loaders/Skeleton1.vue'
+import { recipesSocket, usersSocket } from "../a_websocket/index.js";
 
 const auth = useAuthStore()
 
@@ -358,10 +359,6 @@ const fetchMeta = async () => {
     }
 };
 
-
-onMounted(async () => {
-    await Promise.all([fetchRecipe(), fetchMeta()]);
-});
 
 const op = ref();
 const shares = ref([
@@ -491,14 +488,65 @@ const formatDate = (dateString) => {
 }
 
 const toast = useToast()
-const showTemplate = () => {
-    toast.add({
-        severity: 'warn',
-        summary: 'Feature Preview',
-        detail: 'This feature is still in development',
-        life: 3000
-    })
+
+
+onMounted(async () => {
+    await Promise.all([fetchRecipe(), fetchMeta()]);
+    update_view();
+    IntervalledGetMeta();
+});
+
+
+const update_view = async () => {
+    if (auth.token && props.recipe_id) {
+        recipesSocket.emit("update_view", {
+            token: auth.token.token,
+            recipe_id: props.recipe_id,
+        });
+    }
 }
+
+
+let intervalId;
+let metaListener;
+
+const IntervalledGetMeta = () => {
+  if (!props.recipe_id) return;
+
+  // Emit every 10 seconds
+  intervalId = setInterval(() => {
+    recipesSocket.emit("get_meta", {
+      token: auth.token.token,
+      recipe_id: props.recipe_id,
+    });
+  }, 10000);
+
+  // Define listener function separately
+  metaListener = (data) => {
+    if (data && data.recipe_id === props.recipe_id) {
+      recipeMeta.value = data;
+    }
+  };
+
+  // Attach only once
+  recipesSocket.on("get_meta", metaListener);
+};
+
+
+
+
+watch(() => props.recipe_id, (newId) => {
+    if (newId) {
+        update_view();
+    }
+});
+
+onUnmounted(() => {
+  clearInterval(intervalId);
+  if (metaListener) {
+    recipesSocket.off("get_meta", metaListener);
+  }
+});
 </script>
 
 <style>

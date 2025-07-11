@@ -8,20 +8,20 @@ from fastapi.middleware.cors import CORSMiddleware
 from tortoise import Tortoise  # Needed for shutdown
 import socketio
 from fastapi.staticfiles import StaticFiles
-
-from web_socket.main import MainNamespace
+from web_socket.main import MainNamespace, RecipesNamespace, UsersNamespace, NotificationsNamespace
 from config import init_db  # Your DB init logic
 from routes.auth import auth_router,limiter
-from routes.recipes import recipe_router
+from routes.recipes import recipe_router,RecipeService
 from utils.limiter import limiter  
 from routes.user import user_router
 import os
-from config import Config,BASE_SERVER
+from config import Config,WEB_SERVER
 ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "http://localhost:8080",
     "https://yourfrontend.com",
-    f"{BASE_SERVER}"
+    "https://the-food-lovers.netlify.app",
+    f"{WEB_SERVER}",
 ]
 
 
@@ -41,13 +41,11 @@ sio = socketio.AsyncServer(
     cors_allowed_origins=ALLOWED_ORIGINS,
 )
 
+
 sio.register_namespace(MainNamespace("/main"))
-
-
-
-app.include_router(auth_router, prefix="/api")
-app.include_router(recipe_router,prefix="/api")
-app.include_router(user_router,prefix="/api")
+sio.register_namespace(RecipesNamespace("/recipes", RecipeService()))
+sio.register_namespace(UsersNamespace("/users"))
+sio.register_namespace(NotificationsNamespace("/notifications"))
 
 socket_app = socketio.ASGIApp(
     sio,
@@ -65,6 +63,11 @@ async def rate_limit_handler(request: Request, exc: RateLimitExceeded):
         content={"detail": "Rate limit exceeded. Please wait."}
     )
 
+
+
+app.include_router(auth_router, prefix="/api")
+app.include_router(recipe_router,prefix="/api")
+app.include_router(user_router,prefix="/api")
 
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
