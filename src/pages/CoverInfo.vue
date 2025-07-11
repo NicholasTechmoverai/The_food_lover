@@ -334,7 +334,7 @@ onMounted(async () => {
         continueConfirm(nameOrId)
     }
 
-    if (!auth.user.is_chef) {
+    if (!auth.user.isChef) {
         confirm.require({
             message: 'Only chefs can create recipes. Request to become a Chef?',
             header: `You are NOT a chef!`,

@@ -511,25 +511,26 @@ let intervalId;
 let metaListener;
 
 const IntervalledGetMeta = () => {
-  if (!props.recipe_id) return;
+    if (!props.recipe_id) return;
 
-  // Emit every 10 seconds
-  intervalId = setInterval(() => {
-    recipesSocket.emit("get_meta", {
-      token: auth.token.token,
-      recipe_id: props.recipe_id,
-    });
-  }, 10000);
+    // Emit every 10 seconds
+    intervalId = setInterval(() => {
+        recipesSocket.emit("get_meta", {
+            token: auth.token.token,
+            recipe_id: props.recipe_id,
+        });
+    }, 10000);
 
-  // Define listener function separately
-  metaListener = (data) => {
-    if (data && data.recipe_id === props.recipe_id) {
-      recipeMeta.value = data;
-    }
-  };
+    // Define listener function separately
+    metaListener = (data) => {
 
-  // Attach only once
-  recipesSocket.on("get_meta", metaListener);
+        if (data) {
+            recipeMeta.value = data;
+        }
+    };
+
+    // Attach only once
+    recipesSocket.on("get_meta", metaListener);
 };
 
 
@@ -542,10 +543,10 @@ watch(() => props.recipe_id, (newId) => {
 });
 
 onUnmounted(() => {
-  clearInterval(intervalId);
-  if (metaListener) {
-    recipesSocket.off("get_meta", metaListener);
-  }
+    clearInterval(intervalId);
+    if (metaListener) {
+        recipesSocket.off("get_meta", metaListener);
+    }
 });
 </script>
 
