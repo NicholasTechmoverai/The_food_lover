@@ -2,7 +2,9 @@ import axios from 'axios'
 import { ref } from "vue";
 
 
-export const B_URl = 'http://localhost:8000'
+// export const B_URl = 'http://localhost:8000'
+export const B_URl = 'https://dragon-brief-mayfly.ngrok-free.app'
+
 const BACKEND_URL = `${B_URl}/api`
 
 export async function verifyCodeAPI(codeId, code, type) {
