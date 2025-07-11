@@ -12,7 +12,8 @@ from typing import List, Optional, Union
 
 from config import Config,BASE_SERVER
 
-
+from .logger import setup_logger
+logger = setup_logger("socket")
 
 class CookTime(BaseModel):
     hr: int
@@ -531,9 +532,7 @@ class RecipeService:
         """
 
         try:
-            print("recipe_id received:", recipe_id)
             if parent is None:
-                print("parent is none")
 
                 # Fetch top-level comments
                 top_comments = await RecipeComment.filter(
@@ -544,10 +543,8 @@ class RecipeService:
 
                 result = []
 
-                print("result", [f"{c.user.name}: {c.content}" for c in top_comments])
 
                 for comment in top_comments:
-                    print("this comment", f"{comment.user.name}: {comment.content}")
 
                     # First reply (if exists)
                     first_reply = await RecipeComment.filter(
@@ -614,7 +611,7 @@ class RecipeService:
                 }
 
             else:
-                print("Fetching replies for parent:", parent)
+                logger.info("Fetching replies for parent:", parent)
 
                 all_replies = await RecipeComment.filter(
                     recipe_id=recipe_id,
@@ -673,7 +670,7 @@ class RecipeService:
 
 
         except Exception as e:
-            print("Error in get_comments:", str(e))
+            logger.exception("Error in get_comments:", str(e))
             return {"error": "An unexpected error occurred."}
 
 
