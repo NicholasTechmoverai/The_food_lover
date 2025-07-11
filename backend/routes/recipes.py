@@ -32,15 +32,15 @@ async def create_recipe(
         raise HTTPException(status_code=403, detail="Only chefs can submit recipes")
 
    
-    recipe = await service.create_or_update_recipe(data, user.id)
+    recipe = await service.create_or_update_recipe(data, user.id,user.name)
 
-
-    return JSONResponse({
+    return {
         "message": "Recipe processed successfully",
         "user": user.name,
         "recipeName": data.recipeCover.recipeName,
-        "recipeId":recipe.id
-    })
+        "recipeId": str(recipe.id)  
+    }
+
 
 
 

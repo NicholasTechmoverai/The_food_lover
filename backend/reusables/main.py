@@ -1,5 +1,18 @@
 import bleach
 from bleach.css_sanitizer import CSSSanitizer
+import re
+import base64
+import uuid
+import os
+from pathlib import Path
+from typing import Optional
+import base64
+import uuid
+import os
+from pathlib import Path
+from typing import Optional
+import logging
+from config import Config
 
 def sanitizeContents(content: str) -> str:
     safe_tags = [
@@ -36,54 +49,62 @@ def sanitizeContents(content: str) -> str:
     return bleach.linkify(sanitized)
 
 
-import base64
-import uuid
-import os
-from pathlib import Path
-from typing import Optional
 
 
-async def save_base64_image(base64_str: str, folder: str = "uploads",filename:str = None) -> Optional[str]:
-    """
-    Saves a base64-encoded image string to a file and returns the filename.
 
-    Args:
-        base64_str (str): The full base64 string (e.g. "data:image/jpeg;base64,...").
-        folder (str): Destination folder to save the image.
 
-    Returns:
-        str: The saved filename (e.g., "uploads/abc123.jpg"), or None if invalid.
-    """
+# Setup logger
+logger = logging.getLogger("image_saver")
+logger.setLevel(logging.DEBUG)  # Change to INFO or WARNING in prod
 
+# Ensure handler is only added once
+if not logger.handlers:
+    handler = logging.StreamHandler()
+    formatter = logging.Formatter("%(asctime)s [%(levelname)s] %(message)s")
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
+
+
+# Configure logger for production
+logger = logging.getLogger("image_saver")
+logger.setLevel(logging.INFO)
+handler = logging.StreamHandler()
+formatter = logging.Formatter("[%(asctime)s] [%(levelname)s] %(message)s")
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+
+async def save_base64_image(base64_str: str, folder: str = "uploads", filename: str = None) -> Optional[str]:
     if not base64_str.startswith("data:image/"):
+        logger.warning("Invalid base64 image string format.")
         return None
 
     try:
-        # Split the metadata from the actual base64 content
+        # Split base64 header and content
         header, encoded = base64_str.split(",", 1)
-        file_ext = header.split(";")[0].split("/")[1]  # e.g. "jpeg"
+        file_ext = header.split(";")[0].split("/")[1]
 
-        # Decode base64
-        image_data = base64.b64decode(encoded)
-
-        # Ensure folder exists
-        Path(folder).mkdir(parents=True, exist_ok=True)
-
-        # Generate a unique filename
+        # Generate filename
         if not filename:
             filename = f"{uuid.uuid4().hex}.{file_ext}"
         else:
             filename = f"{filename}.{file_ext}"
-            
-        filepath = os.path.join(folder, filename)
 
-        # Save the image
-        with open(filepath, "wb") as f:
-            f.write(image_data)
+        # Construct paths
+        relative_path = os.path.join(folder, filename)
+        full_path = os.path.join(Config.BASE_DIR, relative_path)
 
-        return filepath
+        # Ensure directory exists
+        os.makedirs(os.path.dirname(full_path), exist_ok=True)
+
+        # Decode and write file
+        with open(full_path, "wb") as f:
+            f.write(base64.b64decode(encoded))
+
+        logger.info(f"✅ Image saved: {full_path}")
+        return relative_path.replace("\\", "/")  # return URL-friendly path
+
     except Exception as e:
-        print(f"[Image Save Error]: {e}")
+        logger.error(f"❌ Failed to save image: {e}")
         return None
 
 

@@ -1,5 +1,5 @@
 from tortoise import Tortoise
-
+import os
 WEB_SERVER = 'http://localhost:5173'
 BASE_SERVER = 'http://localhost:8000'
 
@@ -41,5 +41,7 @@ class Config:
     
     SITE_NAME = 'The Food Lovers'
     SITE_LOGO = f"{BASE_SERVER}/uploads/logo.ico"
-    CHEF_PATH = "/uploads/chefs"
+    BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+    CHEF_PATH = os.path.join('uploads', 'chefs')
+
     

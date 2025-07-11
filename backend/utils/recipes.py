@@ -6,7 +6,7 @@ from typing import Tuple
 from tortoise.exceptions import DoesNotExist
 from fastapi import HTTPException
 from typing import Any
-
+import os
 from pydantic import BaseModel, Field
 from typing import List, Optional, Union
 
@@ -47,29 +47,32 @@ class StepTimeRequired(BaseModel):
     min: int
 
 class IngredientInStep(BaseModel):
-    name: str
-    amount: str
-    unit: str
+    name: Optional[str] = None
+    amount: Optional[str] = None
+    unit: Optional[str] = None
+
 
 
 class Step(BaseModel):
     no: int
-    timeRequired: StepTimeRequired
-    tempRequired: int
-    ingredientsUsed: List[IngredientInStep]
-    instructions: str
-    image: str
-    videoUrl: str
+    timeRequired: Optional[StepTimeRequired] = None
+    tempRequired: Optional[int] = None
+    ingredientsUsed: Optional[List[IngredientInStep]] = []
+    instructions: Optional[str] = None
+    image: str 
+    videoUrl: Optional[str] = None
+
 
 
 class RecipeSteps(BaseModel):
     id: str
     name: str
     description: str
-    category: Optional[Union[str, None]]
-    ingredients: List[IngredientInStep]
-    steps: List[Step]
-    tags: List[str]
+    category: Optional[str] = None
+    ingredients: Optional[List[IngredientInStep]] = []
+    steps: Optional[List[Step]] = []
+    tags: Optional[List[str]] = []
+
 
 
 class RecipeRequest(BaseModel):
@@ -85,7 +88,8 @@ class RecipeService:
         self.step_repo = step_repo
 
     async def create_or_update_recipe(self, data: RecipeRequest, user_id: UUID,user_name):
-        upload_path = f"{Config.CHEF_PATH}/{await sanitize_name(user_name)}"
+        upload_path = os.path.join( Config.CHEF_PATH, await sanitize_name(user_name))
+        
         # 1. Sanitize input
         data.recipeCover.description = sanitizeContents(data.recipeCover.description)
         data.recipeSteps.description = sanitizeContents(data.recipeSteps.description)

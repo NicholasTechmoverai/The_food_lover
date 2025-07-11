@@ -280,11 +280,12 @@ import { useToast } from "primevue/usetoast";
 import { useIsMobile } from '../reusables';
 import CuisineSelector from '../cards/CuisineSelector.vue';
 import CategorySelectPage from './CategorySelectPage.vue';
+import { useAuthStore } from '../store/user';
 const confirm = useConfirm();
 const toast = useToast();
 const isMobile = useIsMobile()
 const instructionsInput = ref('text_area');
-
+const auth = useAuthStore()
 // Store & PrimeVue
 const ongoingStore = useOngoingStore()
 
@@ -331,6 +332,33 @@ onMounted(async () => {
     if (ongoingStore.coverRecipe) {
         const nameOrId = ongoingStore.coverRecipe.recipeName || ongoingStore.coverRecipe.id || 'Unnamed'
         continueConfirm(nameOrId)
+    }
+
+    if (!auth.user.is_chef) {
+        confirm.require({
+            message: 'Only chefs can create recipes. Request to become a Chef?',
+            header: `You are NOT a chef!`,
+            icon: 'pi pi-shield',
+            rejectProps: {
+                label: 'Cancel',
+                severity: 'secondary',
+                outlined: true,
+            },
+            acceptProps: {
+                label: 'Request',
+            },
+            accept: () => {
+                toast.add({ severity: 'info', summary: 'Request sent', detail: 'You will be notified once approved.', life: 3000 })
+                setTimeout(() => {
+                    router.go(-1)
+                    // router.push('/chef/request')
+                }, 1500)
+            },
+            reject: () => {
+                ongoingStore.clearCoverRecipe()
+                router.go(-1)
+            },
+        })
     }
 })
 
