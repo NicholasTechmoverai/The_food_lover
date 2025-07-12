@@ -144,11 +144,11 @@ const promptTokenRefresh = () => {
 
   confirm.require({
     group: 'headless',
-    header: 'Hey,are you there?',
-    message: 'Just concerned,Are you with Us?',
+    header: 'Session Check',
+    message: 'We noticed some inactivity. Are you still with us?',
     icon: 'pi pi-clock',
     acceptProps: {
-      label: 'Yes,am with Us',
+      label: 'Yes, I’m here',
       icon: 'pi pi-check',
       size: 'small',
       severity: 'primary'
@@ -157,14 +157,50 @@ const promptTokenRefresh = () => {
       const success = await refreshToken()
       toast.add({
         severity: success ? 'success' : 'error',
-        summary: success ? 'Thanks' : 'Failed',
-        detail: success ? 'Your presence appreciated' : 'Could not extend your session.',
+        summary: success ? 'Session Extended' : 'Session Failed',
+        detail: success 
+          ? ''
+          : 'Unable to extend session. Please try again.',
         life: 3000,
         group: 'bl'
       })
     }
   })
 }
+
+
+// Call this once after login or on app init
+const startTokenCheck = () => {
+  if (tokenInterval) clearInterval(tokenInterval)
+
+  tokenInterval = setInterval(async () => {
+    const token = auth.token
+
+    if (!token) return
+
+    if (isTokenExpired(token)) {
+      // If user is active, refresh automatically
+      if (document.hasFocus()) {
+        const success = await refreshToken()
+        if (!success) {
+          toast.add({
+            severity: 'error',
+            summary: 'Session Failed',
+            detail: 'Unable to extend session. Please log in again.',
+            life: 5000,
+            group: 'bl'
+          })
+          return
+        }
+
+      } else {
+        // If inactive or blurred, prompt for confirmation
+        promptTokenRefresh()
+      }
+    }
+  }, 300000) // every 5 minutes
+}
+
 
 // --- Theme and auth on load ---
 onMounted(async () => {
@@ -182,11 +218,7 @@ onMounted(async () => {
     await refreshToken()
     await checkUserVerification()
 
-    tokenInterval = setInterval(() => {
-      if (auth.token && isTokenExpired(auth.token)) {
-        promptTokenRefresh()
-      }
-    }, 300000) // every 5 min
+    startTokenCheck()
   } catch (error) {
     console.error('App init error:', error)
   }

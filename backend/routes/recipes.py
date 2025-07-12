@@ -263,3 +263,23 @@ async def post_recipe_comments(
     except Exception as e:
         raise HTTPException(status_code=500, detail="Failed to process comment.")
      
+     
+@recipe_router.delete("/recipes/{recipe_id}/comments/{comment_id}")
+@limiter.limit("30/min")
+async def delete_recipe_comment(
+    request: Request,
+    recipe_id: UUID,
+    comment_id: int,
+    user: Users = Depends(get_current_user),
+    service: RecipeService = Depends()
+):
+    """
+    Delete a comment on a specific recipe.
+    """
+    try:
+        return await service.delete_comment(user.id, comment_id)
+
+    except AuthError as e:
+        raise HTTPException(status_code=401, detail=str(e))
+    except Exception:
+        raise HTTPException(status_code=500, detail="Failed to delete comment.")

@@ -11,7 +11,7 @@
         </div>
 
         <!-- Card Content -->
-        <div class="p-4">
+        <div ref="MainCommentInput" class="p-4">
           <CommentInput v-model="commentContent" :attached-files="attachedFiles" :show-emoji-picker="showEmojiPicker"
             :submit-button-text="submitButtonText" :can-submit="canSubmit" :theme="theme"
             @toggle-emoji-picker="toggleEmojiPicker" @trigger-file-upload="triggerFileUpload" @remove-file="removeFile"
@@ -32,7 +32,8 @@
       <div v-else class="space-y-2">
         <article v-for="comment in comments" :key="comment.id" class="group">
           <CommentCard :comment="comment" :current-user="currentUser" :theme="theme" @reply="startReply"
-            @edit="editComment" @like="likeComment" @mention="mentionUser" @get_replies="fetchCommentReplies" />
+            @edit="editComment" @like="likeComment" @delete="deleteComment" @mention="mentionUser"
+            @get_replies="fetchCommentReplies" />
 
           <!-- Reply Input Section (shown when replying to this comment) -->
           <div v-if="replyTarget?.id === comment.id" class="ml-5 mt-3">
@@ -61,7 +62,7 @@
             <article v-for="reply in comment.replies" :key="reply.id" class="group">
               <CommentCard :comment="reply" :current-user="currentUser" :theme="theme" :is-reply="true"
                 @reply="startReply" @edit="editComment" @like="likeComment" @mention="mentionUser"
-                @get_replies="fetchCommentReplies" />
+                @get_replies="fetchCommentReplies" @delete="deleteComment" />
 
               <!-- Reply Input Section (shown when replying to this reply) -->
               <div v-if="replyTarget?.id === reply.id" class="ml-5 mt-3">
@@ -93,6 +94,8 @@
   <div v-if="isLoadingComments">
     <div class="w-full h-[40px] bg-gray-400/30 animate-pulse">loading...</div>
   </div>
+          <Toast position="bottom-center" group="bc" />
+
 </template>
 
 <script setup>
@@ -105,9 +108,11 @@ import { Picker } from 'emoji-mart-vue-fast'
 import CommentCard from './CommentCard.vue'
 import CommentInput from './CommentInput.vue' // New component
 import { useAuthStore } from '../store/user'
-import { fetchComments, make_a_post } from '../apis'
+import { fetchComments, make_a_delete, make_a_post } from '../apis'
+import { useToast } from 'primevue/usetoast'
 
 const auth = useAuthStore()
+const toast = useToast()
 
 const defaultAvatar =
   'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png'
@@ -243,7 +248,10 @@ const startReply = comment => {
   })
 }
 
+const MainCommentInput = ref(null)
+
 const editComment = comment => {
+  MainCommentInput.value.scrollIntoView({ behavior: 'smooth' ,block: 'center'})
   editTarget.value = comment
   replyTarget.value = null
   commentContent.value = comment.content
@@ -253,6 +261,33 @@ const editComment = comment => {
       commentTextarea.value.$el.focus()
     }
   })
+}
+
+const deleteComment = async (comment) => {
+  const response = await make_a_delete(
+    `/recipes/${props.recipe_id}/comments/${comment.id}`,
+    auth.token,
+    {  }
+  )
+  if (!response.success) {
+    toast.add({
+      severity: 'error',
+      summary: `Failed to delete comment`,
+      detail: response.message || 'An error occurred while deleting the comment.',
+      group: 'bc',
+      life: 5000,
+    });
+  }else {
+    // Remove comment from local state
+    comments.value = comments.value.filter(c => c.id !== comment.id)
+    toast.add({
+      severity: 'success',
+      summary: `Comment deleted`,
+      // detail: 'The comment has been successfully deleted.',
+      group: 'bc',
+      life: 2000,
+    });
+  }
 }
 
 const cancelComment = () => {
@@ -297,7 +332,7 @@ const submitComment = async () => {
     content: commentContent.value,
     edited: isEditing,
     parent: isReplying ? (replyTarget.value.parent_id || replyTarget.value.id) : null,
-    file: null ,// Optional file handling
+    file: null,// Optional file handling
     comment_id: isEditing ? editTarget.value.id : null
   }
 

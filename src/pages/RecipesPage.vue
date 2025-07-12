@@ -90,8 +90,10 @@
 
   </div>
   <!-- Router View for Dynamic Pages -->
-  <router-view v-if="isRouterViewActive"
-    class=" inset-0 bg-white dark:bg-gray-900 z-50 overflow-y-auto transition-all duration-300" />
+  <transition name="slide-fade" mode="out-in">
+    <router-view v-if="isRouterViewActive" class="inset-0 bg-white dark:bg-gray-900 z-50 overflow-y-auto" />
+  </transition>
+
 </template>
 
 <script setup>
@@ -236,3 +238,29 @@ onMounted(async () => {
 });
 
 </script>
+<style scoped>
+.slide-fade-enter-active,
+.slide-fade-leave-active {
+  transition: all 0.4s ease;
+}
+
+.slide-fade-enter-from {
+  opacity: 0;
+  transform: translateX(50px);
+}
+
+.slide-fade-enter-to {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.slide-fade-leave-from {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.slide-fade-leave-to {
+  opacity: 0;
+  transform: translateX(-50px);
+}
+</style>

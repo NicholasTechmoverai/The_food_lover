@@ -200,3 +200,56 @@ export const make_a_post = async (
         }
     }
 }
+
+
+export const make_a_delete = async (
+    endpoint = '',
+    token = null,
+    bodyContent = {},
+    fallback = []
+) => {
+    if (!token) {
+        return {
+            success: false,
+            message: 'Kindly login to make the request!',
+            data: fallback,
+        }
+    }
+
+    try {
+        const response = await axios.delete(
+            `${BACKEND_URL}${endpoint}`,
+            {
+                headers: {
+                    Authorization: `Bearer ${token.token}`,
+                    'Content-Type': 'application/json',
+                },
+                data: bodyContent
+            }
+        )
+
+        if ([200, 201].includes(response.status)) {
+            return {
+                success: true,
+                data: response.data,
+            }
+        } else {
+            return {
+                success: false,
+                message: `Unexpected response status: ${response.status}`,
+                data: fallback,
+            }
+        }
+    } catch (error) {
+        return {
+            success: false,
+            message:
+                error?.response?.data?.detail ||
+                error?.response?.data?.message ||
+                error.message ||
+                'An unexpected error occurred',
+            data: fallback,
+        }
+    }
+
+}
