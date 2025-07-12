@@ -1,7 +1,7 @@
 from tortoise import Tortoise
 import os
 WEB_SERVER = 'http://localhost:5173'
-BASE_SERVER = 'https://usd-excellent-effective-rf.trycloudflare.com'
+BASE_SERVER = 'https://converted-stronger-library-realistic.trycloudflare.com'
 # BASE_SERVER = 'http://localhost:8000'
 
 db_url = "mysql://root:75223031@localhost/the_food_lovers"
