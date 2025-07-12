@@ -4,6 +4,8 @@ from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, EmailStr
+from typing import List
+import asyncio
 
 from .auth import get_current_user,AuthError
 from utils.limiter import limiter  
@@ -134,7 +136,7 @@ async def save_unsave_favourite_recipe(
     
     
     
-@recipe_router.get("/recipes/meta")
+@recipe_router.get("/recipe/meta")
 @limiter.limit("30/min")
 async def recipe_meta(
     request: Request,
@@ -153,8 +155,48 @@ async def recipe_meta(
     except AuthError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
-        raise HTTPException(status_code=500, detail="Failed to fetch recipe.")       
-    
+        raise HTTPException(status_code=500, detail="Failed to fetch recipe.") 
+          
+
+
+class RecipesMetaRequest(BaseModel):
+    recipe_ids: List[UUID]
+
+@recipe_router.post("/recipes/meta")
+@limiter.limit("30/min")
+async def fetch_recipes_meta(
+    request: Request,
+    payload: RecipesMetaRequest,
+    user: Users = Depends(get_current_user),
+    service: RecipeService = Depends()
+):
+    """
+    Fetch metadata (like, is_saved, etc.) for a list of recipes by their UUIDs.
+    Rate-limited to 30 requests per minute.
+    """
+    try:
+        if not payload.recipe_ids:
+            raise HTTPException(status_code=400, detail="No recipe IDs provided.")
+
+        metas = await asyncio.gather(*[
+            service.get_recipe_meta(recipe_id, user.id)
+            for recipe_id in payload.recipe_ids
+        ])
+
+        result = {}
+
+        for i, meta in enumerate(metas):
+            if meta:
+                result[str(payload.recipe_ids[i])] = meta
+
+        return result
+
+    except AuthError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Failed to fetch recipe.")
+     
+        
     
 @recipe_router.get("/recipes/comments")
 @limiter.limit("30/min")

@@ -107,6 +107,7 @@ import { useAuthStore } from '../store/user.js'
 import { useToast } from 'primevue/usetoast'
 import RecipeLoader from '../loaders/Skeleton3.vue'
 import RecipeTypesLoader from '../loaders/Skeleton1.vue'
+import { make_a_post } from '../apis/index.js'
 
 const auth = useAuthStore()
 const toast = useToast()
@@ -162,6 +163,8 @@ const getRecipes = async (
         recipes.value.push(...res.data.recipes);
         offset.value = res.data.offset ?? pageOffset
         limit.value = res.data.limit ?? pageLimit
+        // Fetch meta for the newly fetched recipes
+        await fetchRecipeMeta(res.data.recipes.map(r => r.id))
       } else {
         recipes.value = res.data
       }
@@ -169,6 +172,40 @@ const getRecipes = async (
   }
 }
 
+
+const fetchRecipeMeta = async (recipe_ids) => {
+  const res = await make_a_post('/recipes/meta', auth.token, { recipe_ids: recipe_ids }, null)
+  if (res) {
+    if (res.message && !res.success) {
+      toast.add({
+        severity: 'error',
+        summary: `Error fetching Recipe Meta!`,
+        detail: `${res.message}`,
+        life: 5000
+      })
+    }
+    if (res.data) {
+      const metaMap = res.data;
+
+      recipes.value = recipes.value.map(recipe => ({
+        ...recipe,
+        recipeMeta: {
+          likeCount: 0,
+          comments: 0,
+          isFollowing: false,
+          isFollowed: false,
+          views: 0,
+          shareCount: 0,
+          isLiked: false,
+          isSaved: false,
+          ...(metaMap[recipe.id] || {})  // safely override defaults
+        }
+      }))
+      console.log('Updated Recipes with Meta:', recipes.value);
+    }
+
+  }
+}
 
 
 const getRecipeTypes = async (params = null) => {

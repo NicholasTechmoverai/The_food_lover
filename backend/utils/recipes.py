@@ -1,4 +1,4 @@
-from models import Recipe, RecipeStep, Tag, Category,Ingredient,RecipeLike,RecipeComment,ShareRecipe,Favorite,RecipeView
+from models import Recipe, RecipeStep, Tag, Category,Ingredient,RecipeLike,RecipeComment,ShareRecipe,Favorite,RecipeView,Follow
 from reusables.main import sanitizeContents ,save_base64_image,sanitize_name
 from uuid import  UUID
 from tortoise.expressions import Q
@@ -279,6 +279,8 @@ class RecipeService:
             "image": f"{BASE_SERVER}/{recipe.cover_image_url}",
             "tags": [tag.name for tag in recipe.tags],
             "cookTime": minutes_to_time(recipe.cook_time_minutes),
+            "updatedAt": recipe.updated_at.isoformat(),
+            "createdAt": recipe.created_at.isoformat(),
             "description": recipe.description,
             "cuisine": {
                 "name": recipe.cuisine,
@@ -376,12 +378,21 @@ class RecipeService:
         """
 
         # Aggregate counts
+        recipe = await self.recipe_repo.get_or_none(id=recipe_id).prefetch_related("user")
+        if not recipe:
+            raise HTTPException(status_code=404, detail="Recipe not found")
+        
         like_count = await RecipeLike.filter(recipe_id=recipe_id).count()
         comment_count = await RecipeComment.filter(recipe_id=recipe_id, is_deleted=False).count()
         view_count = await RecipeView.filter(recipe_id=recipe_id).count()
         share_count = await ShareRecipe.filter(recipe_id=recipe_id).count()
 
-        # Default user-specific flags
+
+
+        # Check if the user follows the recipe's author
+        is_following = False
+    
+        # Default user-specific flags)
         is_liked = False
         is_saved = False
 
@@ -389,6 +400,7 @@ class RecipeService:
         if user_id:
             is_liked = await RecipeLike.filter(recipe_id=recipe_id, user_id=user_id).exists()
             is_saved = await Favorite.filter(recipe_id=recipe_id, user_id=user_id).exists()
+            is_following = await Follow.filter(follower_id=user_id, following_id=recipe.user.id).exists()
 
         return {
             "likeCount": like_count,
@@ -396,8 +408,9 @@ class RecipeService:
             "views": view_count,
             "shareCount": share_count,
             "isLiked": is_liked,
-            "isSaved": is_saved
-        }        
+            "isSaved": is_saved,
+            "isFollowing": is_following
+        }
     async def share(
         self,
         user_id: UUID,

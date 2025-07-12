@@ -1,6 +1,6 @@
 <template>
     <div
-        class=" min-h-screen bg-gradient-to-br   from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 p-4 md:p-8 overflow-auto">
+        class=" min-h-screen bg-gradient-to-br   from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 p-0 md:p-4 overflow-auto">
         <div class="max-w-6xl mx-auto">
 
             <!-- Recipe Header -->
@@ -85,8 +85,19 @@
                                 {{ recipe.user?.name || 'Anonymous Chef' }}
                             </h4>
                             <p class="text-sm text-gray-500 dark:text-gray-400">
-                                {{ recipe.user?.totalRecipes || 0 }} recipes • {{ formatDate(recipe.updatedAt) }}
+                                {{ recipe.user?.totalRecipes || 0 }} recipes • {{ formatTimeAgo(recipe.updatedAt) }}
                             </p>
+                        </div>
+                        <div>
+                            <button v-if="!NowFollowing" @click="follow(recipe.user.id)"
+                                class="text-xs px-3 py-1 rounded-full border border-[var(--theme-color)] text-[var(--theme-color)] hover:bg-[var(--theme-color)] hover:text-white transition">
+                                <span v-if="recipeMeta?.isFollowing">Following</span><span v-else>Follow</span>
+                            </button>
+                            <span v-else-if="NowFollowing"
+                                class="text-xs px-3 py-1 rounded-full border border-[var(--theme-color)] text-[var(--theme-color)] opacity-70 cursor-not-allowed">
+                                <span v-if="recipeMeta?.isFollowing">Unfollowing...</span><span
+                                    v-else>Following...</span>
+                            </span>
                         </div>
                     </div>
 
@@ -194,7 +205,7 @@
                             <div class="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
                                 <span><i class="pi pi-eye"></i> {{ recipeMeta.views || 0 }} views</span>
                                 <span><i class="pi pi-comment"></i> {{ recipeMeta.comments || 0 }} comments</span>
-                                <span><i class="pi pi-calendar"></i> {{ formatDate(recipe.updatedAt) }}</span>
+                                <span><i class="pi pi-calendar"></i> {{ formatTimeAgo(recipe.updatedAt) }}</span>
                             </div>
                         </div>
 
@@ -241,12 +252,12 @@ import FlowGalleryViewer from '../cards/FlowGalleryViewer.vue'
 import GridStepsView from '../cards/GridStepsView.vue'
 import { fetchRecipeMeta, fetchRecipeSteps } from '../apis/recipes.js'
 import ChatsPage from '../cards/ChatsPage.vue'
-import { like_unlike, save_unsave_favourites } from '../apis/index.js'
+import { folow_unfollow, like_unlike, save_unsave_favourites } from '../apis/index.js'
 import RecipeStepCard from '../loaders/Skeleton1.vue'
 import { recipesSocket, usersSocket } from "../a_websocket/index.js";
-
+import { formatDistanceToNow } from 'date-fns'
+import InputChatBar from '../cards/CommentInput.vue'
 const auth = useAuthStore()
-
 
 const listType = ref('grid')
 const listTypeOptions = [
@@ -264,6 +275,7 @@ const recipeMeta = ref({
     likeCount: 10,
     isSaved: false,
     isLiked: false,
+    isFollowing: false,
     views: 74,
     comments: 12,
 })
@@ -326,7 +338,7 @@ const fetchMeta = async () => {
 
     try {
         const res = await fetchRecipeMeta(
-            '/recipes/meta',
+            '/recipe/meta',
             auth.token,
             { name: props.recipe_name, recipe_id: props.recipe_id },
             recipeMeta.value
@@ -480,12 +492,36 @@ const toggleSave = async () => {
     }
 };
 
+const NowFollowing = ref(false)
+const follow = async (chefId) => {
+  NowFollowing.value = true
+  const res = await folow_unfollow(auth.token, chefId)
 
-const formatDate = (dateString) => {
-    if (!dateString) return 'Unknown date'
-    const options = { year: 'numeric', month: 'long', day: 'numeric' }
-    return new Date(dateString).toLocaleDateString(undefined, options)
+  recipeMeta.value.isFollowing = !recipeMeta.value.isFollowing
+
+  if (!res?.success) {
+    toast.add({
+      severity: 'error',
+      summary: 'Follow Failed',
+      detail: res.message || 'Unable to follow the user. Please try again.',
+      group: 'bc',
+      life: 4000
+    })
+    return
+  }
+  toast.add({
+    severity: res?.success ? 'info' : 'error',
+    summary: res?.success && recipeMeta.value.isFollowing ? 'Followed' : 'Unfollowed',
+    detail: res?.success && recipeMeta.value.isFollowing ? `You're now following ${recipe.value.user?.name}` : `You have unfollowed ${recipe.value.user?.name}` || 'Unable to follow the user. Please try again.',
+    group: 'bc',
+    life: 3000
+  })
+
+  NowFollowing.value = false
 }
+
+const formatTimeAgo = date => formatDistanceToNow(new Date(date), { addSuffix: true })
+
 
 const toast = useToast()
 

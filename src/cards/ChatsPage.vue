@@ -1,96 +1,21 @@
 <template>
-  <div class="w-full mx-auto px-2 py-4">
-    <!-- Comment Input Section -->
-    <section class="mb-6">
+  <div class="w-full mx-auto py-1 px-2 ">
+    <!-- Main Comment Input Section (only shown when not replying) -->
+    <section v-if="!replyTarget" class="mb-6">
       <div class="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-100 dark:border-gray-700">
         <!-- Card Header -->
         <div class="px-4 py-3 border-b border-gray-100 dark:border-gray-700">
           <h2 class="text-base font-semibold text-gray-800 dark:text-gray-100">
-            {{ replyTarget ? `Replying to ${replyTarget.user?.name}` : 'Leave a comment' }}
+            Leave a comment
           </h2>
         </div>
 
         <!-- Card Content -->
         <div class="p-4">
-          <div class="flex gap-3">
-            <!-- User Avatar -->
-            <div class="flex-shrink-0">
-              <Avatar :image="currentUser.profilePic" shape="circle" class="w-8 h-8" />
-            </div>
-
-            <!-- Input Area -->
-            <div class="flex-1 relative">
-              <!-- Main Textarea -->
-              <Textarea v-model="commentContent"
-                :placeholder="replyTarget ? 'Write your reply...' : 'Share your thoughts...'" rows="2"
-                class="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
-                autoResize ref="commentTextarea" />
-
-              <!-- Mention Preview -->
-              <div v-if="replyTarget"
-                class="mt-1 inline-flex items-center px-2 py-0.5 bg-blue-50 dark:bg-blue-900/30 rounded-full text-xs">
-                <span class="font-medium text-blue-600 dark:text-blue-300">@{{ replyTarget.user?.name }}</span>
-                <span class="ml-1 text-gray-500 dark:text-gray-400">will be notified</span>
-              </div>
-
-              <!-- Emoji Picker -->
-              <div v-if="showEmojiPicker" class="absolute bottom-full left-0 mb-1 z-10">
-                <Picker :data="emojiData" @select="addEmoji" :showPreview="false" :showSearch="true"
-                  title="Pick an emoji" />
-              </div>
-
-              <!-- File Previews -->
-              <div v-if="attachedFiles.length > 0" class="mt-2 flex flex-wrap gap-1">
-                <div v-for="(file, index) in attachedFiles" :key="index"
-                  class="flex items-center gap-1 px-2 py-1 bg-gray-50 dark:bg-gray-700 rounded-full text-xs">
-                  <span class="max-w-[100px] truncate text-gray-700 dark:text-gray-300">{{ file.name }}</span>
-                  <button @click="removeFile(index)"
-                    class="text-gray-400 hover:text-red-500 transition-colors">
-                    <i class="pi pi-times text-xs"></i>
-                  </button>
-                </div>
-              </div>
-
-              <!-- Action Bar -->
-              <div class="mt-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-                <div class="flex items-center gap-1">
-                  <button @click="toggleEmojiPicker"
-                    class="p-1.5 text-gray-500 hover:text-blue-500 dark:hover:text-blue-400 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                    title="Add emoji">
-                    <i class="pi pi-smile text-sm"></i>
-                  </button>
-                  <button @click="triggerFileUpload"
-                    class="p-1.5 text-gray-500 hover:text-blue-500 dark:hover:text-blue-400 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                    title="Attach files">
-                    <i class="pi pi-paperclip text-sm"></i>
-                  </button>
-                  <input type="file" ref="fileInput" class="hidden" @change="handleFileUpload"
-                    accept="image/*,.pdf,.doc,.docx" multiple />
-
-                  <button v-if="replyTarget" @click="insertMention"
-                    class="p-1.5 text-gray-500 hover:text-blue-500 dark:hover:text-blue-400 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                    title="Mention user">
-                    <i class="pi pi-at text-sm"></i>
-                  </button>
-                </div>
-
-                <div class="flex items-center gap-2">
-                  <button v-if="replyTarget || editTarget" @click="cancelComment"
-                    class="px-3 py-1 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors">
-                    Cancel
-                  </button>
-                  <button @click="submitComment" :disabled="!canSubmit" :class="{
-                    'bg-blue-600 hover:bg-blue-700': canSubmit,
-                    'bg-blue-300 cursor-not-allowed': !canSubmit
-                  }" class="px-3 py-1 text-xs font-medium text-white rounded transition-colors flex items-center gap-1"
-                    :style="{ backgroundColor: theme }">
-                    <i class="pi pi-send text-xs"></i>
-                    {{ submitButtonText }}
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
+          <CommentInput v-model="commentContent" :attached-files="attachedFiles" :show-emoji-picker="showEmojiPicker"
+            :submit-button-text="submitButtonText" :can-submit="canSubmit" :theme="theme"
+            @toggle-emoji-picker="toggleEmojiPicker" @trigger-file-upload="triggerFileUpload" @remove-file="removeFile"
+            @submit="submitComment" @add-emoji="addEmoji" />
         </div>
       </div>
     </section>
@@ -107,15 +32,58 @@
       <div v-else class="space-y-2">
         <article v-for="comment in comments" :key="comment.id" class="group">
           <CommentCard :comment="comment" :current-user="currentUser" :theme="theme" @reply="startReply"
-            @edit="editComment" @like="likeComment" @mention="mentionUser" @get_replies="fetchCommentReplies"/>
+            @edit="editComment" @like="likeComment" @mention="mentionUser" @get_replies="fetchCommentReplies" />
+
+          <!-- Reply Input Section (shown when replying to this comment) -->
+          <div v-if="replyTarget?.id === comment.id" class="ml-5 mt-3">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-100 dark:border-gray-700">
+              <!-- Card Header -->
+              <div class="px-4 py-3 border-b border-gray-100 dark:border-gray-700">
+                <h2 class="text-base font-semibold text-gray-800 dark:text-gray-100">
+                  Replying to {{ replyTarget.user?.name }}
+                </h2>
+              </div>
+
+              <!-- Card Content -->
+              <div class="p-4">
+                <CommentInput v-model="commentContent" :attached-files="attachedFiles"
+                  :show-emoji-picker="showEmojiPicker" :submit-button-text="submitButtonText" :can-submit="canSubmit"
+                  :theme="theme" :is-reply="true" @toggle-emoji-picker="toggleEmojiPicker"
+                  @trigger-file-upload="triggerFileUpload" @remove-file="removeFile" @submit="submitComment"
+                  @cancel="cancelComment" @add-emoji="addEmoji" />
+              </div>
+            </div>
+          </div>
 
           <!-- Replies Section -->
           <div v-if="comment.replies?.length"
-            class="ml-10 mt-1 pl-4 border-l border-gray-100 dark:border-gray-700 space-y-2">
+            class="ml-5 mt-1 pl-4 border-l border-gray-100 dark:border-gray-700 space-y-2">
             <article v-for="reply in comment.replies" :key="reply.id" class="group">
               <CommentCard :comment="reply" :current-user="currentUser" :theme="theme" :is-reply="true"
                 @reply="startReply" @edit="editComment" @like="likeComment" @mention="mentionUser"
                 @get_replies="fetchCommentReplies" />
+
+              <!-- Reply Input Section (shown when replying to this reply) -->
+              <div v-if="replyTarget?.id === reply.id" class="ml-5 mt-3">
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-100 dark:border-gray-700">
+                  <!-- Card Header -->
+                  <div class="px-4 py-3 border-b border-gray-100 dark:border-gray-700">
+                    <h2 class="text-base font-semibold text-gray-800 dark:text-gray-100">
+                      Replying to {{ replyTarget.user?.name }}
+                    </h2>
+                  </div>
+
+                  <!-- Card Content -->
+                  <div class="p-4">
+                    <!-- In the reply sections of your parent component -->
+                    <CommentInput v-model="commentContent" :attached-files="attachedFiles"
+                      :show-emoji-picker="showEmojiPicker" :submit-button-text="submitButtonText"
+                      :can-submit="canSubmit" :theme="theme" :is-reply="true" :replying-to="replyTarget?.user?.name"
+                      @toggle-emoji-picker="toggleEmojiPicker" @trigger-file-upload="triggerFileUpload"
+                      @remove-file="removeFile" @submit="submitComment" @add-emoji="addEmoji" @cancel="cancelComment" />
+                  </div>
+                </div>
+              </div>
             </article>
           </div>
         </article>
@@ -135,20 +103,21 @@ import Textarea from 'primevue/textarea'
 import data from '@emoji-mart/data'
 import { Picker } from 'emoji-mart-vue-fast'
 import CommentCard from './CommentCard.vue'
+import CommentInput from './CommentInput.vue' // New component
 import { useAuthStore } from '../store/user'
 import { fetchComments, make_a_post } from '../apis'
 
 const auth = useAuthStore()
 
 const defaultAvatar =
-    'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png'
+  'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png'
 
 const props = defineProps({
-    theme: String,
-    recipe_id: {
-        type: String,
-        required: true
-    }
+  theme: String,
+  recipe_id: {
+    type: String,
+    required: true
+  }
 })
 
 // UI state
@@ -170,13 +139,13 @@ const comments = ref([])
 const currentUser = auth.user
 
 const canSubmit = computed(() => {
-    return commentContent.value.trim().length > 0 || attachedFiles.value.length > 0
+  return commentContent.value.trim().length > 0 || attachedFiles.value.length > 0
 })
 
 const submitButtonText = computed(() => {
-    if (editTarget.value) return 'Update'
-    if (replyTarget.value) return 'Post Reply'
-    return 'Post Comment'
+  if (editTarget.value) return 'Update'
+  if (replyTarget.value) return 'Post Reply'
+  return 'Post Comment'
 })
 
 // Format time
@@ -184,105 +153,119 @@ const formatTimeAgo = date => formatDistanceToNow(new Date(date), { addSuffix: t
 
 // Emoji
 const toggleEmojiPicker = () => {
-    showEmojiPicker.value = !showEmojiPicker.value
+  showEmojiPicker.value = !showEmojiPicker.value
 }
 
 const addEmoji = emoji => {
-    const textarea = commentTextarea.value.$el
-    const start = textarea.selectionStart
-    const end = textarea.selectionEnd
+  const textarea = commentTextarea.value?.$el
+  if (!textarea) return
 
-    const before = commentContent.value.substring(0, start)
-    const after = commentContent.value.substring(end)
+  const start = textarea.selectionStart
+  const end = textarea.selectionEnd
 
-    commentContent.value = before + emoji.native + after
+  const before = commentContent.value.substring(0, start)
+  const after = commentContent.value.substring(end)
 
-    nextTick(() => {
-        textarea.focus()
-        textarea.selectionStart = start + emoji.native.length
-        textarea.selectionEnd = start + emoji.native.length
-    })
+  commentContent.value = before + emoji.native + after
 
-    showEmojiPicker.value = false
+  nextTick(() => {
+    textarea.focus()
+    textarea.selectionStart = start + emoji.native.length
+    textarea.selectionEnd = start + emoji.native.length
+  })
+
+  showEmojiPicker.value = false
 }
 
 // File upload
 const triggerFileUpload = () => fileInput.value.click()
 
 const handleFileUpload = event => {
-    const files = Array.from(event.target.files)
-    attachedFiles.value.push(
-        ...files.map(file => ({
-            name: file.name,
-            size: file.size,
-            type: file.type.startsWith('image') ? 'image' : 'file',
-            file
-        }))
-    )
-    event.target.value = ''
+  const files = Array.from(event.target.files)
+  attachedFiles.value.push(
+    ...files.map(file => ({
+      name: file.name,
+      size: file.size,
+      type: file.type.startsWith('image') ? 'image' : 'file',
+      file
+    }))
+  )
+  event.target.value = ''
 }
 
 const removeFile = index => attachedFiles.value.splice(index, 1)
 
 // Mentions
 const insertMention = () => {
-    if (replyTarget.value) {
-        const mention = `@${replyTarget.value.user.name} `
-        insertAtCursor(mention)
-    }
+  if (replyTarget.value) {
+    const mention = `@${replyTarget.value.user.name} `
+    insertAtCursor(mention)
+  }
 }
 
 const mentionUser = user => {
-    if (user) {
-        const mention = `@${user.name} `
-        insertAtCursor(mention)
-    }
+  if (user) {
+    const mention = `@${user.name} `
+    insertAtCursor(mention)
+  }
 }
 
 const insertAtCursor = text => {
-    const textarea = commentTextarea.value.$el
-    const start = textarea.selectionStart
-    const end = textarea.selectionEnd
+  const textarea = commentTextarea.value?.$el
+  if (!textarea) return
 
-    commentContent.value =
-        commentContent.value.substring(0, start) + text + commentContent.value.substring(end)
+  const start = textarea.selectionStart
+  const end = textarea.selectionEnd
 
-    nextTick(() => {
-        textarea.focus()
-        textarea.selectionStart = start + text.length
-        textarea.selectionEnd = start + text.length
-    })
+  commentContent.value =
+    commentContent.value.substring(0, start) + text + commentContent.value.substring(end)
+
+  nextTick(() => {
+    textarea.focus()
+    textarea.selectionStart = start + text.length
+    textarea.selectionEnd = start + text.length
+  })
 }
 
 // Reply/edit logic
 const startReply = comment => {
-    console.log("REPLING COMMENT: ", comment)
+  console.log("REPLYING COMMENT: ", comment)
 
-    replyTarget.value = comment
-    editTarget.value = null
-    nextTick(() => commentTextarea.value.$el.focus())
-    insertMention()
+  replyTarget.value = comment
+  editTarget.value = null
+  commentContent.value = ''
+  attachedFiles.value = []
+
+  nextTick(() => {
+    if (commentTextarea.value?.$el) {
+      commentTextarea.value.$el.focus()
+    }
+  })
 }
 
 const editComment = comment => {
-    editTarget.value = comment
-    replyTarget.value = null
-    commentContent.value = comment.content
-    attachedFiles.value = comment.attachments || []
-    nextTick(() => commentTextarea.value.$el.focus())
+  editTarget.value = comment
+  replyTarget.value = null
+  commentContent.value = comment.content
+  attachedFiles.value = comment.attachments || []
+  nextTick(() => {
+    if (commentTextarea.value?.$el) {
+      commentTextarea.value.$el.focus()
+    }
+  })
 }
 
 const cancelComment = () => {
-    replyTarget.value = null
-    editTarget.value = null
-    commentContent.value = ''
-    attachedFiles.value = []
-    showEmojiPicker.value = false
+  replyTarget.value = null
+  editTarget.value = null
+  commentContent.value = ''
+  attachedFiles.value = []
+  showEmojiPicker.value = false
 }
 
 // Like action (demo)
 const likeComment = comment => {
-    comment.likes += 1
+  comment.likes += 1
 }
 
 const fetchCommentReplies = async (parent_id) => {
@@ -302,78 +285,75 @@ const fetchCommentReplies = async (parent_id) => {
   }
 };
 
-
-// 🧠 SUBMIT LOGIC
+// Submit logic
 const submitComment = async () => {
-    if (!canSubmit.value) return
-    isSubmitting.value = true
+  if (!canSubmit.value) return
+  isSubmitting.value = true
 
-    const isEditing = Boolean(editTarget.value)
-    const isReplying = Boolean(replyTarget.value)
+  const isEditing = Boolean(editTarget.value)
+  const isReplying = Boolean(replyTarget.value)
 
-    const payload = {
-        content: commentContent.value,
-        edited: isEditing,
-        parent: isReplying ? (replyTarget.value.parent_id || replyTarget.value.id) : null,
-        file: null // Optional file handling
-    }
+  const payload = {
+    content: commentContent.value,
+    edited: isEditing,
+    parent: isReplying ? (replyTarget.value.parent_id || replyTarget.value.id) : null,
+    file: null ,// Optional file handling
+    comment_id: isEditing ? editTarget.value.id : null
+  }
 
-    console.log(" COMMENTing: ", payload)
+  console.log("COMMENTing: ", payload)
 
+  const response = await make_a_post(
+    `/recipes/${props.recipe_id}/comments`,
+    auth.token,
+    payload
+  )
 
-    const response = await make_a_post(
-        `/recipes/${props.recipe_id}/comments`,
-        auth.token,
-        payload
-    )
-
-    if (!response.success) {
-        isSubmitting.value = false
-        return alert(response.message || 'Failed to submit comment')
-    }
-
-    const submittedComment = {
-        ...response.data,
-        user: { ...currentUser },
-        replies: [],
-        attachments: attachedFiles.value.map(file => ({
-            name: file.name,
-            url: URL.createObjectURL(file.file),
-            type: file.type
-        }))
-    }
-
-    console.log(" message rsponce: ", submittedComment)
-
-    if (isEditing) {
-        editTarget.value.content = submittedComment.content
-        editTarget.value.is_edited = true
-        editTarget.value.attachments = submittedComment.attachments
-    } else if (isReplying) {
-        const parentId = replyTarget.value.parent_id || replyTarget.value.id
-        const parent = comments.value.find(c => c.id === parentId)
-        parent?.replies?.push(submittedComment)
-    } else {
-        comments.value.unshift(submittedComment)
-    }
-
-    cancelComment()
+  if (!response.success) {
     isSubmitting.value = false
+    return alert(response.message || 'Failed to submit comment')
+  }
+
+  const submittedComment = {
+    ...response.data,
+    user: { ...currentUser },
+    replies: [],
+    attachments: attachedFiles.value.map(file => ({
+      name: file.name,
+      url: URL.createObjectURL(file.file),
+      type: file.type
+    }))
+  }
+
+  console.log("message response: ", submittedComment)
+
+  if (isEditing) {
+    editTarget.value.content = submittedComment.content
+    editTarget.value.is_edited = true
+    editTarget.value.attachments = submittedComment.attachments
+  } else if (isReplying) {
+    const parentId = replyTarget.value.parent_id || replyTarget.value.id
+    const parent = comments.value.find(c => c.id === parentId)
+    parent?.replies?.push(submittedComment)
+  } else {
+    comments.value.unshift(submittedComment)
+  }
+
+  cancelComment()
+  isSubmitting.value = false
 }
 
 onMounted(async () => {
-    isLoadingComments.value = true;
+  isLoadingComments.value = true;
 
-    const { success, data, message } = await fetchComments(auth.token, props.recipe_id, { recipe_id: props.recipe_id });
-    if (success) {
-        comments.value = data.comments;
+  const { success, data, message } = await fetchComments(auth.token, props.recipe_id, { recipe_id: props.recipe_id });
+  if (success) {
+    comments.value = data.comments;
+  } else {
+    console.error('Failed to load comments:', message);
+    comments.value = [];
+  }
 
-    } else {
-        console.error('Failed to load comments:', message);
-        comments.value = [];
-    }
-
-    isLoadingComments.value = false;
+  isLoadingComments.value = false;
 });
-
 </script>

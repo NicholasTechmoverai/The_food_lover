@@ -73,3 +73,16 @@ export const formattedFromUrl = ((name) => {
     return name ? name.replace(/-/g, ' ') : 'Untitled '
 })
  
+export const formatCookTime = (timeObj) => {
+    if (!timeObj) return '0m'
+    const parts = []
+    if (timeObj.hr && timeObj.hr > 0) parts.push(`${timeObj.hr}h`)
+    if (timeObj.min && timeObj.min > 0) parts.push(`${timeObj.min}m`)
+    return parts.join(' ') || '0m'
+}
+
+const formatDate = (dateString) => {
+    if (!dateString) return 'Unknown date'
+    const options = { year: 'numeric', month: 'long', day: 'numeric' }
+    return new Date(dateString).toLocaleDateString(undefined, options)
+}

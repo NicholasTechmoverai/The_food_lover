@@ -1,5 +1,5 @@
 <template>
-  <div class="bg-white dark:bg-gray-800 rounded-md shadow border border-gray-100 dark:border-gray-700 overflow-hidden transition-all hover:shadow-sm"
+  <div class="bg-white/50 dark:bg-gray-800/50 rounded-md shadow border border-gray-100/50 dark:border-gray-700/50 overflow-hidden transition-all hover:shadow-sm"
     :class="{ 'bg-gray-50 dark:bg-gray-700/50': isReply, 'ml-10': isReply }"
     :style="comment.user?.id === currentUser.id ? { backgroundColor: theme + '30' } : {}">
     <!-- Header -->
