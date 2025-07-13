@@ -1,6 +1,6 @@
 <template>
     <div :style="{ '--theme-color': user?.theme || '#f97316' }"
-        class="bg-white dark:bg-gray-900/70 transition-colors duration-300">
+        class="bg-white  dark:bg-gray-900/70 transition-colors duration-300">
         <div class="parent relative overflow-hidden z-0 h-[500px] mt-50">
             <svg width="0" height="0" class="sr-only" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
                 version="1.1">
@@ -55,7 +55,7 @@
                 </svg>
             </div>
 
-            <div class="min-h-screen -mt-[850px] relative z-10">
+            <div class="min-h-screen -mt-[780px] relative z-10">
                 <!-- Profile Header -->
                 <header v-if="!profile_loading"
                     class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 rounded-xl shadow-sm">
