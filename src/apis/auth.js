@@ -2,8 +2,8 @@ import axios from 'axios'
 import { ref } from "vue";
 
 
-export const B_URl = 'http://localhost:8000'
-// export const B_URl = 'https://ace-uganda-provides-tramadol.trycloudflare.com'
+// export const B_URl = 'http://localhost:8000'
+export const B_URl = 'https://candles-latin-efficiently-satin.trycloudflare.com'
 
 const BACKEND_URL = `${B_URl}/api`
 
