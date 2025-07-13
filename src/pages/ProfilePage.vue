@@ -78,9 +78,7 @@
                                             d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
                                     </svg>
                                 </button>
-
-                            </div>
-                            <div v-if="avatarChanged" class="flex gap-4 mt-4">
+                                  <div v-if="avatarChanged" class="absolute -bottom-9 left-0 flex gap-4 mt-4">
                                 <button @click="saveProfileAvatar"
                                     class="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
                                     <i class="pi pi-save"></i>
@@ -93,6 +91,9 @@
                                     Cancel
                                 </button>
                             </div>
+
+                            </div>
+                          
 
 
                             <!-- Profile Info -->
@@ -723,8 +724,7 @@ const saveProfileAvatar = async () => {
 
         if (res?.success && res.data) {
             // Update untouched user snapshot to reflect new avatar
-            untouched_user_avatar.value = { ...user_info.value.user };
-avatarChanged.value = false
+            untouched_user_avatar.value = user_info.value.user.avatar
             toast.add({
                 severity: 'success',
                 summary: 'Avatar Updated',
