@@ -12,7 +12,7 @@ from enum import Enum
 class AdminUser(AbstractAdmin):
     id = fields.IntField(pk=True)
 
-    username = fields.CharField(max_length=50, unique=True, index=True)
+    adminname = fields.CharField(max_length=50, unique=True, index=True)
     password = fields.CharField(max_length=128)
     
     is_superuser = fields.BooleanField(default=False)
@@ -36,14 +36,20 @@ class User(Model):
 
     email = fields.CharField(max_length=255, unique=True, index=True)
     name = fields.CharField(max_length=255,index=True)
+    username = fields.CharField(max_length=50, unique=True, null=True, index=True)
+    bio = fields.TextField(null=True)
     picture_url = fields.CharField(max_length=855, null=True)
+    phone_number = fields.CharField(max_length=20, null=True)
+    website = fields.CharField(max_length=255, null=True)
+    
 
     password = fields.CharField(max_length=255, null=True)
     is_verified = fields.BooleanField(default=False)
-    is_chef = fields.BooleanField(default=False) 
+    is_chef = fields.BooleanField(default=False, index=True)
+    theme = fields.CharField(max_length=20, default="#07b607ff", index=True)  # Default theme color
 
     is_active = fields.BooleanField(default=True)
-    location = fields.CharField(max_length=180, null=True)
+    location = fields.CharField(max_length=180, null=True, index=True)
     user_agent = fields.CharField(max_length=500, null=True)
     last_login = fields.DatetimeField(null=True)
 

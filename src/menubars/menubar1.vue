@@ -262,12 +262,14 @@ const Menu_items = ref([
         separator: true
     },
     {
-        label: 'Logout',
-        icon: 'pi pi-sign-out',
+        label: auth.user?.name ? auth.user.name : 'Login',
+        icon: auth.user?.name ? 'pi pi-user' : 'pi pi-sign-in',
         command: async () => {
-            auth.setToken(null)
-            auth.setUser(null)
-            // await Logout()
+            if (!auth.user?.id) {
+                router.push('/register/login');
+                return;
+            }
+            router.push(`/${auth.user.name}`);
         }
     }
 ]);

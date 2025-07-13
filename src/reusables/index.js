@@ -81,7 +81,7 @@ export const formatCookTime = (timeObj) => {
     return parts.join(' ') || '0m'
 }
 
-const formatDate = (dateString) => {
+export const formatDate = (dateString) => {
     if (!dateString) return 'Unknown date'
     const options = { year: 'numeric', month: 'long', day: 'numeric' }
     return new Date(dateString).toLocaleDateString(undefined, options)

@@ -21,6 +21,7 @@ import LivePage from '../pages/livePage.vue'
 import CookingTipCard from '../cards/CookingTipCard.vue'
 import CookingTipsPage from '../pages/CookingTipsPage.vue'
 import VerifyPage from '../cards/VerifyPage.vue'
+import ProfilePage from '../pages/ProfilePage.vue'
 
 
 const routes = [
@@ -28,6 +29,12 @@ const routes = [
     path: '/',
     name: 'LandingPage',
     component: LandingPage,
+  },
+    {
+    path: '/:username',
+    name: 'ProfilePage',
+    component: ProfilePage,
+    props: true
   },
   {
     path: '/recipes',

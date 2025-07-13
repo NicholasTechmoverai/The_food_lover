@@ -80,15 +80,29 @@ class RecipesNamespace(socketio.AsyncNamespace):
             
             
 
-class UsersNamespace(socketio.AsyncNamespace):
-    namespace = "/users"
+class UsersNamespace(socketio.AsyncNamespace,AuthService):
+    def __init__(self, namespace, user_service: AuthService):
+        super().__init__(namespace)
+        self.user_service = user_service
 
     def on_connect(self, sid, environ):
         print(f"[Users] Connected: {sid}")
 
-    async def on_status_ping(self, sid, data):
-        ...
+    async def on_check_username_availability(self, sid, data):
+        try:
+            username = data.get("username")
+            user_id = data.get("user_id")
+            logger.debug(f"[Users] Checking availability for username: {username} from {sid}")  
+            if not username or not user_id:
+                logger.warning(f"[Users] Missing username or user_id from {sid}")
+                return
 
+            is_available = await self.user_service.check_username_availability(username,user_id)
+            await self.emit("check_username_availability", {"username": username, "available": is_available}, room=sid)
+        except Exception as e:
+            logger.exception(f"[UsersNamespace Error]: {e}")
+            
+            
 class NotificationsNamespace(socketio.AsyncNamespace):
     namespace = "/notifications"
 

@@ -1,8 +1,8 @@
 from tortoise import Tortoise
 import os
 WEB_SERVER = 'http://localhost:5173'
-BASE_SERVER = 'https://converted-stronger-library-realistic.trycloudflare.com'
-# BASE_SERVER = 'http://localhost:8000'
+# BASE_SERVER = 'https://ace-uganda-provides-tramadol.trycloudflare.com'
+BASE_SERVER = 'http://localhost:8000'
 
 db_url = "mysql://root:75223031@localhost/the_food_lovers"
 
@@ -45,5 +45,6 @@ class Config:
     SITE_LOGO = "https://the-food-lovers.netlify.app/assets/logo-DuL6grKj.ico"
     BASE_DIR = os.path.abspath(os.path.dirname(__file__))
     CHEF_PATH = os.path.join('uploads', 'chefs')
+    USER_PATH = os.path.join('uploads', 'users')
 
     

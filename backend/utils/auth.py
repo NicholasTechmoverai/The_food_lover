@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from typing import Optional
+from typing import Optional,Dict
 from tortoise.expressions import Q
 import os
 import re
@@ -10,10 +10,10 @@ from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, ExpiredSignatureError, jwt
 from passlib.context import CryptContext
 
-from models import User as Users,Follow,VerificationCode
-from config import Config,WEB_SERVER
+from models import User as Users,Follow,VerificationCode,Recipe
+from config import Config,WEB_SERVER,BASE_SERVER
 from utils.email_sender import send_email,form_email_message,code_template,verify_link_template
-from reusables.main import sanitize_name
+from reusables.main import sanitizeContents ,save_base64_image,sanitize_name
 from uuid import UUID
 import secrets
 from datetime import datetime, timezone
@@ -26,6 +26,9 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 
 defaultAvatar = 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png'
+
+from .logger import setup_logger
+logger = setup_logger("socket")
 
 
 # Dependency: Extracts user from token
@@ -87,6 +90,77 @@ class AuthService:
            return None
         return user
 
+    async def check_username_availability(self, username: str,user_id: UUID) -> bool:
+        if username is None or not re.match(r"^[a-zA-Z0-9_]{3,20}$", username):
+            raise HTTPException(
+                status_code=400,
+                detail="Username must be 3-20 characters long and can only contain letters, numbers, and underscores."
+            )
+        user = await self.user_repo.get_or_none(username=username)
+        if user and user.id != user_id:
+            return False
+        return True
+
+    async def get_user(self, username: str, my_user_id: Optional[UUID] = None) -> dict:
+        try:
+            user = await self.user_repo.get_or_none(username=username)
+            if not user:
+                raise HTTPException(status_code=404, detail="User not found")
+
+            # Initialize metadata
+            is_following = False
+            following_count = 0
+            follower_count = 0
+            recipes_count = 0
+
+            try:
+                if my_user_id:
+                    is_following = await Follow.filter(
+                        follower_id=my_user_id,
+                        following_id=user.id
+                    ).exists()
+            except Exception as e:
+                logger.warning(f"[get_user] Failed to check following status: {e}")
+
+            try:
+                if user.is_chef:
+                    follower_count = await Follow.filter(following_id=user.id).count()
+                    following_count = await Follow.filter(follower_id=user.id).count()
+                    recipes_count = await Recipe.filter(user=user).count()
+            except Exception as e:
+                logger.warning(f"[get_user] Failed to fetch follow/recipe stats: {e}")
+
+            return {
+                "user": {
+                    "id": str(user.id),
+                    "username": user.username,
+                    "avatar": user.picture_url if user.picture_url.startswith("https://") else f"{BASE_SERVER}/{user.picture_url}",
+                    "bio": user.bio,
+                    "name": user.name,
+                    "email": user.email if user.id == my_user_id else None,
+                    "created_at": user.created_at.strftime("%Y-%m-%d") if user.created_at else None,
+                    "phone_number": user.phone_number if user.id == my_user_id else None,
+                    "website": user.website,
+                    "theme": getattr(user, "theme", "#4CAF50"),
+                    "is_verified": user.is_verified,
+                    "is_chef": user.is_chef,
+                },
+                "userMetadata": {
+                    "isFollowing": is_following,
+                    "followers": follower_count,     # People who follow this user
+                    "following": following_count,    # People this user follows
+                    "recipes_count": recipes_count,
+                    "starRating": 0,
+                    "reviews_count": 0,
+                },
+            }
+
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error(f"[get_user] Unexpected error while retrieving user '{username}': {e}", exc_info=True)
+            raise HTTPException(status_code=500, detail="Internal server error")
+   
     async def signup(
         self, email: str, name: str,
         password: str, confirm_password: str, terms: bool
@@ -116,6 +190,65 @@ class AuthService:
 
         return await self.send_verification('link',user,None,'email') 
     
+    
+    async def update_user(self, data,user) -> Dict:
+        try:
+            
+            user = await self.user_repo.get_or_none(id=user.id)
+
+            if not user:
+                raise HTTPException(status_code=404, detail="User not found")
+            
+
+            # Update optional fields if provided
+            if data.username:
+                user.username = await sanitize_name(data.username)
+            if data.name:
+                user.name = data.name.strip()
+            if data.bio:
+                data.bio = sanitizeContents(data.bio)
+                user.bio = data.bio.strip()
+            if data.phone_number:
+                user.phone_number = data.phone_number.strip()
+            if data.location:
+                user.location = data.location.strip()
+            if data.new_email:
+                user.email = data.new_email.strip()
+            if data.theme:
+                user.theme = data.theme
+            if data.website:
+                user.website = data.website 
+                    
+            if data.avatar:
+                image_path = await save_base64_image(data.avatar, Config.USER_PATH)
+                if image_path:
+                    user.picture_url = image_path
+
+            await user.save()
+
+            return {
+                "success": True,
+                "message": "User updated successfully",
+                "user": {
+                    "id": str(user.id),
+                    "username": user.username,
+                    "name": user.name,
+                    "email": user.email,
+                    "avatar": user.picture_url,
+                    "bio": user.bio,
+                    "phone_number": user.phone_number,
+                    "location": user.location,
+                    "website": user.website,
+                    "theme": getattr(user, "theme", "#4CAF50"),
+                    "isVerified":user.is_verified,
+                    "isChef":user.is_chef,
+                }
+            }
+
+        except Exception as err:
+            logger.exception(f"[update_user error]: {err}")
+            raise HTTPException(status_code=500, detail="An error occurred while updating the user.")
+
     async def follow_unfollow(self, user_id: UUID, chef_id: UUID) -> bool:
         """
         Toggle follow/unfollow for a given chef by a user.
@@ -185,7 +318,7 @@ class AuthService:
     def verify_password(self, plain_password: str, hashed_password: str) -> bool:
         return pwd_context.verify(plain_password, hashed_password)
     
-    async def send_verification(self, method='link', user=None, code_id=None,verification_type = 'email'):
+    async def send_verification(self, method='link', user=None, code_id=None,verification_type = 'email', new_email: Optional[str] = None):
         if code_id:
             old_code = await VerificationCode.get_or_none(id=code_id)
             if not old_code:
@@ -218,7 +351,7 @@ class AuthService:
         )
 
         # Send email
-        sent = await send_email(user.email, email_body)
+        sent = await send_email(user.email if not new_email else new_email, email_body)
         if not sent:
             raise HTTPException(status_code=500, detail="Failed to send verification email.")
 
@@ -287,7 +420,7 @@ class AuthService:
             "user": {
                 "id": str(user.id),
                 # "email": user.email,
-                "name": user.name,
+                "name": user.username or user.name,
                 "isVerified":user.is_verified,
                 "isChef":user.is_chef,
                 "profilePic":user.picture_url,

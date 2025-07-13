@@ -10,7 +10,7 @@ import socketio
 from fastapi.staticfiles import StaticFiles
 from web_socket.main import MainNamespace, RecipesNamespace, UsersNamespace, NotificationsNamespace
 from config import init_db  # Your DB init logic
-from routes.auth import auth_router,limiter
+from routes.auth import auth_router,limiter,AuthService
 from routes.recipes import recipe_router,RecipeService
 from utils.limiter import limiter  
 from routes.user import user_router
@@ -44,7 +44,7 @@ sio = socketio.AsyncServer(
 
 sio.register_namespace(MainNamespace("/main"))
 sio.register_namespace(RecipesNamespace("/recipes", RecipeService()))
-sio.register_namespace(UsersNamespace("/users"))
+sio.register_namespace(UsersNamespace("/users", AuthService()))
 sio.register_namespace(NotificationsNamespace("/notifications"))
 
 socket_app = socketio.ASGIApp(
@@ -104,3 +104,5 @@ async def shutdown():
 
 
 #uvicorn app:socket_app --reload
+#cloudflared tunnel --url http://localhost:3000
+

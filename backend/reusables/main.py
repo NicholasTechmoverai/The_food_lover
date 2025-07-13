@@ -109,4 +109,4 @@ async def save_base64_image(base64_str: str, folder: str = "uploads", filename: 
 
 
 async def sanitize_name (name):
-    return re.sub(r'[^a-zA-Z0-9_-]', '', name.replace(" ", "_").lower())
+    return re.sub(r'[^a-zA-Z0-9_-]', '', name.strip().replace(" ", "_").lower())

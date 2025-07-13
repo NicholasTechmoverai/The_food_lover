@@ -46,23 +46,30 @@ async def verify_user(
     try:
         return await auth.verify_code(code_id=code_id, code=code, type=type)
     except HTTPException as e:
-        raise e  # re-raise expected HTTPExceptions
-    except Exception as e:
-        print(e)
-        raise HTTPException(status_code=500, detail="Internal server error")
-
+        raise HTTPException(status_code=401, detail=f"Verification failed: {str(e)}")
+   
 
 @auth_router.post("/send-verification")
 @limiter.limit("10/minute")
-async def send_verfication(
+async def send_verification(
     request: Request,
     code_id: Optional[UUID] = None,
+    new_email: Optional[EmailStr] = None,
     u_id: Optional[str] = None,
     type: str = 'email',
     method: str = 'link',
     auth: AuthService = Depends()
 ):
     try:
+        if new_email  and u_id:
+            user = await auth.is_user_exists(u_id)
+            if not user:
+                raise HTTPException(status_code=404, detail="User not found.")
+            is_new_email_available = await auth.is_user_exists(new_email)
+            if is_new_email_available:
+                raise HTTPException(status_code=400, detail="Email already registered!")
+
+            return await auth.send_verification(method, user, None, type, new_email)
         if code_id:
             return await auth.send_verification(method, None, code_id, type)
 

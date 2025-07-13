@@ -2,8 +2,8 @@ import axios from 'axios'
 import { ref } from "vue";
 
 
-// export const B_URl = 'http://localhost:8000'
-export const B_URl = 'https://converted-stronger-library-realistic.trycloudflare.com'
+export const B_URl = 'http://localhost:8000'
+// export const B_URl = 'https://ace-uganda-provides-tramadol.trycloudflare.com'
 
 const BACKEND_URL = `${B_URl}/api`
 
@@ -15,6 +15,12 @@ export async function verifyCodeAPI(codeId, code, type) {
 
     if ([200, 201].includes(response.status)) {
       return { success: true, data: response.data };
+    }
+    else if (response.status === 422) {
+      return {
+        success: false,
+        message: 'Invalid data format. Please check your input.',
+      };
     }
 
     return {
@@ -33,10 +39,10 @@ export async function verifyCodeAPI(codeId, code, type) {
   }
 }
 
-export async function send_verify(codeId,method,type,u_id=null) {
+export async function send_verify(codeId,method,type,u_id=null,new_email=null) {
   try {
     const response = await axios.post(`${BACKEND_URL}/auth/send-verification`, null, {
-      params: { code_id:codeId, u_id, type,method }
+      params: { code_id:codeId, u_id, type,method,new_email }
     });
 
     if ([200, 201].includes(response.status)) {
