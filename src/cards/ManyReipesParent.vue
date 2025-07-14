@@ -1,32 +1,62 @@
 <template>
     <div>
-        
       <!-- Main Recipe List -->
-      <section class="order-2 lg:order-1 lg:col-span-2 space-y-8">
-
-        <!-- Recipe Cards -->
+      <section class="order-2 lg:order-1 lg:col-span-2 space-y-6 md:space-y-8">
+        <!-- Recipe Cards Grid -->
         <div>
-
-          <div v-if="recipes_loading" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <RecipeLoader v-for="i in 2" :key="i" />
+          <!-- Loading State -->
+          <div v-if="recipes_loading" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 sm:gap-5 md:gap-6"
+               style="grid-template-columns: repeat(auto-fill, minmax(350px, 1fr))">
+            <RecipeLoader 
+              v-for="i in 4" 
+              :key="'loader-'+i" 
+              class="min-w-[300px] border border-gray-200/80 dark:border-gray-700/50 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300"
+            />
           </div>
 
-          <div v-else class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <RecipeCard v-for="recipe in recipes" :key="recipe.id" :recipe="recipe"
-              class="border border-gray-300 dark:border-gray-700/50 rounded-md" />
+          <!-- Loaded State -->
+          <div v-else>
+            <!-- Empty State -->
+            <div v-if="recipes.length === 0" class="text-center py-12 md:py-16 lg:py-20">
+              <div class="mx-auto w-24 h-24 md:w-32 md:h-32 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-6">
+                <i class="pi pi-book text-4xl md:text-5xl text-gray-400 dark:text-gray-500"></i>
+              </div>
+              <h3 class="text-lg md:text-xl font-semibold text-gray-800 dark:text-gray-100 mb-3">
+                No recipes found
+              </h3>
+              <p class="text-gray-500 dark:text-gray-400 max-w-md mx-auto text-sm md:text-base">
+                Try adjusting your search or create a new recipe
+              </p>
+            </div>
+
+            <!-- Recipe Grid -->
+            <div v-else 
+                 class="grid gap-4 sm:gap-5 md:gap-6"
+                 style="grid-template-columns: repeat(auto-fill, minmax(320px, 1fr))">
+              <RecipeCard 
+                v-for="recipe in recipes" 
+                :key="recipe.id" 
+                :recipe="recipe"
+                class="min-w-[300px] border border-gray-200/80 dark:border-gray-700/50 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1"
+              />
+            </div>
           </div>
 
-          <div class="pt-4" v-if="recipes.length > (limit-offset)">
-            <button @click="getRecipes(limit + 10, offset + 10)"
-              class="inline-flex items-center gap-2 text-primary-600 hover:underline text-sm font-medium">
-              Show more <i class="pi pi-arrow-right"></i>
+          <!-- Pagination/Show More -->
+          <div v-if="recipes.length > 0 && recipes.length >= limit" class="pt-6 md:pt-8 flex justify-center">
+            <button 
+              @click="getRecipes(limit + 10, offset + 10)"
+              class="inline-flex items-center gap-2 px-5 py-2.5 md:px-6 md:py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-full text-sm md:text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700/60 transition-all duration-200 hover:shadow-md"
+            >
+              Show more recipes
+              <i class="pi pi-arrow-right text-xs md:text-sm"></i>
             </button>
           </div>
         </div>
-
       </section>
     </div>
 </template>
+
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import RecipeCard from '../cards/RecipeCard.vue'

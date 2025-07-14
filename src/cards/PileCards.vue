@@ -1,46 +1,38 @@
 <template>
-  <div class="p-4">
-    <h1 class="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-100 text-center">
-       ⟵ Scroll ⟶ 
-    </h1>
+    <div class="py-4">
+        <h1 class="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-100 text-center">
+            ⟵ Scroll ⟶
+        </h1>
 
-    <ul class="flex gap-4 overflow-x-auto pb-4">
-      <li
-        v-for="recipe in recipes"
-        :key="recipe.title"
-        class="relative min-w-[250px] rounded-xl overflow-hidden shadow hover:shadow-lg transition duration-300 bg-white dark:bg-gray-800"
-      >
-        <!-- Recipe Image -->
-        <img
-          :src="recipe.image"
-          :alt="recipe.alt"
-          class="w-full h-64 object-cover"
-        />
+        <ul class="flex gap-4 overflow-x-auto pb-4">
+            <li v-for="recipe in recipes" :key="recipe.title"
+                class="relative min-w-[250px]  overflow-hidden shadow hover:shadow-lg transition duration-300 bg-white dark:bg-gray-800">
+                <!-- Recipe Image -->
+                <img :src="recipe.image" :alt="recipe.alt" class="w-full h-64 object-cover" />
 
-        <!-- Overlay Content -->
-        <div
-          class="absolute inset-0 bg-black/40 backdrop-blur-sm text-white flex flex-col justify-end p-3"
-        >
-          <div class="flex items-center gap-2 mb-2">
-            <img
-              :src="recipe.chef.avatar"
-              :alt="recipe.chef.name"
-              class="w-8 h-8 rounded-full border-2 border-white"
-            />
-            <div class="text-sm">
-              <p class="font-semibold leading-tight">{{ recipe.chef.name }}</p>
-              <p class="text-xs opacity-80">{{ recipe.views }} views</p>
-            </div>
-          </div>
+                <!-- Overlay Content -->
+                <div class="absolute inset-0 bg-black/40  text-white flex flex-col justify-end p-3">
+                    <div class="flex justify-between items-center text-xs text-white/90">
+                        <span class="font-bold text-xl">{{ recipe.title }}</span>
+                        <!-- <span><i class="pi pi-heart-fill text-red-400 mr-1"></i>{{ recipe.likes }}</span> -->
+                    </div>
+                    <div class="flex items-center gap-2 mb-2">
+                        <img :src="recipe.chef.avatar" :alt="recipe.chef.name"
+                            class="w-8 h-8 rounded-full border-2 border-white" />
+                        <div class="text-sm">
+                            <p class="font-semibold leading-tight">{{ recipe.chef.name }}</p>
+                            <p class="text-xs opacity-80">{{ recipe.views }} views</p>
+                        </div>
+                    </div>
 
-          <div class="flex justify-between items-center text-xs text-white/90">
-            <span class="font-semibold">{{ recipe.title }}</span>
-            <span><i class="pi pi-heart-fill text-red-400 mr-1"></i>{{ recipe.likes }}</span>
-          </div>
-        </div>
-      </li>
-    </ul>
-  </div>
+
+                </div>
+            </li>
+        </ul>
+    </div>
+
+
+
 </template>
 
 
@@ -168,78 +160,6 @@ const recipes = [
             id: 10,
             name: 'Chef Pierre',
             avatar: 'https://i.pravatar.cc/40?img=10'
-        }
-    },
-    {
-        title: 'Vegetable Soup',
-        image: 'https://images.unsplash.com/photo-1547592180-85f173990554',
-        alt: 'homemade vegetable soup with bread',
-        views: 2760,
-        likes: 445,
-        chef: {
-            id: 11,
-            name: 'Chef Anna',
-            avatar: 'https://i.pravatar.cc/40?img=11'
-        }
-    },
-    {
-        title: 'Shrimp Scampi',
-        image: 'https://images.unsplash.com/photo-1601758003122-53c40e686a19',
-        alt: 'shrimp scampi with linguine',
-        views: 2870,
-        likes: 464,
-        chef: {
-            id: 12,
-            name: 'Chef Marco',
-            avatar: 'https://i.pravatar.cc/40?img=12'
-        }
-    },
-    {
-        title: 'Chicken Wings',
-        image: 'https://images.unsplash.com/photo-1567620832903-9fc6debc209f',
-        alt: 'crispy chicken wings with sauce',
-        views: 3985,
-        likes: 680,
-        chef: {
-            id: 13,
-            name: 'Chef Jake',
-            avatar: 'https://i.pravatar.cc/40?img=13'
-        }
-    },
-    {
-        title: 'Mushroom Risotto',
-        image: 'https://images.unsplash.com/photo-1572695157366-5e585ab2b69f',
-        alt: 'creamy mushroom risotto',
-        views: 2920,
-        likes: 478,
-        chef: {
-            id: 14,
-            name: 'Chef Isabella',
-            avatar: 'https://i.pravatar.cc/40?img=14'
-        }
-    },
-    {
-        title: 'BBQ Ribs',
-        image: 'https://images.unsplash.com/photo-1544025162-d76694265947',
-        alt: 'tender BBQ ribs with coleslaw',
-        views: 4090,
-        likes: 702,
-        chef: {
-            id: 15,
-            name: 'Chef Daniel',
-            avatar: 'https://i.pravatar.cc/40?img=15'
-        }
-    },
-    {
-        title: 'Vegetable Curry',
-        image: 'https://images.unsplash.com/photo-1585937421612-70a008356fbe',
-        alt: 'spicy vegetable curry with rice',
-        views: 2650,
-        likes: 444,
-        chef: {
-            id: 16,
-            name: 'Chef Priya',
-            avatar: 'https://i.pravatar.cc/40?img=16'
         }
     }
 ]
