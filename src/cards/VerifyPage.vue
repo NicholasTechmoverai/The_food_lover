@@ -95,7 +95,7 @@ const submitCode = async () => {
         auth.setUser(user);
         auth.setToken({ token: access_token, expires_in });
 
-        setTimeout(() => router.push(`/${user.name}`), 2500);
+        setTimeout(() => router.push(`/${user.name}`), 1500);
       }
     } else {
       error.value = res.message || 'Invalid or expired verification link.';

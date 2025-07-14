@@ -211,25 +211,20 @@ const noty_menu_items = ref([
 ]);
 
 const Menu_items = ref([
+
     {
         label: 'Recipes',
         icon: 'pi pi-book',
-        items: [
-            {
-                label: 'New Recipe',
-                icon: 'pi pi-plus',
-                command: () => {
-                    router.push('/recipes/new/cover'); // ✅ clean, avoids redirect
-                }
-            },
-            {
-                label: 'All Recipes',
-                icon: 'pi pi-list',
-                command: () => {
-                    router.push('/recipes');
-                }
-            }
-        ]
+        command: () => {
+            router.push('/recipes');
+        }
+    },
+    {
+        label: 'Cooking Tips',
+        icon: 'pi pi-list',
+        command: () => {
+            router.push('/cooking-tips');
+        }
     },
     {
         label: 'Settings',
@@ -260,6 +255,13 @@ const Menu_items = ref([
     },
     {
         separator: true
+    },
+        {
+        label: 'New recipe',
+        icon: 'pi pi-plus',
+        command: () => {
+            router.push('/recipes/new/cover'); // ✅ clean, avoids redirect
+        }
     },
     {
         label: auth.user?.name ? auth.user.name : 'Login',
