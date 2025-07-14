@@ -29,9 +29,12 @@ const fetchMeta = async (endpoint, token = null, queryParams = {}, fallback = []
   }
 };
 
-// Fetch followers of a recipe
-export const fetchFollowers = async (token = null, recipeId, queryParams = {}) => {
-  return await fetchMeta(`/recipes/${recipeId}/followers`, token, queryParams, []);
+// Fetch user folloers
+export const fetchFollowers = async (token = null, queryParams = {}) => {
+  return await fetchMeta(`/users/followers`, token, queryParams, []);
+};
+export const fetchFollowing = async (token = null, queryParams = {}) => {
+  return await fetchMeta(`/users/following`, token, queryParams, []);
 };
 
 // Fetch comments of a recipe

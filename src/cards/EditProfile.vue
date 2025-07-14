@@ -1,6 +1,24 @@
 <template>
     <div class="p-6 max-w-2xl mx-auto space-y-6">
+        <!-- Theme Color Picker -->
+        <div class="relative group">
+            <button @click="showColorPicker = !showColorPicker"
+                class="px-4 py-1.5 sm:px-6 sm:py-2 bg-white dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded-full font-medium hover:bg-gray-50 dark:hover:bg-gray-600 transition-all transform hover:scale-105 active:scale-95 shadow-sm flex items-center gap-1 sm:gap-2 text-sm sm:text-base">
+                <i class="pi pi-palette text-sm sm:text-base"></i>
+                Theme
+            </button>
 
+            <div v-if="showColorPicker"
+                class="absolute z-20 mt-2 w-40 sm:w-48 p-2 sm:p-3 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700">
+                <div class="grid grid-cols-5 gap-1 sm:gap-2">
+                    <button v-for="color in themeColors" :key="color.value" @click="changeThemeColor(color)"
+                        class="w-6 h-6 sm:w-8 sm:h-8 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--theme-color)]"
+                        :class="[color.bg, user.theme === color.value ? 'ring-2 ring-offset-2 ring-[var(--theme-color)]' : '']"
+                        :title="color.name">
+                    </button>
+                </div>
+            </div>
+        </div>
         <!-- Username -->
         <FloatLabel class="w-full" variant="in">
             <IconField>
@@ -140,6 +158,9 @@ const props = defineProps({
     user: Object,
 });
 
+
+
+
 // -------------------- State --------------------
 
 const untouched_user = ref({ ...props.user });
@@ -164,7 +185,26 @@ const codeId = ref('');
 const codeType = ref('email');
 
 // -------------------- Username Check --------------------
+const showColorPicker = ref(false)
+const themeColors = [
+    { name: 'Emerald', value: '#10B981', bg: 'bg-emerald-500' },
+    { name: 'Blue', value: '#3B82F6', bg: 'bg-blue-500' },
+    { name: 'Indigo', value: '#6366F1', bg: 'bg-indigo-500' },
+    { name: 'Purple', value: '#8B5CF6', bg: 'bg-purple-500' },
+    { name: 'Pink', value: '#EC4899', bg: 'bg-pink-500' },
+    { name: 'Red', value: '#EF4444', bg: 'bg-red-500' },
+    { name: 'Orange', value: '#F97316', bg: 'bg-orange-500' },
+    { name: 'Yellow', value: '#F59E0B', bg: 'bg-yellow-500' },
+    { name: 'Teal', value: '#14B8A6', bg: 'bg-teal-500' },
+    { name: 'Cyan', value: '#06B6D4', bg: 'bg-cyan-500' }
+];
 
+const changeThemeColor = (color) => {
+    user.value.theme = color.value;
+    props.user.theme = color.value
+    showColorPicker.value = false;
+    // Save to backend in real implementation
+};
 let usernameTimeout;
 const checkUsername = () => {
     clearTimeout(usernameTimeout);
@@ -394,7 +434,7 @@ const saveEmail = async () => {
             new_email: user.value.email,
             old_email: untouched_user.value.email,
             user_id: user.value.id,
-            email:untouched_user.value.email,
+            email: untouched_user.value.email,
         });
 
         if (res?.success && res.data) {
@@ -434,12 +474,13 @@ const saveEmail = async () => {
 const saveProfile = async () => {
     try {
         const res = await make_a_post(`/users/update/${untouched_user.value.username}`, auth.token, {
-            user_id:untouched_user.value.id,
-            email:untouched_user.value.email,
+            user_id: untouched_user.value.id,
+            email: untouched_user.value.email,
             username: user.value.username,
             name: user.value.name,
             bio: bioContent.value,
             phone_number: user.value.phone_number,
+            theme:user.value.theme
         });
         return res
     } catch (error) {

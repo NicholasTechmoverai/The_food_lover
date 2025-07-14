@@ -1,15 +1,18 @@
 <template>
   <div
-    class="min-w-[300px] bg-white relative dark:bg-gray-900 shadow-md hover:shadow-xl rounded-lg overflow-hidden transition-all duration-300 hover:-translate-y-1 flex flex-col h-full"
+    class="min-w-[300px] max-w-[500px] bg-white relative dark:bg-gray-900 shadow-md hover:shadow-xl rounded-lg overflow-hidden transition-all duration-300 hover:-translate-y-1 flex flex-col h-full"
     :style="{ '--theme-color': recipe?.repiceColor || '#f97316' }">
     <!-- 👤 User Header -->
     <div class="flex justify-between items-center px-4 py-3 border-b border-gray-300 dark:border-gray-700">
       <div class="flex items-center gap-3">
+        <router-link :to="`/${recipe.user.username}`">
         <img :src="recipe.user?.profilePic || defaultAvatar" :alt="recipe.user?.name"
           class="w-10 h-10 rounded-full object-cover" />
+          </router-link>
         <div>
           <h4 class="text-sm font-semibold text-gray-800 dark:text-white">{{ recipe.user?.name }}</h4>
-          <p class="text-xs text-gray-500 dark:text-gray-400">{{ recipe.user?.totalRecipes }} recipes shared</p>
+          <p class="text-xs text-gray-500 dark:text-gray-400">{{ recipe.user?.totalRecipes }} recipes shared • <span> {{
+            formatTimeAgo(recipe?.createdAt) }}</span></p>
         </div>
       </div>
       <button v-if="!NowFollowing" @click="follow(recipe.user.id)"
@@ -18,7 +21,7 @@
       </button>
       <span v-else-if="NowFollowing"
         class="text-xs px-3 py-1 rounded-full border border-[var(--theme-color)] text-[var(--theme-color)] opacity-70 cursor-not-allowed">
-         <span v-if="recipe?.recipeMeta?.isFollowing">Unfollowing...</span><span v-else>Following...</span>
+        <span v-if="recipe?.recipeMeta?.isFollowing">Unfollowing...</span><span v-else>Following...</span>
       </span>
     </div>
 
@@ -34,7 +37,8 @@
         <button @click.stop="toggleLike"
           class="flex flex-row justify-center items-center gap-1 cursor-pointer text-xs px-3 py-1 rounded-full border border-[var(--theme-color)] text-[var(--theme-color)] hover:bg-[var(--theme-color)] hover:text-white transition"
           :class="{ 'bg-[var(--theme-color)] text-white': recipe?.recipeMeta?.isLiked }">
-          <i :class="recipe?.recipeMeta?.isLiked ? 'pi pi-heart-fill' : 'pi pi-heart'"></i><span>{{ recipe?.recipeMeta?.likeCount }}</span>
+          <i :class="recipe?.recipeMeta?.isLiked ? 'pi pi-heart-fill' : 'pi pi-heart'"></i><span>{{
+            recipe?.recipeMeta?.likeCount }}</span>
         </button>
         <button @click.stop="toggleSave"
           class="cursor-pointer text-xs px-3 py-1 rounded-full border border-[var(--theme-color)] text-[var(--theme-color)] hover:bg-[var(--theme-color)] hover:text-white transition"
@@ -44,8 +48,10 @@
       </div>
 
       <div class="absolute bottom-2 left-2 flex gap-2">
-        <span class="badge rounded-2xl bg-white/40 dark:bg-gray-800/40 px-2 border border-[var(--theme-color)]">{{ recipe?.complexityLevel?.name }}</span>
-        <span class="badge flex items-center gap-1 px-2  bg-white/40 dark:bg-gray-800/40 rounded-2xl border border-[var(--theme-color)]" >
+        <span class="badge rounded-2xl bg-white/40 dark:bg-gray-800/40 px-2 border border-[var(--theme-color)]">{{
+          recipe?.complexityLevel?.name }}</span>
+        <span
+          class="badge flex items-center gap-1 px-2  bg-white/40 dark:bg-gray-800/40 rounded-2xl border border-[var(--theme-color)]">
           <ClockIcon class="w-4 h-4" /> {{ formatCookTime(recipe?.cookTime) }}
         </span>
       </div>
@@ -143,6 +149,7 @@ import onerrorImage from '../assets/onerrorimage.png'
 import { useAuthStore } from '../store/user.js'
 import { useToast } from 'primevue/usetoast'
 import { like_unlike, save_unsave_favourites } from '../apis/index.js'
+import { formatDistanceToNow } from 'date-fns'
 
 
 // import { ClockIcon, GlobeIcon, ArrowRightIcon } from 'your-icon-library';
@@ -191,6 +198,8 @@ const isFollowing = ref(false)
 const showFullDescription = ref(false);
 const defaultAvatar = 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png';
 const placeholderImage = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?ixlib=rb-4.0.3&auto=format&fit=crop&w=880&q=80';
+
+const formatTimeAgo = date => formatDistanceToNow(new Date(date), { addSuffix: true })
 
 const formatCookTime = (cookTime) => {
   if (cookTime.hr > 0 && cookTime.min > 0) {
@@ -246,47 +255,47 @@ const follow = async (chefId) => {
 
 
 const toggleLike = async () => {
-    const res = await like_unlike(auth.token, props.recipe.id)
-    if (res.success) {
-        props.recipe.recipeMeta.isLiked = !props.recipe.recipeMeta.isLiked
-        props.recipe.recipeMeta.likeCount += props.recipe.recipeMeta.isLiked ? 1 : -1
-    } else {
-        toast.add({
-            severity: 'error',
-            summary: 'Failed to like',
-            detail: `${res.message} || 'failed!!'`,
-            group: 'bc',
-            life: 2000
-        });
-    }
+  const res = await like_unlike(auth.token, props.recipe.id)
+  if (res.success) {
+    props.recipe.recipeMeta.isLiked = !props.recipe.recipeMeta.isLiked
+    props.recipe.recipeMeta.likeCount += props.recipe.recipeMeta.isLiked ? 1 : -1
+  } else {
+    toast.add({
+      severity: 'error',
+      summary: 'Failed to like',
+      detail: `${res.message} || 'failed!!'`,
+      group: 'bc',
+      life: 2000
+    });
+  }
 }
 
 const toggleSave = async () => {
-    const res = await save_unsave_favourites(auth.token, props.recipe.id);
+  const res = await save_unsave_favourites(auth.token, props.recipe.id);
 
-    if (res.success) {
-        const isNowSaved = !props.recipe.recipeMeta.value.isSaved;
+  if (res.success) {
+    const isNowSaved = !props.recipe.recipeMeta.isSaved;
 
-        toast.add({
-            severity: isNowSaved ? 'success' : 'info',
-            summary: isNowSaved ? 'Recipe Saved' : 'Recipe Removed',
-            detail: isNowSaved
-                ? `You’ve saved “${props.recipe.recipeName}” to your favorites.`
-                : `You’ve removed “${props.recipe.recipeName}” from your favorites.`,
-            group: 'bc',
-            life: 2500,
-        });
+    toast.add({
+      severity: isNowSaved ? 'success' : 'info',
+      summary: isNowSaved ? 'Recipe Saved' : 'Recipe Removed',
+      detail: isNowSaved
+        ? `You’ve saved “${props.recipe.recipeName}” to your favorites.`
+        : `You’ve removed “${props.recipe.recipeName}” from your favorites.`,
+      group: 'bc',
+      life: 2500,
+    });
 
-        props.recipe.recipeMeta.isSaved = isNowSaved;
-    } else {
-        toast.add({
-            severity: 'error',
-            summary: 'Action Failed',
-            detail: res.message || `Something went wrong while updating favorites.`,
-            group: 'bc',
-            life: 2500,
-        });
-    }
+    props.recipe.recipeMeta.isSaved = isNowSaved;
+  } else {
+    toast.add({
+      severity: 'error',
+      summary: 'Action Failed',
+      detail: res.message || `Something went wrong while updating favorites.`,
+      group: 'bc',
+      life: 2500,
+    });
+  }
 };
 
 

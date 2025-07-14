@@ -1,7 +1,7 @@
 <template>
-    <div :style="{ '--theme-color': user?.theme || '#f97316' }"
+    <div :style="{ '--theme-color': user_info.user?.theme || '#f97316' }"
         class="bg-white  dark:bg-gray-900/70 transition-colors duration-300">
-        <div class="parent relative overflow-hidden z-0 h-[500px] mt-50">
+        <div ref="topElementRef" class="parent relative overflow-hidden h-screen z-0  ">
             <svg width="0" height="0" class="sr-only" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
                 version="1.1">
                 <defs>
@@ -38,7 +38,8 @@
             </a>
         </div>
 
-        <div :style="{ '--theme-color': user?.theme || '#f97316' }" class="relative">
+        <div :style="{ '--theme-color': user_info.user?.theme || '#f97316', marginTop: `-${topHeight}px` }"
+            class="relative b_content">
             <!-- Animated Background Elements -->
             <div class="fixed inset-0 overflow-hidden -z-10 opacity-10 dark:opacity-5">
                 <svg width="100%" height="100%" class="absolute inset-0" xmlns="http://www.w3.org/2000/svg">
@@ -55,206 +56,272 @@
                 </svg>
             </div>
 
-            <div class="min-h-screen -mt-[780px] relative z-10">
+            <div class="min-h-screen  relative z-10">
                 <!-- Profile Header -->
                 <header v-if="!profile_loading"
                     class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 rounded-xl shadow-sm">
                     <div class="flex flex-col lg:flex-row gap-8 lg:gap-12">
                         <!-- Profile Section -->
-                        <div class="flex-1 flex flex-col md:flex-row items-center md:items-start gap-8">
+                        <div class="flex-1 flex flex-col md:flex-row items-center md:items-start gap-6 md:gap-8">
                             <!-- Avatar with animated border -->
-                            <div class="relative group">
+                            <div class="relative group shrink-0">
+                                <!-- Glowing background effect -->
                                 <div
-                                    class="absolute -inset-1 rounded-full bg-gradient-to-r from-[var(--theme-color)] to-yellow-500 opacity-75 group-hover:opacity-100 blur transition-all duration-300">
+                                    class="absolute -inset-1 rounded-full bg-gradient-to-r from-[var(--theme-color)] to-yellow-500 opacity-70 group-hover:opacity-100 blur transition-all duration-300">
                                 </div>
+                                <!-- Avatar Image -->
                                 <img :src="user_info.user.avatar"
-                                    class="relative w-32 h-32 min-w-32 md:w-40 md:h-40 rounded-full border-4 border-white dark:border-gray-800 shadow-lg object-cover z-10"
-                                    alt="Profile picture">
-                                <button @click="changeAvatar"
-                                    class="absolute -bottom-2 -right-2 bg-[var(--theme-color)] hover:bg-[var(--theme-color)]/90 w-10 h-10 rounded-full flex items-center justify-center text-white shadow-md transition-all z-20 transform hover:scale-110 active:scale-95">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none"
-                                        viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
-                                    </svg>
-                                </button>
-                                  <div v-if="avatarChanged" class="absolute -bottom-9 left-0 flex gap-4 mt-4">
-                                <button @click="saveProfileAvatar"
-                                    class="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
-                                    <i class="pi pi-save"></i>
-                                    Save
+                                    class="relative w-28 h-28 sm:w-32 sm:h-32 md:w-40 md:h-40 rounded-full border-4 border-white dark:border-gray-800 shadow-lg object-cover z-10"
+                                    alt="Profile picture" />
+
+                                <!-- Edit Button -->
+                                <button v-if="user_info.user.id === auth.user.id" @click="changeAvatar"
+                                    class="absolute -bottom-2 -right-2 bg-[var(--theme-color)] hover:bg-[var(--theme-color)]/90 w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-white shadow-md transition-transform duration-200 z-20 transform hover:scale-110 active:scale-95">
+                                    <i class="pi pi-pencil text-sm sm:text-base"></i>
                                 </button>
 
-                                <button @click="reset_profile_avatar"
-                                    class="flex items-center gap-2 px-4 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 transition">
-                                    <i class="pi pi-times"></i>
-                                    Cancel
-                                </button>
+                                <!-- Save / Cancel Buttons -->
+                                <div v-if="avatarChanged && user_info.user.id === auth.user.id"
+                                    class="absolute -bottom-12 left-1/2 -translate-x-1/2 flex gap-2 sm:gap-3 bg-white dark:bg-gray-900 px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl shadow-md z-30 mt-4 animate-fade-in">
+                                    <!-- Save -->
+                                    <button @click="saveProfileAvatar"
+                                        class="flex items-center gap-1 sm:gap-2 px-3 py-1 sm:px-4 sm:py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-lg shadow transition-transform duration-200 hover:scale-105 text-sm sm:text-base">
+                                        <i class="pi pi-save text-xs sm:text-sm"></i>
+                                        <span>Save</span>
+                                    </button>
+
+                                    <!-- Cancel -->
+                                    <button @click="reset_profile_avatar"
+                                        class="flex items-center gap-1 sm:gap-2 px-3 py-1 sm:px-4 sm:py-1.5 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg shadow transition-transform duration-200 hover:scale-105 text-sm sm:text-base">
+                                        <i class="pi pi-times text-xs sm:text-sm"></i>
+                                        <span>Cancel</span>
+                                    </button>
+                                </div>
                             </div>
-
-                            </div>
-                          
-
 
                             <!-- Profile Info -->
-                            <div class="text-center md:text-left flex-1">
+                            <div class="text-center md:text-left flex-1 w-full">
                                 <!-- User Header Section -->
-                                <div class="flex flex-row md:items-center gap-4 justify-center md:justify-start">
-                                    <h1 class="text-3xl font-bold text-gray-900 dark:text-white">
+                                <div
+                                    class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 justify-center md:justify-start">
+                                    <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
                                         {{ user_info.user.username }}
                                     </h1>
 
+                                    <div class="flex items-center justify-center gap-2 sm:gap-4">
+                                        <!-- Verification Badge -->
+                                        <div v-if="user_info.user.is_verified" class="flex items-center text-blue-500">
+                                            <i class="pi pi-verified text-sm sm:text-base"></i>
+                                            <span class="text-xs sm:text-sm ml-1">Verified</span>
+                                        </div>
 
-
-                                    <!-- Verification Badge -->
-                                    <div v-if="user_info.user.is_verified" class="flex items-center text-blue-500">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20"
-                                            fill="currentColor">
-                                            <path fill-rule="evenodd"
-                                                d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                                                clip-rule="evenodd" />
-                                        </svg>
-                                        <span class="text-sm ml-1">Verified</span>
-                                    </div>
-
-                                    <!-- Chef Badge -->
-                                    <div v-if="user_info.user.is_chef"
-                                        class="flex items-center text-[var(--theme-color)]">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20"
-                                            fill="currentColor">
-                                            <path
-                                                d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-                                        </svg>
-                                        <span class="text-sm ml-1">Chef</span>
+                                        <!-- Chef Badge -->
+                                        <div v-if="user_info.user.is_chef"
+                                            class="flex items-center text-[var(--theme-color)]">
+                                            <i class="pi pi-users text-sm sm:text-base"></i>
+                                            <span class="text-xs sm:text-sm ml-1">Chef</span>
+                                        </div>
                                     </div>
                                 </div>
 
                                 <!-- Stats Section -->
-                                <div v-if="!editProfile" class="flex justify-center md:justify-start space-x-8 ">
+                                <div v-if="!editProfile"
+                                    class="flex justify-center md:justify-start space-x-4 sm:space-x-6 md:space-x-8 mt-4">
                                     <div class="text-center">
-                                        <span class="block text-3xl font-bold text-[var(--theme-color)]">
+                                        <span class="block text-2xl sm:text-3xl font-bold text-[var(--theme-color)]">
                                             {{ user_info.userMetadata.recipes_count }}
                                         </span>
-                                        <span class="text-sm text-gray-500 dark:text-gray-400">Recipes</span>
+                                        <span class="text-xs sm:text-sm text-gray-500 dark:text-gray-400">Recipes</span>
                                     </div>
 
                                     <div v-if="user_info.user.is_chef" class="text-center">
-                                        <span class="block text-3xl font-bold text-[var(--theme-color)]">
+                                        <span class="block text-2xl sm:text-3xl font-bold text-[var(--theme-color)]">
                                             {{ user_info.userMetadata.followers }}
                                         </span>
-                                        <span class="text-sm text-gray-500 dark:text-gray-400">Followers</span>
+                                        <span @click="toggle_followers"
+                                            class="cursor-pointer text-xs sm:text-sm text-gray-500 dark:text-gray-400">Followers</span>
+                                        <Popover ref="follwrs">
+                                            <div
+                                                class="flex flex-col max-h-96 overflow-y-auto p-4 w-72 bg-white dark:bg-gray-900 rounded-lg shadow-lg">
+                                                <span class="font-semibold text-lg mb-3">Followers</span>
+                                                <ul v-if="loading_followers"><i class="pi pi-spin pi-spinner"
+                                                        style="font-size: 2rem"></i></ul>
+
+                                                <ul v-else class="space-y-2">
+                                                    <li v-for="follower in followers" :key="follower.id"
+                                                        class="flex items-center gap-3 p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg cursor-pointer transition">
+                                                        <!-- Avatar -->
+                                                        <img :src="follower.avatar" alt="avatar"
+                                                            class="w-10 h-10 rounded-full object-cover" />
+
+                                                        <!-- Name & Username -->
+
+                                                        <router-link :to="`${follower.username}`" class="flex-1">
+                                                            <div
+                                                                class="font-medium text-sm text-gray-900 dark:text-white">
+                                                                {{ follower.name }}
+                                                            </div>
+                                                            <div class="text-xs text-gray-500 dark:text-gray-400">
+                                                                @{{ follower.username }}
+                                                            </div>
+                                                        </router-link>
+
+                                                        <!-- Follow / Unfollow button -->
+                                                        <button v-if="follower.isChef && follower.id !== auth.user.id"
+                                                            @click.stop="toggleFollow(follower)"
+                                                            class="text-xs px-3 py-1 rounded-full font-semibold transition duration-200"
+                                                            :class="follower.isFollowing
+                                                                ? 'bg-red-100 text-red-600 hover:bg-red-200'
+                                                                : 'bg-blue-100 text-blue-600 hover:bg-blue-200'">
+                                                            {{ follower.isFollowing ? 'Unfollow' : 'Follow' }}
+                                                        </button>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </Popover>
+
                                     </div>
 
                                     <div class="text-center">
-                                        <span class="block text-3xl font-bold text-[var(--theme-color)]">
+                                        <span class="block text-2xl sm:text-3xl font-bold text-[var(--theme-color)]">
                                             {{ user_info.userMetadata.following }}
                                         </span>
-                                        <span class="text-sm text-gray-500 dark:text-gray-400">Following</span>
+                                        <span @click="toggle_followings"
+                                            class="cursor-pointer text-xs sm:text-sm text-gray-500 dark:text-gray-400">Following</span>
+                                        <Popover ref="follwng">
+                                            <div
+                                                class="flex flex-col max-h-96 overflow-y-auto p-4 w-72 bg-white dark:bg-gray-900 rounded-lg shadow-lg">
+                                                <span class="font-semibold text-lg mb-3">Following</span>
+
+                                                <ul v-if="loading_following"><i class="pi pi-spin pi-spinner"
+                                                        style="font-size: 2rem"></i></ul>
+
+                                                <ul v-else class="space-y-2">
+                                                    <li v-for="follower in following" :key="follower.id"
+                                                        class="flex items-center gap-3 p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg cursor-pointer transition">
+                                                        <!-- Avatar -->
+                                                        <img :src="follower.avatar" alt="avatar"
+                                                            class="w-10 h-10 rounded-full object-cover" />
+
+                                                        <router-link :to="`${follower.username}`" class="flex-1">
+                                                            <div
+                                                                class="font-medium text-sm text-gray-900 dark:text-white">
+                                                                {{ follower.name }}
+                                                            </div>
+                                                            <div class="text-xs text-gray-500 dark:text-gray-400">
+                                                                @{{ follower.username }}
+                                                            </div>
+                                                        </router-link>
+
+
+                                                        <!-- Follow / Unfollow button -->
+                                                        <button v-if="follower.id !== auth.user.id"
+                                                            @click.stop="toggleFollow(follower)"
+                                                            class="text-xs px-3 py-1 rounded-full font-semibold transition duration-200"
+                                                            :class="follower.isFollowing
+                                                                ? 'bg-red-100 text-red-600 hover:bg-red-200'
+                                                                : 'bg-blue-100 text-blue-600 hover:bg-blue-200'">
+                                                            {{ follower.isFollowing ? 'Unfollow' : 'Follow' }}
+                                                        </button>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </Popover>
+
                                     </div>
                                 </div>
 
                                 <!-- User Details Section -->
                                 <div v-if="!editProfile"
-                                    class="flex flex-col justify-center items-center md:items-start mt-4 space-y-2">
-                                    <span class="text-gray-500 dark:text-gray-400 text-sm">
+                                    class="flex flex-col justify-center items-center md:items-start mt-4 space-y-1 sm:space-y-2">
+                                    <span class="text-gray-500 dark:text-gray-400 text-xs sm:text-sm">
                                         Joined {{ formatDate(user_info?.user?.created_at) }}
                                     </span>
 
-                                    <p class="text-gray-600 dark:text-gray-200 text-lg font-semibold">
-                                        <span><i class="fas fa-user"></i></span> {{ user_info.user.name || "N/A" }}
-                                    </p>
-
-                                    <p v-if="user_info.user.phone_number"
-                                        class="text-gray-600 dark:text-gray-200 text-lg font-semibold">
-                                        <span><i class="fas fa-phone"></i></span> {{ user_info.user.phone_number ||
+                                    <p class="text-gray-600 dark:text-gray-200 text-base sm:text-lg font-semibold">
+                                        <i class="pi pi-user text-sm sm:text-base mr-1"></i> {{ user_info.user.name ||
                                             "N/A" }}
                                     </p>
 
+                                    <p v-if="user_info.user.phone_number"
+                                        class="text-gray-600 dark:text-gray-200 text-base sm:text-lg font-semibold">
+                                        <i class="pi pi-phone text-sm sm:text-base mr-1"></i> {{
+                                            user_info.user.phone_number || "N/A" }}
+                                    </p>
+
                                     <p v-if="user_info.user.email"
-                                        class="text-gray-500 dark:text-gray-50 text-lg font-semibold">
-                                        <span><i class="fas fa-envelope"></i></span> {{ user_info.user.email || "N/A" }}
+                                        class="text-gray-500 dark:text-gray-50 text-base sm:text-lg font-semibold">
+                                        <i class="pi pi-envelope text-sm sm:text-base mr-1"></i> {{ user_info.user.email
+                                            || "N/A" }}
                                     </p>
 
                                     <!-- Bio Section -->
-                                    <div class="w-full mt-3">
-                                        <p class="text-gray-600 dark:text-gray-400 mb-1">*Bio*</p>
+                                    <div class="w-full mt-2 sm:mt-3">
+                                        <p class="text-gray-600 dark:text-gray-400 mb-1 text-sm sm:text-base">*Bio*</p>
                                         <div v-html="user_info.user.bio || '<p class=\'text-gray-600 dark:text-gray-300\'>Food enthusiast sharing my favorite recipes</p>'"
-                                            class="max-h-[200px] overflow-y-auto break-words text-gray-600 dark:text-gray-300 max-w-lg border rounded p-3 bg-gray-200/30 dark:bg-gray-700/30 border-gray-200 dark:border-gray-600">
+                                            class="max-h-[200px] overflow-y-auto break-words text-gray-600 dark:text-gray-300 max-w-lg border rounded p-2 sm:p-3 bg-gray-200/30 dark:bg-gray-700/30 border-gray-200 dark:border-gray-600 text-sm sm:text-base">
                                         </div>
                                     </div>
                                 </div>
-
 
                                 <div v-if="editProfile && user_info.user.id === auth.user.id">
                                     <!-- Edit Profile Form -->
                                     <EditProfileCard ref="profile_editor" :user="user_info.user"
                                         @save="saveProfileChanges" @cancel="editProfile = false" />
-
                                 </div>
 
-
-
                                 <!-- Action Buttons Section -->
-                                <div class="flex flex-wrap gap-3 mt-6 justify-center md:justify-start">
+                                <div class="flex flex-wrap gap-2 sm:gap-3 mt-4 sm:mt-6 justify-center md:justify-start">
                                     <!-- Edit Profile Button -->
                                     <button v-if="!editProfile && user_info.user.id === auth.user.id"
                                         @click="editUserProfile"
-                                        class="px-6 py-2 bg-white dark:bg-gray-700 border-2 border-[var(--theme-color)] text-[var(--theme-color)] dark:text-white rounded-full font-medium hover:bg-[var(--theme-color)] hover:text-white dark:hover:bg-[var(--theme-color)]/90 transition-all transform hover:scale-105 active:scale-95 shadow-sm flex items-center gap-2">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none"
-                                            viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                        </svg>
+                                        class="px-4 py-1.5 sm:px-6 sm:py-2 bg-white dark:bg-gray-700 border-2 border-[var(--theme-color)] text-[var(--theme-color)] dark:text-white rounded-full font-medium hover:bg-[var(--theme-color)] hover:text-white dark:hover:bg-[var(--theme-color)]/90 transition-all transform hover:scale-105 active:scale-95 shadow-sm flex items-center gap-1 sm:gap-2 text-sm sm:text-base">
+                                        <i class="pi pi-pencil text-sm sm:text-base"></i>
                                         Edit Profile
                                     </button>
 
                                     <button v-if="editProfile && user_info.user.id === auth.user.id"
                                         @click="saveProfileChanges"
-                                        class="px-6 py-2 bg-[var(--theme-color)] text-white rounded-full font-medium hover:bg-[var(--theme-color)]/90 transition-all transform hover:scale-105 active:scale-95 shadow-sm flex items-center gap-2">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none"
-                                            viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                        </svg>
+                                        class="px-4 py-1.5 sm:px-6 sm:py-2 bg-[var(--theme-color)] text-white rounded-full font-medium hover:bg-[var(--theme-color)]/90 transition-all transform hover:scale-105 active:scale-95 shadow-sm flex items-center gap-1 sm:gap-2 text-sm sm:text-base">
+                                        <i class="pi pi-save text-sm sm:text-base"></i>
                                         Save Changes
                                     </button>
 
                                     <!-- Share Profile Button -->
                                     <button @click="share"
-                                        class="px-6 py-2 bg-white dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded-full font-medium hover:bg-gray-50 dark:hover:bg-gray-600 transition-all transform hover:scale-105 active:scale-95 shadow-sm flex items-center gap-2">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none"
-                                            viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-                                        </svg>
+                                        class="px-4 py-1.5 sm:px-6 sm:py-2 bg-white dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded-full font-medium hover:bg-gray-50 dark:hover:bg-gray-600 transition-all transform hover:scale-105 active:scale-95 shadow-sm flex items-center gap-1 sm:gap-2 text-sm sm:text-base">
+                                        <i class="pi pi-share-alt text-sm sm:text-base"></i>
                                         Share
                                     </button>
+
                                     <div class="card flex justify-center">
-
-
                                         <Popover ref="op">
-                                            <div class="flex flex-col gap-4 w-[25rem]">
+                                            <div class="flex flex-col gap-4 w-[20rem] sm:w-[25rem]">
                                                 <!-- Copy Link Section -->
                                                 <div>
-                                                    <span class="font-medium block mb-2">Share this profile</span>
+                                                    <span class="font-medium block mb-2 text-sm sm:text-base">Share this
+                                                        profile</span>
                                                     <InputGroup>
-                                                        <InputText :value="profileUrl" readonly class="w-[25rem]" />
+                                                        <InputText :value="profileUrl" readonly
+                                                            class="w-[20rem] sm:w-[25rem] text-sm sm:text-base" />
                                                         <InputGroupAddon class="cursor-pointer" @click="copyUrl()">
-                                                            <i class="pi pi-copy" />
+                                                            <i class="pi pi-copy text-sm sm:text-base" />
                                                         </InputGroupAddon>
                                                     </InputGroup>
                                                 </div>
 
                                                 <!-- Share Buttons -->
                                                 <div>
-                                                    <span class="font-medium block mb-2">Share on</span>
+                                                    <span class="font-medium block mb-2 text-sm sm:text-base">Share
+                                                        on</span>
                                                     <ul class="list-none p-0 m-0 flex flex-col gap-3">
                                                         <li v-for="site in shares" :key="site.name"
                                                             class="flex items-center gap-3 hover:bg-gray-100 dark:hover:bg-gray-800 rounded px-2 py-1 cursor-pointer"
                                                             @click="shareOnSocial(site.name.toLowerCase())">
                                                             <i :class="site.icon" :style="{ color: site.color }"
-                                                                class="text-xl w-6 text-center" />
-                                                            <span class="font-medium text-sm">{{ site.name }}</span>
+                                                                class="text-lg sm:text-xl w-6 text-center" />
+                                                            <span class="font-medium text-xs sm:text-sm">{{ site.name
+                                                            }}</span>
                                                         </li>
                                                     </ul>
                                                 </div>
@@ -262,181 +329,189 @@
                                         </Popover>
                                     </div>
 
-
                                     <!-- Theme Color Picker -->
                                     <div class="relative group">
-                                        <button @click="showColorPicker = !showColorPicker"
-                                            class="px-6 py-2 bg-white dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded-full font-medium hover:bg-gray-50 dark:hover:bg-gray-600 transition-all transform hover:scale-105 active:scale-95 shadow-sm flex items-center gap-2">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none"
-                                                viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
-                                            </svg>
+                                        <button
+                                            class="px-4 py-1.5 sm:px-6 sm:py-2 bg-[var(--theme-color)] border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded-full font-medium hover:bg-gray-50 dark:hover:bg-gray-600 transition-all transform hover:scale-105 active:scale-95 shadow-sm flex items-center gap-1 sm:gap-2 text-sm sm:text-base">
+                                            <i class="pi pi-palette text-sm sm:text-base"></i>
                                             Theme
                                         </button>
 
-                                        <div v-if="showColorPicker"
-                                            class="absolute z-20 mt-2 w-48 p-3 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700">
-                                            <div class="grid grid-cols-5 gap-2">
-                                                <button v-for="color in themeColors" :key="color.value"
-                                                    @click="changeThemeColor(color.value)"
-                                                    class="w-8 h-8 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--theme-color)]"
-                                                    :class="[color.bg, user_info.user.theme === color.value ? 'ring-2 ring-offset-2 ring-[var(--theme-color)]' : '']"
-                                                    :title="color.name">
-                                                </button>
-                                            </div>
-                                        </div>
+
                                     </div>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Settings Panel -->
-                        <div
-                            class="lg:w-80 bg-gray-50/70 dark:bg-gray-800/30 backdrop-blur-sm rounded-xl p-6 shadow-inner border border-gray-200 dark:border-gray-800/50">
+                        <div v-if="user_info.user.id === auth.user.id"
+                            class="lg:w-80 bg-gray-50/70 dark:bg-gray-800/30 backdrop-blur-sm rounded-xl p-4 sm:p-6 shadow-inner border border-gray-200 dark:border-gray-800/50 mt-6 lg:mt-0">
                             <h2
-                                class="text-xl font-semibold text-gray-800 dark:text-white mb-6 flex items-center gap-2">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-[var(--theme-color)]"
-                                    fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                </svg>
+                                class="text-lg sm:text-xl font-semibold text-gray-800 dark:text-white mb-4 sm:mb-6 flex items-center gap-2">
+                                <i class="pi pi-cog text-[var(--theme-color)] text-sm sm:text-base"></i>
                                 Account Settings
                             </h2>
 
-                            <div class="space-y-8 gap-1 flex flex-col">
+                            <div class="space-y-6 gap-1 flex flex-col">
                                 <!-- Change Password -->
                                 <button @click="changePassword"
-                                    class="w-full flex items-center gap-3 px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-600/50 bg-white dark:bg-gray-700/50 text-gray-700 dark:text-gray-200 font-medium hover:bg-gray-50 dark:hover:bg-gray-600 hover:border-[var(--theme-color)] hover:text-[var(--theme-color)] transition-all">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5"
-                                        viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                            d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
-                                    </svg>
+                                    class="w-full flex items-center gap-2 sm:gap-3 px-3 py-2 sm:px-4 sm:py-3 rounded-lg border border-gray-200 dark:border-gray-600/50 bg-white dark:bg-gray-700/50 text-gray-700 dark:text-gray-200 font-medium hover:bg-gray-50 dark:hover:bg-gray-600 hover:border-[var(--theme-color)] hover:text-[var(--theme-color)] transition-all text-sm sm:text-base">
+                                    <i class="pi pi-lock text-sm sm:text-base"></i>
                                     Change Password
                                 </button>
 
                                 <!-- Notification Settings -->
                                 <button @click="openNotificationSettings"
-                                    class="w-full flex items-center gap-3 px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-600/50 bg-white dark:bg-gray-700/50 text-gray-700 dark:text-gray-200 font-medium hover:bg-gray-50 dark:hover:bg-gray-600 hover:border-[var(--theme-color)] hover:text-[var(--theme-color)] transition-all">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5"
-                                        viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                            d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
-                                    </svg>
+                                    class="w-full flex items-center gap-2 sm:gap-3 px-3 py-2 sm:px-4 sm:py-3 rounded-lg border border-gray-200 dark:border-gray-600/50 bg-white dark:bg-gray-700/50 text-gray-700 dark:text-gray-200 font-medium hover:bg-gray-50 dark:hover:bg-gray-600 hover:border-[var(--theme-color)] hover:text-[var(--theme-color)] transition-all text-sm sm:text-base">
+                                    <i class="pi pi-bell text-sm sm:text-base"></i>
                                     Notifications
                                 </button>
 
                                 <!-- Request to be Chef -->
                                 <button v-if="!user_info.user.is_chef" @click="requestChefRole"
-                                    class="w-full flex items-center gap-3 px-4 py-3 rounded-lg border border-[var(--theme-color)]/50 bg-[var(--theme-color)]/5 text-[var(--theme-color)] font-medium hover:bg-[var(--theme-color)]/10 transition-all group">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5"
-                                        viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                            d="M4.5 12.75l6 6 9-13.5" />
-                                    </svg>
+                                    class="w-full flex items-center gap-2 sm:gap-3 px-3 py-2 sm:px-4 sm:py-3 rounded-lg border border-[var(--theme-color)]/50 bg-[var(--theme-color)]/5 text-[var(--theme-color)] font-medium hover:bg-[var(--theme-color)]/10 transition-all group text-sm sm:text-base">
+                                    <i class="pi pi-user-plus text-sm sm:text-base"></i>
                                     <span>Request Chef Access</span>
                                     <span
-                                        class="ml-auto text-xs bg-[var(--theme-color)] text-white px-2 py-1 rounded-full group-hover:bg-[var(--theme-color)]/90">Pro</span>
+                                        class="ml-auto text-xs bg-[var(--theme-color)] text-white px-2 py-0.5 sm:px-2 sm:py-1 rounded-full group-hover:bg-[var(--theme-color)]/90">Pro</span>
                                 </button>
 
                                 <!-- Verify Account -->
                                 <button v-if="!user_info.user.is_verified" @click="startVerification"
-                                    class="w-full flex items-center gap-3 px-4 py-3 rounded-lg border border-[var(--theme-color)]/50 bg-[var(--theme-color)]/5 text-[var(--theme-color)] font-medium hover:bg-[var(--theme-color)]/10 transition-all">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5"
-                                        viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                            d="M9 12.75L11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 01-1.043 3.296 3.745 3.745 0 01-3.296 1.043A3.745 3.745 0 0112 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 01-3.296-1.043 3.745 3.745 0 01-1.043-3.296A3.745 3.745 0 013 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 011.043-3.296 3.746 3.746 0 013.296-1.043A3.746 3.746 0 0112 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 013.296 1.043 3.746 3.746 0 011.043 3.296A3.745 3.745 0 0121 12z" />
-                                    </svg>
+                                    class="w-full flex items-center gap-2 sm:gap-3 px-3 py-2 sm:px-4 sm:py-3 rounded-lg border border-[var(--theme-color)]/50 bg-[var(--theme-color)]/5 text-[var(--theme-color)] font-medium hover:bg-[var(--theme-color)]/10 transition-all text-sm sm:text-base">
+                                    <i class="pi pi-check-circle text-sm sm:text-base"></i>
                                     Verify Account
                                 </button>
 
-
-
                                 <!-- Divider -->
-                                <div class="border-t border-gray-200 dark:border-gray-600 my-3"></div>
+                                <div class="border-t border-gray-200 dark:border-gray-600 my-1 sm:my-3"></div>
 
                                 <!-- Logout -->
                                 <button @click="signOut"
-                                    class="w-full flex items-center gap-3 px-4 py-3 rounded-lg border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 font-medium hover:bg-red-100 dark:hover:bg-red-900/50 transition-all">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5"
-                                        viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                            d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" />
-                                    </svg>
+                                    class="w-full flex items-center gap-2 sm:gap-3 px-3 py-2 sm:px-4 sm:py-3 rounded-lg border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 font-medium hover:bg-red-100 dark:hover:bg-red-900/50 transition-all text-sm sm:text-base">
+                                    <i class="pi pi-sign-out text-sm sm:text-base"></i>
                                     Sign Out
                                 </button>
                             </div>
                         </div>
                     </div>
                 </header>
-
                 <div v-else class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                     <div class="flex items-center justify-center h-96">
                         <div class="animate-spin rounded-full h-16 w-16 border-t-2 border-[var(--theme-color)]"></div>
                     </div>
                 </div>
 
-                <!-- Enhanced Recipe Tabs -->
+                <!-- Enhanced Recipe Tabs with Smooth Transitions -->
                 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 border-b border-gray-200 dark:border-gray-700">
-                    <div class="flex overflow-x-auto">
-                        <button @click="activeTab = 'myRecipes'"
-                            :class="{ 'text-[var(--theme-color)] border-[var(--theme-color)] font-bold': activeTab === 'myRecipes', 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 border-transparent': activeTab !== 'myRecipes' }"
-                            class="whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm transition-all relative group">
-                            My Recipes
-                            <span v-if="activeTab === 'myRecipes'"
-                                class="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-1/2 h-1 bg-[var(--theme-color)] rounded-full"></span>
+                    <div class="flex overflow-x-auto scrollbar-hide">
+                        <button @click="activeTab = 'myRecipes'" :class="{
+                            'text-[var(--theme-color)] dark:text-[var(--theme-color)] font-semibold': activeTab === 'myRecipes',
+                            'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300': activeTab !== 'myRecipes'
+                        }"
+                            class="whitespace-nowrap py-4 px-6 font-medium text-sm transition-all duration-300 relative group flex flex-col items-center">
+                            <span v-if="user_info.user.id === auth.user.id">My Recipes ({{
+                                user_info.userMetadata.recipes_count }})</span>
+                            <span v-else>Posted Recipes ({{ user_info.userMetadata.recipes_count }})</span>
+                            <span :class="activeTab === 'myRecipes' ? 'w-full scale-100' : 'w-0 scale-0'"
+                                class="absolute bottom-0 h-0.5 bg-[var(--theme-color)] rounded-full transition-all duration-300 origin-center"></span>
                         </button>
-                        <button @click="activeTab = 'saved'"
-                            :class="{ 'text-[var(--theme-color)] border-[var(--theme-color)] font-bold': activeTab === 'saved', 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 border-transparent': activeTab !== 'saved' }"
-                            class="whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm transition-all relative group">
+
+                        <button v-if="user_info.user.id === auth.user.id" @click="activeTab = 'saved'" :class="{
+                            'text-[var(--theme-color)] dark:text-[var(--theme-color)] font-semibold': activeTab === 'saved',
+                            'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300': activeTab !== 'saved'
+                        }"
+                            class="whitespace-nowrap py-4 px-6 font-medium text-sm transition-all duration-300 relative group flex flex-col items-center">
                             Saved Recipes
-                            <span v-if="activeTab === 'saved'"
-                                class="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-1/2 h-1 bg-[var(--theme-color)] rounded-full"></span>
+                            <span :class="activeTab === 'saved' ? 'w-full scale-100' : 'w-0 scale-0'"
+                                class="absolute bottom-0 h-0.5 bg-[var(--theme-color)] rounded-full transition-all duration-300 origin-center"></span>
                         </button>
-                        <button @click="activeTab = 'liked'"
-                            :class="{ 'text-[var(--theme-color)] border-[var(--theme-color)] font-bold': activeTab === 'liked', 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 border-transparent': activeTab !== 'liked' }"
-                            class="whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm transition-all relative group">
-                            Liked Recipes
-                            <span v-if="activeTab === 'liked'"
-                                class="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-1/2 h-1 bg-[var(--theme-color)] rounded-full"></span>
+
+                        <button @click="activeTab = 'cooking-tips'" :class="{
+                            'text-[var(--theme-color)] dark:text-[var(--theme-color)] font-semibold': activeTab === 'cooking-tips',
+                            'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300': activeTab !== 'cooking-tips'
+                        }"
+                            class="whitespace-nowrap py-4 px-6 font-medium text-sm transition-all duration-300 relative group flex flex-col items-center">
+                            <span v-if="user_info.user.id === auth.user.id">My Cooking Tips</span>
+                            <span v-else>Posted Cooking Tips</span>
+                            <span :class="activeTab === 'cooking-tips' ? 'w-full scale-100' : 'w-0 scale-0'"
+                                class="absolute bottom-0 h-0.5 bg-[var(--theme-color)] rounded-full transition-all duration-300 origin-center"></span>
                         </button>
                     </div>
                 </div>
 
-                <!-- Recipe Grid -->
-                <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                    <!-- Enhanced Empty State -->
-                    <div class="text-center py-16">
-                        <div
-                            class="mx-auto w-48 h-48 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden mb-6 relative">
-                            <div class="absolute inset-0 bg-gradient-to-br from-[var(--theme-color)]/10 to-transparent">
+                <div class="relative">
+                    <!-- My Recipes Tab -->
+                    <transition enter-active-class="transition-opacity duration-300 ease-out"
+                        enter-from-class="opacity-0" enter-to-class="opacity-100"
+                        leave-active-class="transition-opacity duration-200 ease-in" leave-from-class="opacity-100"
+                        leave-to-class="opacity-0">
+                        <div v-show="activeTab === 'myRecipes'" class="py-4 md:px-2 lg:px-5">
+                            <MainRecipeCardsParent v-if="activeTab === 'myRecipes' && user_info.user.id"
+                                :user_id="user_info.user.id" @recipes_count="update_fetched_user_recipes" />
+
+                            <!-- Empty State for Posted Recipes -->
+                            <div v-if="totalPostedRecipes < 1" class="text-center py-12">
+                                <div
+                                    class="mx-auto w-40 h-40 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden mb-6 relative flex items-center justify-center">
+                                    <i class="pi pi-book text-6xl text-gray-400 dark:text-gray-500"></i>
+                                    <div
+                                        class="absolute inset-0 bg-gradient-to-br from-[var(--theme-color)]/10 to-transparent">
+                                    </div>
+                                </div>
+                                <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-3">
+                                    No recipes created yet
+                                </h3>
+                                <p class="text-gray-500 dark:text-gray-400 mb-6 max-w-md mx-auto">
+                                    Start sharing your culinary creations with the community
+                                </p>
+                                <router-link to="/recipes/new/cover"
+                                    class="inline-flex items-center px-6 py-2.5 border border-transparent rounded-full shadow-sm text-white bg-[var(--theme-color)] hover:bg-[var(--theme-color)]/90 transition-all transform hover:scale-105 font-medium">
+                                    Create Your First Recipe
+                                    <i class="pi pi-arrow-right ml-2"></i>
+                                </router-link>
                             </div>
-                            <img src="https://images.unsplash.com/photo-1547592180-85f173990554?w=500&auto=format"
-                                class="w-full h-full object-cover opacity-70" alt="No recipes">
                         </div>
-                        <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-3">
-                            {{ activeTab === 'myRecipes' ? 'No recipes created yet' :
-                                activeTab === 'saved' ? 'No saved recipes' : 'No liked recipes' }}
-                        </h3>
-                        <p class="text-gray-500 dark:text-gray-400 mb-8 max-w-md mx-auto">
-                            {{ activeTab === 'myRecipes' ? 'Start sharing your culinary creations with the community' :
-                                activeTab === 'saved' ? 'Save your favorite recipes to find them easily later' :
-                                    'Like recipes to see them here' }}
-                        </p>
-                        <router-link :to="activeTab === 'myRecipes' ? '/create-recipe' : '/recipes'"
-                            class="inline-flex items-center px-8 py-3 border border-transparent rounded-full shadow-sm text-white bg-[var(--theme-color)] hover:bg-[var(--theme-color)]/90 transition-all transform hover:scale-105 font-medium">
-                            {{ activeTab === 'myRecipes' ? 'Create Your First Recipe' : 'Browse Recipes' }}
-                            <svg xmlns="http://www.w3.org/2000/svg" class="ml-2 -mr-1 h-5 w-5" fill="none"
-                                viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                            </svg>
-                        </router-link>
-                    </div>
-                </main>
+                    </transition>
+
+                    <!-- Saved Recipes Tab -->
+                    <transition enter-active-class="transition-opacity duration-300 ease-out"
+                        enter-from-class="opacity-0" enter-to-class="opacity-100"
+                        leave-active-class="transition-opacity duration-200 ease-in" leave-from-class="opacity-100"
+                        leave-to-class="opacity-0">
+                        <div v-show="activeTab === 'saved' && user_info.user.id === auth.user.id"
+                            class="py-4 md:px-2 lg:px-5">
+                            <MainRecipeCardsParent v-if="activeTab === 'saved' && user_info.user.id"
+                                :user_id="user_info.user.id" :saved="true"
+                                @recipes_count="update_fetched_user_recipes" />
+
+                            <!-- Empty State for Saved Recipes -->
+                            <div v-if="totalSavedRecipes < 1" class="text-center py-12">
+                                <div
+                                    class="mx-auto w-40 h-40 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden mb-6 relative flex items-center justify-center">
+                                    <i class="pi pi-bookmark text-6xl text-gray-400 dark:text-gray-500"></i>
+                                    <div
+                                        class="absolute inset-0 bg-gradient-to-br from-[var(--theme-color)]/10 to-transparent">
+                                    </div>
+                                </div>
+                                <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-3">
+                                    No saved recipes yet
+                                </h3>
+                                <p class="text-gray-500 dark:text-gray-400 mb-6 max-w-md mx-auto">
+                                    Save your favorite recipes to find them easily later
+                                </p>
+                                <router-link to="/recipes"
+                                    class="inline-flex items-center px-6 py-2.5 border border-transparent rounded-full shadow-sm text-white bg-[var(--theme-color)] hover:bg-[var(--theme-color)]/90 transition-all transform hover:scale-105 font-medium">
+                                    Browse Recipes
+                                    <i class="pi pi-arrow-right ml-2"></i>
+                                </router-link>
+                            </div>
+                        </div>
+                    </transition>
+                </div>
+
+
+
             </div>
         </div>
         <Toast position="bottom-center" group="bc" />
@@ -470,15 +545,18 @@
 </template>
 
 <script setup>
-import { onMounted, ref, watch, computed } from 'vue';
+import { onMounted, ref, watch, computed, onBeforeUnmount } from 'vue';
 import EditProfileCard from '../cards/EditProfile.vue';
-import { make_a_post } from '../apis';
+import { fetchFollowers, fetchFollowing, folow_unfollow, make_a_post } from '../apis';
 import { useAuthStore } from '../store/user';
 import { formatDate } from '../reusables/index.js';
 import { useToast } from 'primevue/usetoast'
 import { useSiteStore } from '../config/siteConfig.js';
 import { Cropper } from 'vue-advanced-cropper';
+import MainRecipeCardsParent from "../cards/ManyReipesParent.vue"
+
 import 'vue-advanced-cropper/dist/style.css';
+import router from '../router/index.js';
 const { siteConfig } = useSiteStore()
 
 const auth = useAuthStore();
@@ -520,8 +598,7 @@ const showImageEditor = ref(false);
 const fileInput = ref(null);
 const imageToEdit = ref('');
 const activeTab = ref('myRecipes');
-const userRecipes = ref([]);
-const darkMode = ref(false);
+
 const showColorPicker = ref(false);
 const editProfile = ref(false);
 const profile_loading = ref(false);
@@ -541,9 +618,34 @@ const themeColors = [
     { name: 'Cyan', value: '#06B6D4', bg: 'bg-cyan-500' }
 ];
 
+const topElementRef = ref(null)
+const topHeight = ref(0)
+
+let observer
+
+onMounted(() => {
+    if (topElementRef.value) {
+        topHeight.value = topElementRef.value.offsetHeight
+
+        // Watch for changes using ResizeObserver
+        observer = new ResizeObserver(entries => {
+            for (const entry of entries) {
+                topHeight.value = entry.contentRect.height
+            }
+        })
+
+        observer.observe(topElementRef.value)
+    }
+})
+
+onBeforeUnmount(() => {
+    if (observer && topElementRef.value) {
+        observer.unobserve(topElementRef.value)
+    }
+})
 
 const changeThemeColor = (color) => {
-    user.value.theme = color;
+    user_info.value.user.theme = color.value;
     showColorPicker.value = false;
     // Save to backend in real implementation
 };
@@ -552,6 +654,18 @@ const editUserProfile = () => {
     editProfile.value = true;
     console.log('Edit profile clicked');
 };
+
+const totalPostedRecipes = ref(0);
+const totalSavedRecipes = ref(0);
+
+const update_fetched_user_recipes = (count) => {
+  if (activeTab.value === 'myRecipes') {
+    totalPostedRecipes.value = count;
+  } else if (activeTab.value === 'saved') {
+    totalSavedRecipes.value = count;
+  }
+};
+
 
 const profile_editor = ref(null)
 const saving_profile = ref(false)
@@ -606,6 +720,66 @@ const profileUrl = computed(() => {
     if (!props.username) return '';
     return `${window.location.origin}/${props.username}`;
 });
+
+
+
+const follwrs = ref();
+const followers = ref([
+
+]);
+
+const loading_followers = ref(false)
+const toggle_followers = (event) => {
+    follwrs.value.toggle(event);
+    fetch_followers()
+}
+
+const fetch_followers = async () => {
+    loading_followers.value = true
+    const res = await fetchFollowers(null, {
+        target_id: user_info.value.user.id,
+        user_id: auth.user?.id
+    })
+    if (res.data) {
+        followers.value = res.data.followers
+
+    }
+    loading_followers.value = false
+}
+
+
+const follow = (member) => {
+    // selectedMember.value = member;
+    // op.value.hide();
+}
+const loading_following = ref(false)
+const follwng = ref();
+const following = ref([
+
+]);
+const toggle_followings = (event) => {
+    follwng.value.toggle(event);
+    fetch_following()
+}
+const fetch_following = async () => {
+    loading_following.value = true
+    const res = await fetchFollowing(null, {
+        target_id: user_info.value.user.id,
+        user_id: auth.user?.id
+    })
+    if (res.data) {
+        following.value = res.data.following
+
+    }
+    loading_following.value = false
+}
+
+
+const unfollow = (member) => {
+    // selectedMember.value = member;
+    // op.value.hide();
+}
+
 
 
 const op = ref();
@@ -776,7 +950,7 @@ const changeAvatar = () => {
 };
 
 const changePassword = () => {
-    console.log('Change password clicked');
+    router.push('/register/recover-password')
 };
 
 const openNotificationSettings = () => {
@@ -844,6 +1018,56 @@ const load_user = async () => {
 };
 const avatarChanged = computed(() => user_info.value.user.avatar !== untouched_user_avatar.value);
 
+const toggleFollow = async (follow) => {
+    try {
+        const res = await folow_unfollow(auth.token, follow.id);
+
+        if (!res?.success) {
+            toast.add({
+                severity: 'error',
+                summary: 'Follow Failed',
+                detail: res.message || 'Unable to follow the user. Please try again.',
+                group: 'bc',
+                life: 4000,
+            });
+            return;
+        }
+
+        // Toggle the local follow state for UI consistency
+        const newFollowStatus = !follow.isFollowing;
+
+        // Update in followers list
+        const followerItem = followers.value?.find(f => f.id === follow.id);
+        if (followerItem) followerItem.isFollowing = newFollowStatus;
+
+        // Update in following list (if needed)
+        const followingItem = following.value?.find(f => f.id === follow.id);
+        if (followingItem) followingItem.isFollowing = newFollowStatus;
+
+        // Notify the user
+        toast.add({
+            severity: 'info',
+            summary: newFollowStatus ? 'Followed' : 'Unfollowed',
+            detail: newFollowStatus
+                ? `You're now following ${follow.name}`
+                : `You have unfollowed ${follow.name}`,
+            group: 'bc',
+            life: 3000,
+        });
+
+    } catch (err) {
+        console.error('Follow/Unfollow error:', err);
+        toast.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'Something went wrong. Please try again.',
+            group: 'bc',
+            life: 4000,
+        });
+    }
+};
+
+
 onMounted(() => {
     load_user();
 });
@@ -869,6 +1093,8 @@ export default {
 /* Add any custom styles here if needed */
 </style>
 <style scoped>
+.b_content {}
+
 @import url("https://unpkg.com/normalize.css") layer(normalize);
 
 @layer normalize, base, demo;

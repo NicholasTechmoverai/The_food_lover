@@ -92,3 +92,38 @@ async def update_user(
 
     except AuthError as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+
+
+@user_router.get("/followers")
+@limiter.limit("30/min")
+async def get_followers(
+    request: Request,
+    limit: int = 10,
+    offset: int = 0,
+    target_id: UUID =None,
+    user_id:Optional[UUID] = None,
+    auth: AuthService = Depends()
+):
+    try:
+        followers= await auth.get_followers(target_id=target_id,user_id=user_id, offset=offset,limit=limit)
+        return followers
+    except AuthError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@user_router.get("/following")
+@limiter.limit("30/min")
+async def get_followers(
+    request: Request,
+    limit: int = 10,
+    offset: int = 0,
+    target_id: UUID =None,
+    user_id:Optional[UUID] = None,
+    auth: AuthService = Depends()
+):
+    try:
+        followers= await auth.get_following(target_id=target_id,user_id=user_id, offset=offset,limit=limit)
+        return followers
+    except AuthError as e:
+        raise HTTPException(status_code=400, detail=str(e))

@@ -9,6 +9,7 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, ExpiredSignatureError, jwt
 from passlib.context import CryptContext
+from typing import List, Dict
 
 from models import User as Users,Follow,VerificationCode,Recipe
 from config import Config,WEB_SERVER,BASE_SERVER
@@ -18,7 +19,7 @@ from uuid import UUID
 import secrets
 from datetime import datetime, timezone
 datetime.now(timezone.utc)
-
+import random
 # Password hashing context
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -90,16 +91,20 @@ class AuthService:
            return None
         return user
 
-    async def check_username_availability(self, username: str,user_id: UUID) -> bool:
-        if username is None or not re.match(r"^[a-zA-Z0-9_]{3,20}$", username):
-            raise HTTPException(
-                status_code=400,
-                detail="Username must be 3-20 characters long and can only contain letters, numbers, and underscores."
-            )
-        user = await self.user_repo.get_or_none(username=username)
-        if user and user.id != user_id:
+    async def check_username_availability(self, username: str, user_id: UUID = None) -> bool:
+        if not username or not re.fullmatch(r"^[a-zA-Z0-9_]{3,20}$", username):
             return False
-        return True
+
+        # Check for existing user with that username
+        user = await self.user_repo.get_or_none(username=username)
+
+        # If user exists and it's not the same user (editing), it's taken
+        if user:
+            if user_id and user.id == user_id:
+                return True  # allowed to keep current username
+            return False     # taken by another user
+
+        return True  # available
 
     async def get_user(self, username: str, my_user_id: Optional[UUID] = None) -> dict:
         try:
@@ -123,7 +128,7 @@ class AuthService:
                 logger.warning(f"[get_user] Failed to check following status: {e}")
 
             try:
-                if user.is_chef:
+                # if user.is_chef:
                     follower_count = await Follow.filter(following_id=user.id).count()
                     following_count = await Follow.filter(follower_id=user.id).count()
                     recipes_count = await Recipe.filter(user=user).count()
@@ -179,9 +184,12 @@ class AuthService:
             raise HTTPException(status_code=409, detail="Email is already registered")
 
         hashed_password = pwd_context.hash(password)
+        username = await self.create_username(name)
+        
         user = await self.user_repo.create(
             email=email,
             name=name,
+            username = username,
             password=hashed_password,
             picture_url=defaultAvatar
         )
@@ -190,7 +198,24 @@ class AuthService:
 
         return await self.send_verification('link',user,None,'email') 
     
-    
+    async def create_username(self, name: str) -> str:
+        base_username = await sanitize_name(name)
+
+        # Try base username first
+        if not await self.check_username_availability(base_username, None):
+            return base_username
+
+        # Try appending random numbers up to N attempts
+        for _ in range(5):
+            random_username = f"{base_username}_{random.randint(1000, 9999)}"
+            if not await self.check_username_availability(random_username, None):
+                return random_username
+
+        # Final fallback (still return something, even if not ideal)
+        logger.warning("Could not find available username for base: %s", base_username)
+        return f"{base_username}_{random.randint(10000, 99999)}"
+            
+        
     async def update_user(self, data,user) -> Dict:
         try:
             
@@ -234,7 +259,7 @@ class AuthService:
                     "username": user.username,
                     "name": user.name,
                     "email": user.email,
-                    "avatar": user.picture_url,
+                    "avatar": user.picture_url if user.picture_url.startswith("https://") else f"{BASE_SERVER}/{user.picture_url}",
                     "bio": user.bio,
                     "phone_number": user.phone_number,
                     "location": user.location,
@@ -266,7 +291,103 @@ class AuthService:
         # follwewd just now
         #TODO:send notifications to chef
         return True
+     
+
+
+    async def get_followers(
+        self, 
+        target_id: UUID, 
+        user_id: UUID, 
+        offset: int = 0, 
+        limit: int = 10
+    ) -> dict:
+        # Get paginated followers
+        follows = await Follow.filter(following_id=target_id) \
+            .offset(offset).limit(limit) \
+            .prefetch_related("follower")
+
+        result = []
+
+        # Extract all follower user objects
+        follower_users = [f.follower for f in follows if f.follower]
+        follower_ids = [u.id for u in follower_users]
+
+        # Check which followers are followed by user_id
+        following_ids = []
+        if user_id:
+            following_ids = await Follow.filter(
+                follower_id=user_id, 
+                following_id__in=follower_ids
+            ).values_list("following_id", flat=True)
+            following_ids = set(following_ids)
+
+        for follower in follower_users:
+            result.append({
+                "id": str(follower.id),
+                "name": getattr(follower, "name", "Unknown"),
+                "username": getattr(follower, "username", "unknown"),
+                "isChef":follower.is_chef,
+                "avatar": (
+                    follower.picture_url if follower.picture_url.startswith("https://")
+                    else f"{BASE_SERVER}/{follower.picture_url}"
+                ) if getattr(follower, "picture_url", None) else "",
+                "isFollowing": follower.id in following_ids
+            })
+
+        return {
+            "followers": result,
+            "offset": offset,
+            "limit": limit,
+            "count": len(result)
+        }
+
+        
     
+    async def get_following(
+        self, 
+        target_id: UUID,      # user whose "following" list we want
+        user_id: UUID,        # viewer (used for isFollowing check)
+        offset: int = 0, 
+        limit: int = 10
+    ) -> Dict[str, List[dict]]:
+        # Get paginated users the target is following
+        follows = await Follow.filter(follower_id=target_id) \
+            .offset(offset).limit(limit) \
+            .prefetch_related("following")
+
+        result = []
+
+        following_users = [f.following for f in follows if f.following]
+        following_ids = [u.id for u in following_users]
+
+        # Check which of these the viewer is also following
+        is_following_back_ids = []
+        if user_id:
+            is_following_back_ids = await Follow.filter(
+                follower_id=user_id,
+                following_id__in=following_ids
+            ).values_list("following_id", flat=True)
+            is_following_back_ids = set(is_following_back_ids)
+
+        for user in following_users:
+            result.append({
+                "id": str(user.id),
+                "name": getattr(user, "name", "Unknown"),
+                "username": getattr(user, "username", "unknown"),
+                "isChef":user.is_chef,
+                "avatar": (
+                    user.picture_url if user.picture_url.startswith("https://")
+                    else f"{BASE_SERVER}/{user.picture_url}"
+                ) if getattr(user, "picture_url", None) else "",
+                "isFollowing": user.id in is_following_back_ids
+            })
+
+        return {
+            "following": result,
+            "offset": offset,
+            "limit": limit,
+            "count": len(result)
+        }    
     async def save_verification_code(self, user_id, code, verification_type):
         expiry = datetime.utcnow() + timedelta(minutes=10)
         
@@ -423,7 +544,8 @@ class AuthService:
                 "name": user.username or user.name,
                 "isVerified":user.is_verified,
                 "isChef":user.is_chef,
-                "profilePic":user.picture_url,
+                "profilePic": user.picture_url if user.picture_url.startswith("https://") else f"{BASE_SERVER}/{user.picture_url}",
+
             }
         }
 

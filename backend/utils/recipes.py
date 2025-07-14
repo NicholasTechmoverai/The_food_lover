@@ -177,11 +177,46 @@ class RecipeService:
         return recipe
 
 
-    async def list_recipes(self, public_only=True, limit: int = 10, offset: int = 0):
-        query = self.recipe_repo.all().prefetch_related("tags", "category", "steps__ingredients", "user")
+   
+    async def list_recipes(
+        self,
+        public_only: bool = True,
+        limit: int = 10,
+        offset: int = 0,
+        user_id: Optional[UUID] = None,
+        saved:Optional[bool]=False,
+        tags: Optional[list] = None,
+        name: Optional[str] = None,
+        cuisine: Optional[str] = None,
+        category: Optional[str] = None
+    ):
+        query = self.recipe_repo.all().prefetch_related(
+            "tags", "category", "steps__ingredients", "user"
+        )
 
         if public_only:
             query = query.filter(is_public=True)
+
+        if saved and user_id:
+            saved_ids = await Favorite.filter(user_id=user_id).values_list("recipe_id", flat=True)
+            logger.info("Getting saved recipes %s", saved_ids)
+            query = query.filter(id__in=saved_ids)
+        elif user_id:
+            logger.info("Getting recipes for user_id: %s", user_id)
+            query = query.filter(user_id=user_id)
+            
+        if name:
+            query = query.filter(name__icontains=name)
+
+        if cuisine:
+            query = query.filter(cuisine__icontains=cuisine)
+
+        if category:
+            query = query.filter(category__name__icontains=category)
+
+        if tags:
+            for tag in tags:
+                query = query.filter(tags__name__icontains=tag)
 
         query = query.order_by("-updated_at", "-created_at").offset(offset).limit(limit)
         recipes = await query
@@ -197,23 +232,29 @@ class RecipeService:
             recipe_dict = {
                 "id": str(r.id),
                 "recipeName": r.name,
+                "createdAt":r.created_at,
                 "repiceColor": r.theme_color,
-                "image": F"{BASE_SERVER}/{r.cover_image_url}",
+                "image": f"{BASE_SERVER}/{r.cover_image_url}",
                 "tags": [tag.name for tag in r.tags],
                 "cookTime": minutes_to_time(r.cook_time_minutes),
                 "description": r.description,
                 "cuisine": {
                     "name": r.cuisine,
-                    "region": "East Africa"  # You can modify this to come from DB if available
+                    "region": "East Africa"  # Replace with dynamic data if available
                 },
                 "complexityLevel": {
                     "name": r.difficulty_level.capitalize(),
-                    "value": {"Easy": 1, "Medium": 2, "Hard": 3}.get(r.difficulty_level.capitalize(), 1)
+                    "value": {
+                        "Easy": 1,
+                        "Medium": 2,
+                        "Hard": 3
+                    }.get(r.difficulty_level.capitalize(), 1)
                 },
                 "category": [cat.name for cat in r.category],
                 "user": {
-                    "name": r.user.name if hasattr(r.user, "name") else "Unknown",
-                    "profilePic": getattr(r.user, "profile_pic", ""),
+                    "username":getattr(r.user, "username", "Unknown"),
+                    "name": getattr(r.user, "name", "Unknown"),
+                    "profilePic":r.user.picture_url if r.user.picture_url.startswith("https://") else f"{BASE_SERVER}/{r.user.picture_url}",
                     "id": str(r.user.id),
                     "totalRecipes": await self.recipe_repo.filter(user=r.user).count(),
                     "isVerified": getattr(r.user, "is_verified", False),
@@ -221,12 +262,11 @@ class RecipeService:
             }
             result.append(recipe_dict)
 
-        return {"recipes":result,
-                "limit":limit,
-                "offset":offset
-                }
-
-
+        return {
+            "recipes": result,
+            "limit": limit,
+            "offset": offset
+        }
 
     async def update_view_activity(
         self, 
@@ -261,77 +301,90 @@ class RecipeService:
 
 
       
-    async def get_recipe_by_id(self, name: str, recipe_id: UUID, user_id: UUID = None) -> Tuple[dict[str, Any], dict[str, Any]]:
-        recipe = await self.recipe_repo.get_or_none(id=recipe_id).prefetch_related(
-            "tags", "category", "steps__ingredients", "user"
-        )
+    async def get_recipe_by_id(self, name: str, recipe_id: UUID, user_id: Optional[UUID] = None) -> Tuple[dict[str, Any], dict[str, Any]]:
+        try:
+            recipe = await self.recipe_repo.get_or_none(id=recipe_id).prefetch_related(
+                "tags", "category", "steps__ingredients", "user"
+            )
 
-        if not recipe:
-            raise HTTPException(status_code=404, detail="Recipe not found")
+            if not recipe:
+                logger.warning("Recipe with ID %s not found", recipe_id)
+                raise HTTPException(status_code=404, detail="Recipe not found")
 
-        def minutes_to_time(total: int):
-            return {"hr": total // 60, "min": total % 60}
+            def minutes_to_time(total: int) -> dict:
+                return {"hr": total // 60, "min": total % 60}
 
-        recipe_cover = {
-            "id": str(recipe.id),
-            "recipeName": recipe.name,
-            "repiceColor": recipe.theme_color,
-            "image": f"{BASE_SERVER}/{recipe.cover_image_url}",
-            "tags": [tag.name for tag in recipe.tags],
-            "cookTime": minutes_to_time(recipe.cook_time_minutes),
-            "updatedAt": recipe.updated_at.isoformat(),
-            "createdAt": recipe.created_at.isoformat(),
-            "description": recipe.description,
-            "cuisine": {
-                "name": recipe.cuisine,
-                "region": "East Africa",  # Optional: adjust based on actual DB info
-            },
-            "complexityLevel": {
-                "name": recipe.difficulty_level.capitalize(),
-                "value": {"Easy": 1, "Medium": 2, "Hard": 3}.get(recipe.difficulty_level.capitalize(), 1),
-            },
-            "category": [cat.name for cat in recipe.category],
-            "user": {
-                "name": getattr(recipe.user, "name", "Unknown"),
-                "profilePic": getattr(recipe.user, "profile_pic", ""),
-                "id": str(recipe.user.id),
-                "totalRecipes": await self.recipe_repo.filter(user=recipe.user).count(),
-                "isVerified": getattr(recipe.user, "is_verified", False),
-            },
-        }
-
-        recipe_steps = {
-            "id": str(recipe.id),
-            "name": recipe.name,
-            "description": recipe.description,
-            "category": [cat.name for cat in recipe.category],
-            "tags": [tag.name for tag in recipe.tags],
-            "steps": [],
-        }
-
-        for step in sorted(recipe.steps, key=lambda s: s.step_number):
-            ingredients_used = [
-                {
-                    "name": ing.name,
-                    "amount": ing.quantity,
-                    "unit": ing.unit
-                }
-                for ing in step.ingredients
-            ]
-
-            step_entry = {
-                "no": step.step_number,
-                "timeRequired": minutes_to_time(step.cook_time_minutes or 0),
-                "tempRequired": step.temperature_celsius,
-                "instructions": step.description,
-                "image": f"{BASE_SERVER}/{step.image_url}",
-                "videoUrl": step.video_url,
-                "ingredientsUsed": ingredients_used,
+            recipe_cover = {
+                "id": str(recipe.id),
+                "recipeName": recipe.name,
+                "repiceColor": recipe.theme_color,
+                "image": f"{BASE_SERVER}/{recipe.cover_image_url}" if recipe.cover_image_url else "",
+                "tags": [tag.name for tag in recipe.tags],
+                "cookTime": minutes_to_time(recipe.cook_time_minutes or 0),
+                "updatedAt": recipe.updated_at.isoformat(),
+                "createdAt": recipe.created_at.isoformat(),
+                "description": recipe.description,
+                "cuisine": {
+                    "name": recipe.cuisine,
+                    "region": "East Africa",  # Replace with dynamic region if needed
+                },
+                "complexityLevel": {
+                    "name": recipe.difficulty_level.capitalize(),
+                    "value": {"Easy": 1, "Medium": 2, "Hard": 3}.get(recipe.difficulty_level.capitalize(), 1),
+                },
+                "category": [cat.name for cat in recipe.category],
+                "user": {
+                    "name": getattr(recipe.user, "name", "Unknown"),
+                    "username": getattr(recipe.user, "username", "unknown"),
+                    "profilePic": (
+                        recipe.user.picture_url
+                        if recipe.user.picture_url.startswith("https://")
+                        else f"{BASE_SERVER}/{recipe.user.picture_url}"
+                    ) if recipe.user.picture_url else "",
+                    "id": str(recipe.user.id),
+                    "totalRecipes": await self.recipe_repo.filter(user=recipe.user).count(),
+                    "isVerified": getattr(recipe.user, "is_verified", False),
+                },
             }
 
-            recipe_steps["steps"].append(step_entry)
+            recipe_steps = {
+                "id": str(recipe.id),
+                "name": recipe.name,
+                "description": recipe.description,
+                "category": [cat.name for cat in recipe.category],
+                "tags": [tag.name for tag in recipe.tags],
+                "steps": [],
+            }
 
-        return recipe_cover, recipe_steps
+            for step in sorted(recipe.steps, key=lambda s: s.step_number):
+                ingredients_used = [
+                    {
+                        "name": ing.name,
+                        "amount": ing.quantity,
+                        "unit": ing.unit
+                    }
+                    for ing in step.ingredients
+                ]
+
+                step_entry = {
+                    "no": step.step_number,
+                    "timeRequired": minutes_to_time(step.cook_time_minutes or 0),
+                    "tempRequired": step.temperature_celsius,
+                    "instructions": step.description,
+                    "image": f"{BASE_SERVER}/{step.image_url}" if step.image_url else "",
+                    "videoUrl": step.video_url,
+                    "ingredientsUsed": ingredients_used,
+                }
+
+                recipe_steps["steps"].append(step_entry)
+
+            return recipe_cover, recipe_steps
+
+        except HTTPException:
+            raise  # Re-raise FastAPI HTTP exceptions
+        except Exception as e:
+            logger.exception("Failed to fetch recipe ID %s: %s", recipe_id, str(e))
+            raise HTTPException(status_code=500, detail="An unexpected error occurred while retrieving the recipe.")
     
     async def like_unlike(self, user_id: UUID, recipe_id: UUID) -> bool:
         """
@@ -584,7 +637,8 @@ class RecipeService:
                         "user": {
                             "id": str(comment.user.id),
                             "name": getattr(comment.user, "name", "Unknown"),
-                            "profilePic": getattr(comment.user, "profile_pic", "")
+                            "profilePic": comment.user.picture_url if comment.user.picture_url.startswith("https://") else f"{BASE_SERVER}/{comment.user.picture_url}",
+
                         },
                         "replies": [],
                         "replyCount": reply_count
@@ -603,7 +657,8 @@ class RecipeService:
                             "user": {
                                 "id": str(first_reply.user.id),
                                 "name": getattr(first_reply.user, "name", "Unknown"),
-                                "profilePic": getattr(first_reply.user, "profile_pic", "")
+                                "profilePic": first_reply.user.picture_url if first_reply.user.picture_url.startswith("https://") else f"{BASE_SERVER}/{first_reply.user.picture_url}",
+
                             }
                         }
                         comment_dict["replies"].append(reply_dict)
@@ -670,7 +725,8 @@ class RecipeService:
                         "user": {
                             "id": str(c.user.id),
                             "name": getattr(c.user, "name", "Unknown"),
-                            "profilePic": getattr(c.user, "profile_pic", "")
+                            "profilePic": c.user.picture_url if c.user.picture_url.startswith("https://") else f"{BASE_SERVER}/{c.user.picture_url}",
+
                         }
                     })
 

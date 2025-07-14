@@ -65,22 +65,7 @@
         <!-- Recipe Cards -->
         <div>
           <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-4">Browse Recipes</h2>
-
-          <div v-if="recipes_loading" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <RecipeLoader v-for="i in 2" :key="i" />
-          </div>
-
-          <div v-else class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <RecipeCard v-for="recipe in recipes" :key="recipe.id" :recipe="recipe"
-              class="border border-gray-300 dark:border-gray-700/50 rounded-md" />
-          </div>
-
-          <div class="pt-4">
-            <button @click="getRecipes(limit + 10, offset + 10)"
-              class="inline-flex items-center gap-2 text-primary-600 hover:underline text-sm font-medium">
-              Show more <i class="pi pi-arrow-right"></i>
-            </button>
-          </div>
+          <MainRecipeCardsParent />
         </div>
 
       </section>
@@ -99,7 +84,6 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
-import RecipeCard from '../cards/RecipeCard.vue'
 import RevolveCards from '../cards/RevolveCards.vue'
 import TrendingDishesCard from '../cards/TrendingDishesCard.vue'
 import { fetchLiveRecipes, fetchRecipes, fetchRecipeTypes } from '../apis/recipes.js'
@@ -107,16 +91,14 @@ import VideoPage from './VideoPage.vue'
 import RecipeTypes from '../cards/HorizonScroll.vue'// Track route
 import { useAuthStore } from '../store/user.js'
 import { useToast } from 'primevue/usetoast'
-import RecipeLoader from '../loaders/Skeleton3.vue'
 import RecipeTypesLoader from '../loaders/Skeleton1.vue'
-import { make_a_post } from '../apis/index.js'
+import MainRecipeCardsParent from "../cards/ManyReipesParent.vue"
 
 const auth = useAuthStore()
 const toast = useToast()
 const recipes_loading = ref(false)
 const recipes_types_loading = ref(false)
-const offset = ref(0)
-const limit = ref(10)
+
 
 const route = useRoute()
 
@@ -136,78 +118,11 @@ const isRouterViewActive = computed(() =>
 
 
 // Fetch recipes
-const recipes = ref([])
 const recipeTypes = ref([])
 const liveRecipes = ref([])
 
-const getRecipes = async (
-  pageLimit = 10,
-  pageOffset = 0
-) => {
-  recipes_loading.value = true
-  const token = auth.token
-  const res = await fetchRecipes(token, { limit: pageLimit, offset: pageOffset })
-
-  if (res) {
-    recipes_loading.value = false
-    if (res.message && !res.success) {
-      toast.add({
-        severity: 'error',
-        summary: 'Error fetching Recipes!',
-        detail: `${res.message}`,
-        life: 5000
-      })
-    }
-
-    if (res.data) {
-      if (res.data.recipes) {
-        // recipes.value = [...res.data.recipes]
-        recipes.value.push(...res.data.recipes);
-        offset.value = res.data.offset ?? pageOffset
-        limit.value = res.data.limit ?? pageLimit
-        // Fetch meta for the newly fetched recipes
-        await fetchRecipeMeta(res.data.recipes.map(r => r.id))
-      } else {
-        recipes.value = res.data
-      }
-    }
-  }
-}
 
 
-const fetchRecipeMeta = async (recipe_ids) => {
-  const res = await make_a_post('/recipes/meta', auth.token, { recipe_ids: recipe_ids }, null)
-  if (res) {
-    if (res.message && !res.success) {
-      toast.add({
-        severity: 'error',
-        summary: `Error fetching Recipe Meta!`,
-        detail: `${res.message}`,
-        life: 5000
-      })
-    }
-    if (res.data) {
-      const metaMap = res.data;
-
-      recipes.value = recipes.value.map(recipe => ({
-        ...recipe,
-        recipeMeta: {
-          likeCount: 0,
-          comments: 0,
-          isFollowing: false,
-          isFollowed: false,
-          views: 0,
-          shareCount: 0,
-          isLiked: false,
-          isSaved: false,
-          ...(metaMap[recipe.id] || {})  // safely override defaults
-        }
-      }))
-      console.log('Updated Recipes with Meta:', recipes.value);
-    }
-
-  }
-}
 
 
 const getRecipeTypes = async (params = null) => {
@@ -234,7 +149,7 @@ onMounted(async () => {
   recipes_loading.value = true
   liveRecipes.value = await fetchLiveRecipes()
 
-  await Promise.all([getRecipes(), getRecipeTypes()]);
+  await Promise.all([getRecipeTypes()]);
 });
 
 </script>
