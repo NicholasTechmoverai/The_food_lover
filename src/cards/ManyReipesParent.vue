@@ -76,6 +76,18 @@ const props = defineProps({
    saved: {
     type: Boolean,
     default: () => false
+  },
+  recipe_name:{
+    type:String,
+    default:()=>null
+  },
+  categgory:{
+    type:Array,
+    default:()=>[]
+  },
+  tags:{
+    type:Array,
+    default:()=>[]
   }
 });
 
@@ -100,7 +112,14 @@ const getRecipes = async (
 ) => {
   recipes_loading.value = true
   const token = auth.token
-  const res = await fetchRecipes(token, { limit: pageLimit, offset: pageOffset,user_id:props.user_id,saved:props.saved })
+  const res = await fetchRecipes(token, { limit: pageLimit, 
+    offset: pageOffset,
+    user_id:props.user_id,
+    recipe_name:props.recipe_name,
+    categgory:props.categgory,
+    tags:props.tags,
+    saved:props.saved
+   })
 
   if (res) {
     recipes_loading.value = false

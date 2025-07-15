@@ -266,20 +266,27 @@
                                     </div>
 
                                     <!-- Follow Button -->
-                                    <div >
-                                        <button v-if="!NowFollowing"
+                                    <div v-if="user_info?.user.id !== auth.user.id">
+                                        <!-- Follow / Unfollow Button -->
+                                        <Button
+                                            v-if="!NowFollowing && (user_info?.userMetadata?.isFollowing || user_info?.user?.is_chef)"
                                             @click="follow(user_info?.user.id)"
-                                            class="text-xs px-3 py-1 rounded-full border border-[var(--theme-color)] text-[var(--theme-color)] hover:bg-[var(--theme-color)] hover:text-white transition">
-                                            <span class="text-red-500" v-if="user_info?.userMetadata.isFollowing">Unfollow</span>
-                                            <span v-if="!user_info?.userMetadata.isFollowing && user_info.user.is_chef">Follow</span>
+                                            :label="user_info?.userMetadata?.isFollowing ? 'Unfollow' : 'Follow'"
+                                            :severity="user_info?.userMetadata?.isFollowing ? 'danger' : 'primary'"
+                                            variant="outlined" :class="[
+                                                'text-xs px-3 py-1 rounded-full border transition',
+                                                'border-[var(--theme-color)] text-[var(--theme-color)]',
+                                                'hover:bg-[var(--theme-color)] hover:text-white'
+                                            ]" :style="!user_info?.userMetadata?.isFollowing ? { color: user_info?.user?.theme } : {}" />
 
-                                        </button>
+                                        <!-- Loading State -->
                                         <span v-else-if="NowFollowing"
                                             class="text-xs px-3 py-1 rounded-full border border-[var(--theme-color)] text-[var(--theme-color)] opacity-70 cursor-not-allowed">
-                                            <span v-if="user_info?.userMetadata.isFollowing">Unfollowing...</span>
+                                            <span v-if="user_info?.userMetadata?.isFollowing">Unfollowing...</span>
                                             <span v-else>Following...</span>
                                         </span>
                                     </div>
+
                                 </div>
 
 

@@ -127,3 +127,29 @@ async def get_followers(
         return followers
     except AuthError as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+
+@user_router.post("/chef-request/{username}")
+@limiter.limit("5/min")
+async def request_chef(
+    request: Request,
+    data: UserUpdate,
+    username: str,
+    user: Users = Depends(get_current_user),
+    auth: AuthService = Depends()
+):
+    """
+    Update user details by username.
+    Rate-limited to 30 requests per minute.
+    """
+    try:
+        if not user:
+            raise HTTPException(status_code=404, detail="Authenticated user not found")
+
+        if user.id != data.user_id and user.email != data.email:
+            raise HTTPException(status_code=400, detail="User ID or email does not match the authenticated user")
+
+        return await auth.update_user(data,user)
+
+    except AuthError as e:
+        raise HTTPException(status_code=400, detail=str(e))

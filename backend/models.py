@@ -421,7 +421,25 @@ class CookingTip(Model):
 
     def __str__(self):
         return f"Tip: {self.title} by {self.user.name}"
-    
+
+
+
+
+class ChefRequest(Model):
+    id = fields.IntField(pk=True)
+
+    user = fields.ForeignKeyField("models.User", related_name="chef_requests", on_delete=fields.CASCADE)
+
+    created_at = fields.DatetimeField(auto_now_add=True)
+
+    class Meta:
+        table = "chef_request"
+
+    def __str__(self):
+        return f"ChefRequest by {self.user.username}"
+
+
+
 #  Initialize Tortoise ORM
 # from tortoise import Tortoise, run_async
 

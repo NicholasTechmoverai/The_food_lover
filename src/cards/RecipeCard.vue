@@ -12,7 +12,7 @@
         <div>
           <h4 class="text-sm font-semibold text-gray-800 dark:text-white">{{ recipe.user?.name }}</h4>
           <p class="text-xs text-gray-500 dark:text-gray-400">{{ recipe.user?.totalRecipes }} recipes shared • <span> {{
-            formatTimeAgo(recipe?.createdAt|| Date.now()) }}</span></p>
+            formatTimeAgo(recipe?.createdAt || Date.now()) }}</span></p>
         </div>
       </div>
       <button v-if="!NowFollowing && recipe?.user.id !== auth.user.id" @click="follow(recipe.user.id)"
@@ -113,27 +113,39 @@
       </div>
     </div>
 
-    <!-- 🔍 Full Description Modal - Now card-contained -->
-    <div v-if="showFullDescription"
-      class="absolute inset-0 z-10 bg-white dark:bg-gray-900 rounded-lg overflow-y-auto shadow-2xl border-2 border-[var(--theme-color)]/30"
-      @click.self="showFullDescription = false">
-      <div class="p-6">
-        <button
-          class="absolute top-4 right-4 text-xl font-bold text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition"
-          @click="showFullDescription = false">
-          &times;
-        </button>
-        <h3 class="text-xl font-bold mb-4 text-[var(--theme-color)]">About {{ recipe.recipeName }}</h3>
-        <div v-html="recipe.description" class="prose dark:prose-invert max-w-none"></div>
+    <Transition enter-active-class="transition transform duration-300 ease-out"
+      enter-from-class="translate-y-10 opacity-0" enter-to-class="translate-y-0 opacity-100"
+      leave-active-class="transition transform duration-200 ease-in" leave-from-class="translate-y-0 opacity-100"
+      leave-to-class="translate-y-10 opacity-0">
 
-        <div class="mt-6 flex justify-end">
-          <button @click="showFullDescription = false"
-            class="px-4 py-2 rounded-full bg-[var(--theme-color)] text-white hover:opacity-90 transition">
-            Close
+      <div v-if="showFullDescription"
+        class="absolute inset-0 z-10 bg-white/70 dark:bg-gray-900/70 backdrop-blur-sm rounded-lg overflow-y-auto shadow-2xl border-2 border-[var(--theme-color)]/30"
+        @click.self="showFullDescription = false">
+        <div class="p-6">
+          <!-- Close Button (Top right) -->
+          <button
+            class="absolute top-4 right-4 text-xl font-bold text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition"
+            @click="showFullDescription = false">
+            &times;
           </button>
+
+          <!-- Title -->
+          <h3 class="text-xl font-bold mb-4 text-[var(--theme-color)]">About {{ recipe.recipeName }}</h3>
+
+          <!-- Description -->
+          <div v-html="recipe.description" class="prose dark:prose-invert max-w-none"></div>
+
+          <!-- Close Action -->
+          <div class="mt-6 flex justify-end">
+            <button @click="showFullDescription = false"
+              class="px-4 py-2 rounded-full bg-[var(--theme-color)] text-white hover:opacity-90 transition">
+              Close
+            </button>
+          </div>
         </div>
       </div>
-    </div>
+    </Transition>
+
 
     <Toast position="bottom-center" group="bc" />
   </div>
