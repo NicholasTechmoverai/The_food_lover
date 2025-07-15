@@ -188,7 +188,7 @@ class RecipeService:
         tags: Optional[list] = None,
         name: Optional[str] = None,
         cuisine: Optional[str] = None,
-        category: Optional[str] = None
+        category: Optional[list] = None
     ):
         query = self.recipe_repo.all().prefetch_related(
             "tags", "category", "steps__ingredients", "user"

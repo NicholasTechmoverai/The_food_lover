@@ -46,7 +46,7 @@
           <!-- Pagination/Show More -->
           <div v-if="recipes.length > 0 && recipes.length >= limit && !recipes_loading" class="pt-6 md:pt-8 flex justify-center">
             <button 
-              @click="getRecipes(limit + 10, offset + 10)"
+              @click="getRecipes(limit, offset + limit)"
               class="inline-flex items-center gap-2 px-5 py-2.5 md:px-6 md:py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-full text-sm md:text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700/60 transition-all duration-200 hover:shadow-md"
             >
               Show more recipes

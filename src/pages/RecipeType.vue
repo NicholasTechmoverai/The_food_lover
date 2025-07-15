@@ -33,7 +33,7 @@ import { ref } from "vue";
 const props = defineProps({
   recipe_type: {
     type: String,
-    default: 'recipe'
+    default: ()=>null
   }
 });
 

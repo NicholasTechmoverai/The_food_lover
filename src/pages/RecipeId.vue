@@ -88,7 +88,7 @@
                                 {{ recipe.user?.totalRecipes || 0 }} recipes • {{ formatTimeAgo(recipe.updatedAt) }}
                             </p>
                         </div>
-                        <div v-if="recipe.user?.if !== auth.user?.id">
+                        <div v-if="recipe.user?.id !== auth.user?.id">
                             <button v-if="!NowFollowing" @click="follow(recipe.user.id)"
                                 class="text-xs px-3 py-1 rounded-full border border-[var(--theme-color)] text-[var(--theme-color)] hover:bg-[var(--theme-color)] hover:text-white transition">
                                 <span v-if="recipeMeta?.isFollowing">Following</span><span v-else>Follow</span>

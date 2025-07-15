@@ -53,13 +53,25 @@ async def fetch_recipe(
     limit: int = 10,
     offset: int = 0,
     public_only: bool = True,
-    user_id:Optional[UUID] = None,
-    saved:Optional[bool]=False,
+    user_id: Optional[UUID] = None,
+    saved: Optional[bool] = False,
+    recipe_name: Optional[str] = None,
+    category: Optional[List[str]] = None,
+    tags: Optional[List[str]] = None,
+    cuisine: Optional[str] = None,
     service: RecipeService = Depends()
 ):
     try:
         print("recipes for",user_id)
-        recipes = await service.list_recipes(public_only=public_only,limit=limit, offset=offset,user_id=user_id,saved=saved)
+        recipes = await service.list_recipes(public_only=public_only,
+                                             limit=limit, 
+                                             offset=offset,
+                                             user_id=user_id,
+                                             name=recipe_name,
+                                             category=category,
+                                             cuisine=cuisine,
+                                             tags=tags,
+                                             saved=saved)
         return recipes
     except AuthError as e:
         raise HTTPException(status_code=400, detail=str(e))
