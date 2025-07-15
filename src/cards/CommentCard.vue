@@ -59,7 +59,7 @@
       </div>
       
       <button 
-        v-if="showOptions"
+        v-if="showOptions &&  comment.user?.id === currentUser.id"
         @click.stop="toggleOptions"
         class="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700/50 rounded-full transition-colors cursor-pointer"
         ref="optionsButton"
@@ -136,11 +136,11 @@
 
         <!-- More Options Dropdown -->
         <div 
-          v-if="showOptions && optionsOpen" 
+          v-if="showOptions && optionsOpen && comment.user?.id === currentUser.id"
           class="absolute right-4 bottom-12 z-10 shadow-xl"
           ref="dropdownMenu"
         >
-          <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700/70 overflow-hidden min-w-[160px]">
+          <div v-if="comment.user?.id === currentUser.id" class="bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700/70 overflow-hidden min-w-[160px]">
             <button 
               v-for="(option, index) in MoreButtons"
               :key="index"

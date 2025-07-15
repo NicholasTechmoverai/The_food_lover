@@ -61,36 +61,35 @@
                 <header v-if="!profile_loading"
                     class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 rounded-xl shadow-sm">
                     <div class="flex flex-col lg:flex-row gap-8 lg:gap-12">
-                        <!-- Profile Section -->
+                        <!-- ========== PROFILE SECTION ========== -->
                         <div class="flex-1 flex flex-col md:flex-row items-center md:items-start gap-6 md:gap-8">
-                            <!-- Avatar with animated border -->
+                            <!-- Avatar Container -->
                             <div class="relative group shrink-0">
-                                <!-- Glowing background effect -->
+                                <!-- Glowing Background Effect -->
                                 <div
                                     class="absolute -inset-1 rounded-full bg-gradient-to-r from-[var(--theme-color)] to-yellow-500 opacity-70 group-hover:opacity-100 blur transition-all duration-300">
                                 </div>
+
                                 <!-- Avatar Image -->
                                 <img :src="user_info.user.avatar"
                                     class="relative w-28 h-28 sm:w-32 sm:h-32 md:w-40 md:h-40 rounded-full border-4 border-white dark:border-gray-800 shadow-lg object-cover z-10"
                                     alt="Profile picture" />
 
-                                <!-- Edit Button -->
+                                <!-- Edit Avatar Button (Visible to owner) -->
                                 <button v-if="user_info.user.id === auth.user.id" @click="changeAvatar"
                                     class="absolute -bottom-2 -right-2 bg-[var(--theme-color)] hover:bg-[var(--theme-color)]/90 w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-white shadow-md transition-transform duration-200 z-20 transform hover:scale-110 active:scale-95">
                                     <i class="pi pi-pencil text-sm sm:text-base"></i>
                                 </button>
 
-                                <!-- Save / Cancel Buttons -->
+                                <!-- Avatar Action Buttons (When editing) -->
                                 <div v-if="avatarChanged && user_info.user.id === auth.user.id"
                                     class="absolute -bottom-12 left-1/2 -translate-x-1/2 flex gap-2 sm:gap-3 bg-white dark:bg-gray-900 px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl shadow-md z-30 mt-4 animate-fade-in">
-                                    <!-- Save -->
                                     <button @click="saveProfileAvatar"
                                         class="flex items-center gap-1 sm:gap-2 px-3 py-1 sm:px-4 sm:py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-lg shadow transition-transform duration-200 hover:scale-105 text-sm sm:text-base">
                                         <i class="pi pi-save text-xs sm:text-sm"></i>
                                         <span>Save</span>
                                     </button>
 
-                                    <!-- Cancel -->
                                     <button @click="reset_profile_avatar"
                                         class="flex items-center gap-1 sm:gap-2 px-3 py-1 sm:px-4 sm:py-1.5 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg shadow transition-transform duration-200 hover:scale-105 text-sm sm:text-base">
                                         <i class="pi pi-times text-xs sm:text-sm"></i>
@@ -99,15 +98,16 @@
                                 </div>
                             </div>
 
-                            <!-- Profile Info -->
+                            <!-- Profile Information -->
                             <div class="text-center md:text-left flex-1 w-full">
-                                <!-- User Header Section -->
+                                <!-- User Header -->
                                 <div
                                     class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 justify-center md:justify-start">
                                     <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
                                         {{ user_info.user.username }}
                                     </h1>
 
+                                    <!-- Badges -->
                                     <div class="flex items-center justify-center gap-2 sm:gap-4">
                                         <!-- Verification Badge -->
                                         <div v-if="user_info.user.is_verified" class="flex items-center text-blue-500">
@@ -124,9 +124,10 @@
                                     </div>
                                 </div>
 
-                                <!-- Stats Section -->
+                                <!-- ========== STATS SECTION ========== -->
                                 <div v-if="!editProfile"
                                     class="flex justify-center md:justify-start space-x-4 sm:space-x-6 md:space-x-8 mt-4">
+                                    <!-- Recipes Count -->
                                     <div class="text-center">
                                         <span class="block text-2xl sm:text-3xl font-bold text-[var(--theme-color)]">
                                             {{ user_info.userMetadata.recipes_count }}
@@ -134,27 +135,31 @@
                                         <span class="text-xs sm:text-sm text-gray-500 dark:text-gray-400">Recipes</span>
                                     </div>
 
+                                    <!-- Followers (Chefs only) -->
                                     <div v-if="user_info.user.is_chef" class="text-center">
                                         <span class="block text-2xl sm:text-3xl font-bold text-[var(--theme-color)]">
                                             {{ user_info.userMetadata.followers }}
                                         </span>
                                         <span @click="toggle_followers"
-                                            class="cursor-pointer text-xs sm:text-sm text-gray-500 dark:text-gray-400">Followers</span>
+                                            class="underline cursor-pointer text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+                                            Followers
+                                        </span>
+
+                                        <!-- Followers Popover -->
                                         <Popover ref="follwrs">
                                             <div
                                                 class="flex flex-col max-h-96 overflow-y-auto p-4 w-72 bg-white dark:bg-gray-900 rounded-lg shadow-lg">
                                                 <span class="font-semibold text-lg mb-3">Followers</span>
-                                                <ul v-if="loading_followers"><i class="pi pi-spin pi-spinner"
-                                                        style="font-size: 2rem"></i></ul>
+
+                                                <ul v-if="loading_followers">
+                                                    <i class="pi pi-spin pi-spinner" style="font-size: 2rem"></i>
+                                                </ul>
 
                                                 <ul v-else class="space-y-2">
                                                     <li v-for="follower in followers" :key="follower.id"
                                                         class="flex items-center gap-3 p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg cursor-pointer transition">
-                                                        <!-- Avatar -->
                                                         <img :src="follower.avatar" alt="avatar"
                                                             class="w-10 h-10 rounded-full object-cover" />
-
-                                                        <!-- Name & Username -->
 
                                                         <router-link :to="`${follower.username}`" class="flex-1">
                                                             <div
@@ -166,40 +171,58 @@
                                                             </div>
                                                         </router-link>
 
-                                                        <!-- Follow / Unfollow button -->
+                                                        <!-- Follow/Unfollow Button -->
                                                         <button v-if="follower.isChef && follower.id !== auth.user.id"
-                                                            @click.stop="toggleFollow(follower)"
+                                                            @click.stop="toggleFollow(follower.id)"
                                                             class="text-xs px-3 py-1 rounded-full font-semibold transition duration-200"
-                                                            :class="follower.isFollowing
-                                                                ? 'bg-red-100 text-red-600 hover:bg-red-200'
-                                                                : 'bg-blue-100 text-blue-600 hover:bg-blue-200'">
+                                                            :class="follower.isFollowing ? 'bg-red-100 text-red-600 hover:bg-red-200' : 'bg-blue-100 text-blue-600 hover:bg-blue-200'">
                                                             {{ follower.isFollowing ? 'Unfollow' : 'Follow' }}
                                                         </button>
                                                     </li>
                                                 </ul>
+
+                                                <!-- Pagination Controls -->
+                                                <div class="flex justify-between items-center mt-4 gap-4">
+                                                    <button v-if="followers && followers_offset >= followers_limit"
+                                                        @click="fetch_followers(followers_limit, followers_offset - followers_limit)"
+                                                        class="px-4 py-1 text-sm rounded bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200">
+                                                        Prev
+                                                    </button>
+
+                                                    <button
+                                                        v-if="followers_offset + followers_limit < user_info.userMetadata.followers"
+                                                        @click="fetch_followers(followers_limit, followers_offset + followers_limit)"
+                                                        class="px-4 py-1 text-sm rounded bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200">
+                                                        Next
+                                                    </button>
+                                                </div>
                                             </div>
                                         </Popover>
-
                                     </div>
 
+                                    <!-- Following -->
                                     <div class="text-center">
                                         <span class="block text-2xl sm:text-3xl font-bold text-[var(--theme-color)]">
                                             {{ user_info.userMetadata.following }}
                                         </span>
                                         <span @click="toggle_followings"
-                                            class="cursor-pointer text-xs sm:text-sm text-gray-500 dark:text-gray-400">Following</span>
+                                            class="underline cursor-pointer text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+                                            Following
+                                        </span>
+
+                                        <!-- Following Popover -->
                                         <Popover ref="follwng">
                                             <div
                                                 class="flex flex-col max-h-96 overflow-y-auto p-4 w-72 bg-white dark:bg-gray-900 rounded-lg shadow-lg">
                                                 <span class="font-semibold text-lg mb-3">Following</span>
 
-                                                <ul v-if="loading_following"><i class="pi pi-spin pi-spinner"
-                                                        style="font-size: 2rem"></i></ul>
+                                                <ul v-if="loading_following">
+                                                    <i class="pi pi-spin pi-spinner" style="font-size: 2rem"></i>
+                                                </ul>
 
                                                 <ul v-else class="space-y-2">
                                                     <li v-for="follower in following" :key="follower.id"
                                                         class="flex items-center gap-3 p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg cursor-pointer transition">
-                                                        <!-- Avatar -->
                                                         <img :src="follower.avatar" alt="avatar"
                                                             class="w-10 h-10 rounded-full object-cover" />
 
@@ -213,25 +236,55 @@
                                                             </div>
                                                         </router-link>
 
-
-                                                        <!-- Follow / Unfollow button -->
+                                                        <!-- Follow/Unfollow Button -->
                                                         <button v-if="follower.id !== auth.user.id"
                                                             @click.stop="toggleFollow(follower)"
                                                             class="text-xs px-3 py-1 rounded-full font-semibold transition duration-200"
-                                                            :class="follower.isFollowing
-                                                                ? 'bg-red-100 text-red-600 hover:bg-red-200'
-                                                                : 'bg-blue-100 text-blue-600 hover:bg-blue-200'">
+                                                            :class="follower.isFollowing ? 'bg-red-100 text-red-600 hover:bg-red-200' : 'bg-blue-100 text-blue-600 hover:bg-blue-200'">
                                                             {{ follower.isFollowing ? 'Unfollow' : 'Follow' }}
                                                         </button>
                                                     </li>
                                                 </ul>
+
+                                                <!-- Pagination Controls -->
+                                                <div class="flex justify-between items-center mt-4 gap-4">
+                                                    <button v-if="following && following_offset >= following_limit"
+                                                        @click="fetch_following(following_limit, following_offset - following_limit)"
+                                                        class="px-4 py-1 text-sm rounded bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200">
+                                                        Prev
+                                                    </button>
+
+                                                    <button
+                                                        v-if="following_offset + following_limit < user_info.userMetadata.following"
+                                                        @click="fetch_following(following_limit, following_offset + following_limit)"
+                                                        class="px-4 py-1 text-sm rounded bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200">
+                                                        Next
+                                                    </button>
+                                                </div>
                                             </div>
                                         </Popover>
+                                    </div>
 
+                                    <!-- Follow Button -->
+                                    <div >
+                                        <button v-if="!NowFollowing"
+                                            @click="follow(user_info?.user.id)"
+                                            class="text-xs px-3 py-1 rounded-full border border-[var(--theme-color)] text-[var(--theme-color)] hover:bg-[var(--theme-color)] hover:text-white transition">
+                                            <span class="text-red-500" v-if="user_info?.userMetadata.isFollowing">Unfollow</span>
+                                            <span v-if="!user_info?.userMetadata.isFollowing && user_info.user.is_chef">Follow</span>
+
+                                        </button>
+                                        <span v-else-if="NowFollowing"
+                                            class="text-xs px-3 py-1 rounded-full border border-[var(--theme-color)] text-[var(--theme-color)] opacity-70 cursor-not-allowed">
+                                            <span v-if="user_info?.userMetadata.isFollowing">Unfollowing...</span>
+                                            <span v-else>Following...</span>
+                                        </span>
                                     </div>
                                 </div>
 
-                                <!-- User Details Section -->
+
+
+                                <!-- ========== USER DETAILS SECTION ========== -->
                                 <div v-if="!editProfile"
                                     class="flex flex-col justify-center items-center md:items-start mt-4 space-y-1 sm:space-y-2">
                                     <span class="text-gray-500 dark:text-gray-400 text-xs sm:text-sm">
@@ -239,20 +292,20 @@
                                     </span>
 
                                     <p class="text-gray-600 dark:text-gray-200 text-base sm:text-lg font-semibold">
-                                        <i class="pi pi-user text-sm sm:text-base mr-1"></i> {{ user_info.user.name ||
-                                            "N/A" }}
+                                        <i class="pi pi-user text-sm sm:text-base mr-1"></i>
+                                        {{ user_info.user.name || "N/A" }}
                                     </p>
 
                                     <p v-if="user_info.user.phone_number"
                                         class="text-gray-600 dark:text-gray-200 text-base sm:text-lg font-semibold">
-                                        <i class="pi pi-phone text-sm sm:text-base mr-1"></i> {{
-                                            user_info.user.phone_number || "N/A" }}
+                                        <i class="pi pi-phone text-sm sm:text-base mr-1"></i>
+                                        {{ user_info.user.phone_number || "N/A" }}
                                     </p>
 
                                     <p v-if="user_info.user.email"
                                         class="text-gray-500 dark:text-gray-50 text-base sm:text-lg font-semibold">
-                                        <i class="pi pi-envelope text-sm sm:text-base mr-1"></i> {{ user_info.user.email
-                                            || "N/A" }}
+                                        <i class="pi pi-envelope text-sm sm:text-base mr-1"></i>
+                                        {{ user_info.user.email || "N/A" }}
                                     </p>
 
                                     <!-- Bio Section -->
@@ -264,13 +317,13 @@
                                     </div>
                                 </div>
 
+                                <!-- Edit Profile Form -->
                                 <div v-if="editProfile && user_info.user.id === auth.user.id">
-                                    <!-- Edit Profile Form -->
                                     <EditProfileCard ref="profile_editor" :user="user_info.user"
                                         @save="saveProfileChanges" @cancel="editProfile = false" />
                                 </div>
 
-                                <!-- Action Buttons Section -->
+                                <!-- ========== ACTION BUTTONS ========== -->
                                 <div class="flex flex-wrap gap-2 sm:gap-3 mt-4 sm:mt-6 justify-center md:justify-start">
                                     <!-- Edit Profile Button -->
                                     <button v-if="!editProfile && user_info.user.id === auth.user.id"
@@ -280,6 +333,7 @@
                                         Edit Profile
                                     </button>
 
+                                    <!-- Save Changes Button -->
                                     <button v-if="editProfile && user_info.user.id === auth.user.id"
                                         @click="saveProfileChanges"
                                         class="px-4 py-1.5 sm:px-6 sm:py-2 bg-[var(--theme-color)] text-white rounded-full font-medium hover:bg-[var(--theme-color)]/90 transition-all transform hover:scale-105 active:scale-95 shadow-sm flex items-center gap-1 sm:gap-2 text-sm sm:text-base">
@@ -294,6 +348,7 @@
                                         Share
                                     </button>
 
+                                    <!-- Share Popover -->
                                     <div class="card flex justify-center">
                                         <Popover ref="op">
                                             <div class="flex flex-col gap-4 w-[20rem] sm:w-[25rem]">
@@ -310,7 +365,7 @@
                                                     </InputGroup>
                                                 </div>
 
-                                                <!-- Share Buttons -->
+                                                <!-- Social Share Buttons -->
                                                 <div>
                                                     <span class="font-medium block mb-2 text-sm sm:text-base">Share
                                                         on</span>
@@ -329,21 +384,19 @@
                                         </Popover>
                                     </div>
 
-                                    <!-- Theme Color Picker -->
+                                    <!-- Theme Picker Button -->
                                     <div class="relative group">
                                         <button
                                             class="px-4 py-1.5 sm:px-6 sm:py-2 bg-[var(--theme-color)] border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded-full font-medium hover:bg-gray-50 dark:hover:bg-gray-600 transition-all transform hover:scale-105 active:scale-95 shadow-sm flex items-center gap-1 sm:gap-2 text-sm sm:text-base">
                                             <i class="pi pi-palette text-sm sm:text-base"></i>
                                             Theme
                                         </button>
-
-
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Settings Panel -->
+                        <!-- ========== SETTINGS PANEL ========== -->
                         <div v-if="user_info.user.id === auth.user.id"
                             class="lg:w-80 bg-gray-50/70 dark:bg-gray-800/30 backdrop-blur-sm rounded-xl p-4 sm:p-6 shadow-inner border border-gray-200 dark:border-gray-800/50 mt-6 lg:mt-0">
                             <h2
@@ -367,7 +420,7 @@
                                     Notifications
                                 </button>
 
-                                <!-- Request to be Chef -->
+                                <!-- Request Chef Role -->
                                 <button v-if="!user_info.user.is_chef" @click="requestChefRole"
                                     class="w-full flex items-center gap-2 sm:gap-3 px-3 py-2 sm:px-4 sm:py-3 rounded-lg border border-[var(--theme-color)]/50 bg-[var(--theme-color)]/5 text-[var(--theme-color)] font-medium hover:bg-[var(--theme-color)]/10 transition-all group text-sm sm:text-base">
                                     <i class="pi pi-user-plus text-sm sm:text-base"></i>
@@ -386,7 +439,7 @@
                                 <!-- Divider -->
                                 <div class="border-t border-gray-200 dark:border-gray-600 my-1 sm:my-3"></div>
 
-                                <!-- Logout -->
+                                <!-- Logout Button -->
                                 <button @click="signOut"
                                     class="w-full flex items-center gap-2 sm:gap-3 px-3 py-2 sm:px-4 sm:py-3 rounded-lg border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 font-medium hover:bg-red-100 dark:hover:bg-red-900/50 transition-all text-sm sm:text-base">
                                     <i class="pi pi-sign-out text-sm sm:text-base"></i>
@@ -440,7 +493,7 @@
                     </div>
                 </div>
 
-                <div class="relative">
+                <div class="relative" v-if="!profile_loading">
                     <!-- My Recipes Tab -->
                     <transition enter-active-class="transition-opacity duration-300 ease-out"
                         enter-from-class="opacity-0" enter-to-class="opacity-100"
@@ -452,22 +505,15 @@
 
                             <!-- Empty State for Posted Recipes -->
                             <div v-if="totalPostedRecipes < 1" class="text-center py-12">
-                                <div
-                                    class="mx-auto w-40 h-40 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden mb-6 relative flex items-center justify-center">
-                                    <i class="pi pi-book text-6xl text-gray-400 dark:text-gray-500"></i>
-                                    <div
-                                        class="absolute inset-0 bg-gradient-to-br from-[var(--theme-color)]/10 to-transparent">
-                                    </div>
-                                </div>
-                                <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-3">
-                                    No recipes created yet
-                                </h3>
-                                <p class="text-gray-500 dark:text-gray-400 mb-6 max-w-md mx-auto">
-                                    Start sharing your culinary creations with the community
-                                </p>
-                                <router-link to="/recipes/new/cover"
+                                <router-link v-if="user_info.user.isChef && user_info.user.id === auth.user.id"
+                                    to="/recipes/new/cover"
                                     class="inline-flex items-center px-6 py-2.5 border border-transparent rounded-full shadow-sm text-white bg-[var(--theme-color)] hover:bg-[var(--theme-color)]/90 transition-all transform hover:scale-105 font-medium">
                                     Create Your First Recipe
+                                    <i class="pi pi-arrow-right ml-2"></i>
+                                </router-link>
+                                <router-link to="/recipes"
+                                    class="inline-flex items-center px-6 py-2.5 border border-transparent rounded-full shadow-sm text-white bg-[var(--theme-color)] hover:bg-[var(--theme-color)]/90 transition-all transform hover:scale-105 font-medium">
+                                    Discover recipes
                                     <i class="pi pi-arrow-right ml-2"></i>
                                 </router-link>
                             </div>
@@ -503,6 +549,35 @@
                                 <router-link to="/recipes"
                                     class="inline-flex items-center px-6 py-2.5 border border-transparent rounded-full shadow-sm text-white bg-[var(--theme-color)] hover:bg-[var(--theme-color)]/90 transition-all transform hover:scale-105 font-medium">
                                     Browse Recipes
+                                    <i class="pi pi-arrow-right ml-2"></i>
+                                </router-link>
+                            </div>
+                        </div>
+                    </transition>
+                    <transition enter-active-class="transition-opacity duration-300 ease-out"
+                        enter-from-class="opacity-0" enter-to-class="opacity-100"
+                        leave-active-class="transition-opacity duration-200 ease-in" leave-from-class="opacity-100"
+                        leave-to-class="opacity-0">
+                        <div v-show="activeTab === 'cooking-tips'" class="py-4 md:px-2 lg:px-5">
+
+
+                            <!-- Empty State for Saved Recipes -->
+                            <div class="text-center py-12">
+                                <div
+                                    class="mx-auto w-40 h-40 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden mb-6 relative flex items-center justify-center">
+                                    <i class="pi pi-bookmark text-6xl text-gray-400 dark:text-gray-500"></i>
+                                    <div
+                                        class="absolute inset-0 bg-gradient-to-br from-[var(--theme-color)]/10 to-transparent">
+                                    </div>
+                                </div>
+                                <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-3">
+                                    No cooking tipss yet
+                                </h3>
+                                <p class="text-gray-500 dark:text-gray-400 mb-6 max-w-md mx-auto">
+                                </p>
+                                <router-link to="/cooking-tips"
+                                    class="inline-flex items-center px-6 py-2.5 border border-transparent rounded-full shadow-sm text-white bg-[var(--theme-color)] hover:bg-[var(--theme-color)]/90 transition-all transform hover:scale-105 font-medium">
+                                    Browse Cooking Tips
                                     <i class="pi pi-arrow-right ml-2"></i>
                                 </router-link>
                             </div>
@@ -602,7 +677,9 @@ const activeTab = ref('myRecipes');
 const showColorPicker = ref(false);
 const editProfile = ref(false);
 const profile_loading = ref(false);
+
 const toast = useToast();
+
 const cropper = ref(null);
 const saving_profile_avatar = ref(null)
 const themeColors = [
@@ -659,11 +736,11 @@ const totalPostedRecipes = ref(0);
 const totalSavedRecipes = ref(0);
 
 const update_fetched_user_recipes = (count) => {
-  if (activeTab.value === 'myRecipes') {
-    totalPostedRecipes.value = count;
-  } else if (activeTab.value === 'saved') {
-    totalSavedRecipes.value = count;
-  }
+    if (activeTab.value === 'myRecipes') {
+        totalPostedRecipes.value = count;
+    } else if (activeTab.value === 'saved') {
+        totalSavedRecipes.value = count;
+    }
 };
 
 
@@ -734,24 +811,26 @@ const toggle_followers = (event) => {
     fetch_followers()
 }
 
-const fetch_followers = async () => {
+const followers_limit = ref(10)
+const followers_offset = ref(0)
+const fetch_followers = async (limit = 10, offset = 0) => {
     loading_followers.value = true
     const res = await fetchFollowers(null, {
         target_id: user_info.value.user.id,
-        user_id: auth.user?.id
+        user_id: auth.user?.id,
+        limit: limit,
+        offset: offset
     })
     if (res.data) {
         followers.value = res.data.followers
+        followers_limit.value = res.data.limit
+        followers_offset.value = res.data.offset
 
     }
     loading_followers.value = false
 }
 
 
-const follow = (member) => {
-    // selectedMember.value = member;
-    // op.value.hide();
-}
 const loading_following = ref(false)
 const follwng = ref();
 const following = ref([
@@ -761,23 +840,24 @@ const toggle_followings = (event) => {
     follwng.value.toggle(event);
     fetch_following()
 }
-const fetch_following = async () => {
+
+const following_limit = ref(10)
+const following_offset = ref(0)
+const fetch_following = async (limit = 10, offset = 0) => {
     loading_following.value = true
     const res = await fetchFollowing(null, {
         target_id: user_info.value.user.id,
-        user_id: auth.user?.id
+        user_id: auth.user?.id,
+        limit: limit,
+        offset: offset
     })
     if (res.data) {
         following.value = res.data.following
+        following_limit.value = res.data.limit
+        following_offset.value = res.data.offset
 
     }
     loading_following.value = false
-}
-
-
-const unfollow = (member) => {
-    // selectedMember.value = member;
-    // op.value.hide();
 }
 
 
@@ -1067,6 +1147,37 @@ const toggleFollow = async (follow) => {
     }
 };
 
+const NowFollowing = ref(false)
+const follow = async (chefId) => {
+    NowFollowing.value = true
+    const res = await folow_unfollow(auth.token, chefId)
+
+    if (!res?.success) {
+        toast.add({
+            severity: 'error',
+            summary: 'Follow Failed',
+            detail: res.message || 'Unable to follow the user. Please try again.',
+            group: 'bc',
+            life: 4000
+        })
+        NowFollowing.value = false
+
+        return
+    }
+    user_info.value.userMetadata.isFollowing = !user_info.value.userMetadata.isFollowing
+
+    toast.add({
+        severity: res?.success ? 'info' : 'error',
+        summary: res?.success && user_info.value.userMetadata.isFollowing ? 'Followed' : 'Unfollowed',
+        detail: res?.success && user_info.value.userMetadata.isFollowing ? `You're now following ${user_info.value.user?.username}` : `You have unfollowed ${user_info.value.user?.username}` || 'Unable to follow the user. Please try again.',
+        group: 'bc',
+        life: 3000
+    })
+
+    NowFollowing.value = false
+}
+
+
 
 onMounted(() => {
     load_user();
@@ -1075,6 +1186,7 @@ onMounted(() => {
 watch(() => props.username, (newVal) => {
     if (newVal) {
         load_user();
+        activeTab.value = "myRecipes"
     }
 }, { immediate: true });
 

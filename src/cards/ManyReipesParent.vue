@@ -4,18 +4,9 @@
       <section class="order-2 lg:order-1 lg:col-span-2 space-y-6 md:space-y-8">
         <!-- Recipe Cards Grid -->
         <div>
-          <!-- Loading State -->
-          <div v-if="recipes_loading" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 sm:gap-5 md:gap-6"
-               style="grid-template-columns: repeat(auto-fill, minmax(350px, 1fr))">
-            <RecipeLoader 
-              v-for="i in 4" 
-              :key="'loader-'+i" 
-              class="min-w-[300px] border border-gray-200/80 dark:border-gray-700/50 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300"
-            />
-          </div>
-
+        
           <!-- Loaded State -->
-          <div v-else>
+          <div >
             <!-- Empty State -->
             <div v-if="recipes.length === 0" class="text-center py-12 md:py-16 lg:py-20">
               <div class="mx-auto w-24 h-24 md:w-32 md:h-32 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-6">
@@ -41,9 +32,19 @@
               />
             </div>
           </div>
+            <!-- Loading State -->
+          <div v-if="recipes_loading" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 sm:gap-5 md:gap-6"
+               style="grid-template-columns: repeat(auto-fill, minmax(350px, 1fr))">
+            <RecipeLoader 
+              v-for="i in 2" 
+              :key="'loader-'+i" 
+              class="min-w-[300px] border border-gray-200/80 dark:border-gray-700/50 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300"
+            />
+          </div>
+
 
           <!-- Pagination/Show More -->
-          <div v-if="recipes.length > 0 && recipes.length >= limit" class="pt-6 md:pt-8 flex justify-center">
+          <div v-if="recipes.length > 0 && recipes.length >= limit && !recipes_loading" class="pt-6 md:pt-8 flex justify-center">
             <button 
               @click="getRecipes(limit + 10, offset + 10)"
               class="inline-flex items-center gap-2 px-5 py-2.5 md:px-6 md:py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-full text-sm md:text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700/60 transition-all duration-200 hover:shadow-md"

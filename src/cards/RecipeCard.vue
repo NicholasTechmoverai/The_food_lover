@@ -5,17 +5,17 @@
     <!-- 👤 User Header -->
     <div class="flex justify-between items-center px-4 py-3 border-b border-gray-300 dark:border-gray-700">
       <div class="flex items-center gap-3">
-        <router-link :to="`/${recipe.user.username}`">
-        <img :src="recipe.user?.profilePic || defaultAvatar" :alt="recipe.user?.name"
-          class="w-10 h-10 rounded-full object-cover" />
-          </router-link>
+        <router-link :to="`/${recipe?.user?.username || auth.user.name}`">
+          <img :src="recipe.user?.profilePic || defaultAvatar" :alt="recipe.user?.name"
+            class="w-10 h-10 rounded-full object-cover" />
+        </router-link>
         <div>
           <h4 class="text-sm font-semibold text-gray-800 dark:text-white">{{ recipe.user?.name }}</h4>
           <p class="text-xs text-gray-500 dark:text-gray-400">{{ recipe.user?.totalRecipes }} recipes shared • <span> {{
-            formatTimeAgo(recipe?.createdAt) }}</span></p>
+            formatTimeAgo(recipe?.createdAt|| Date.now()) }}</span></p>
         </div>
       </div>
-      <button v-if="!NowFollowing" @click="follow(recipe.user.id)"
+      <button v-if="!NowFollowing && recipe?.user.id !== auth.user.id" @click="follow(recipe.user.id)"
         class="text-xs px-3 py-1 rounded-full border border-[var(--theme-color)] text-[var(--theme-color)] hover:bg-[var(--theme-color)] hover:text-white transition">
         <span v-if="recipe?.recipeMeta?.isFollowing">Following</span><span v-else>Follow</span>
       </button>

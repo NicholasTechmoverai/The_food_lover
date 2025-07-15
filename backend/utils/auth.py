@@ -301,6 +301,7 @@ class AuthService:
         offset: int = 0, 
         limit: int = 10
     ) -> dict:
+        logger.info("followers with offfset and limit, %s ,%s",offset,limit)
         # Get paginated followers
         follows = await Follow.filter(following_id=target_id) \
             .offset(offset).limit(limit) \
@@ -351,6 +352,8 @@ class AuthService:
         limit: int = 10
     ) -> Dict[str, List[dict]]:
         # Get paginated users the target is following
+        logger.info("followings with offfset and limit, %s ,%s",offset,limit)
+
         follows = await Follow.filter(follower_id=target_id) \
             .offset(offset).limit(limit) \
             .prefetch_related("following")

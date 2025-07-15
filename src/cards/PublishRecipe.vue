@@ -159,6 +159,7 @@ const ongoingStore = useOngoingStore();
 const recipeCover = ref({
   user: {
     name: '',
+    username:'',
     profilePic: '',
     id: '',
     totalRecipes: 0
@@ -167,6 +168,7 @@ const recipeCover = ref({
   recipeName: '',
   repiceColor: '#f97316',
   image: null,
+  createdAt:Date.now(),
   tags: [],
   cookTime: { hr: 0, min: 0 },
   description: '',
