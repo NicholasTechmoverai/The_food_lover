@@ -8,7 +8,7 @@
           <!-- Loaded State -->
           <div >
             <!-- Empty State -->
-            <div v-if="recipes.length === 0" class="text-center py-12 md:py-16 lg:py-20">
+            <div v-if="recipes.length === 0 && !recipes_loading" class="text-center py-12 md:py-16 lg:py-20">
               <div class="mx-auto w-24 h-24 md:w-32 md:h-32 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-6">
                 <i class="pi pi-book text-4xl md:text-5xl text-gray-400 dark:text-gray-500"></i>
               </div>
@@ -21,7 +21,7 @@
             </div>
 
             <!-- Recipe Grid -->
-            <div v-else 
+            <div  
                  class="grid gap-4 sm:gap-5 md:gap-6"
                  style="grid-template-columns: repeat(auto-fill, minmax(320px, 1fr))">
               <RecipeCard 

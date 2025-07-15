@@ -12,6 +12,7 @@ from web_socket.main import MainNamespace, RecipesNamespace, UsersNamespace, Not
 from config import init_db  # Your DB init logic
 from routes.auth import auth_router,limiter,AuthService
 from routes.recipes import recipe_router,RecipeService
+from routes.cooking_tips import cooking_tip_router,RecipeService
 from utils.limiter import limiter  
 from routes.user import user_router
 import os
@@ -68,6 +69,8 @@ async def rate_limit_handler(request: Request, exc: RateLimitExceeded):
 app.include_router(auth_router, prefix="/api")
 app.include_router(recipe_router,prefix="/api")
 app.include_router(user_router,prefix="/api")
+app.include_router(cooking_tip_router,prefix="/api")
+
 
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))

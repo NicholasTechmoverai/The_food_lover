@@ -7,6 +7,8 @@ from pydantic import BaseModel, EmailStr
 from .auth import get_current_user,AuthError
 from utils.limiter import limiter  
 from utils.recipes import RecipeService,RecipeRequest
+from utils.cooking_tips import CookingTipService
+from typing import List
 
 from tortoise.expressions import Q
 from uuid import UUID
@@ -18,27 +20,33 @@ cooking_tip_router = APIRouter()
 
 
 
-@cooking_tip_router.post("/cooking-tip")
+@cooking_tip_router.get("/cooking-tip")
 @limiter.limit("30/min")
 async def create_cooking_tip(
-    data: RecipeRequest,
     request: Request,
-    user: Users = Depends(get_current_user),
-    service: RecipeService = Depends()
+    limit: int = 10,
+    offset: int = 0,
+    public_only: bool = True,
+    user_id: Optional[UUID] = None,
+    saved: Optional[bool] = False,
+    title: Optional[str] = None,
+    category: Optional[List[str]] = None,
+    is_popular: bool = True,
+    service: CookingTipService = Depends()
 ):
- 
-    if not user.is_chef:
-        raise HTTPException(status_code=403, detail="Only chefs can submit recipes")
+    try:
+        cooking_tips = await service.list_cooking_tips(public_only=public_only,
+                                             limit=limit, 
+                                             offset=offset,
+                                             user_id=user_id,
+                                             title=title,
+                                             category=category,
+                                             is_popular=is_popular)
+                                            
+        return cooking_tips
+    except AuthError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
-   
-    recipe = await service.create_or_update_recipe(data, user.id,user.name)
-
-    return {
-        "message": "Recipe processed successfully",
-        "user": user.name,
-        "recipeName": data.recipeCover.recipeName,
-        "recipeId": str(recipe.id)  
-    }
 
 
 
@@ -131,26 +139,4 @@ async def save_unsave_favourite_tip(
     except Exception as e:
         raise HTTPException(status_code=500, detail="Failed to fetch recipe.")   
     
-    
-    
-@cooking_tip_router.get("/recipes/meta")
-@limiter.limit("30/min")
-async def cooking_tip_meta(
-    request: Request,
-    tip_id: UUID,
-    name: str,
-    user: Users = Depends(get_current_user),
-    service: RecipeService = Depends()
-):
-    """
-    Fetch a specific recipe by its name and UUID.
-    Rate-limited to 30 requests per minute.
-    """
-    try:
-        meta = await service.get_recipe_meta( recipe_id,user.id)
-        return meta
-    except AuthError as e:
-        raise HTTPException(status_code=400, detail=str(e))
-    except Exception as e:
-        raise HTTPException(status_code=500, detail="Failed to fetch recipe.")       
     

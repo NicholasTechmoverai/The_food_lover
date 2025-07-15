@@ -11,7 +11,7 @@ from jose import JWTError, ExpiredSignatureError, jwt
 from passlib.context import CryptContext
 from typing import List, Dict
 
-from models import User as Users,Follow,VerificationCode,Recipe
+from models import User as Users,Follow,VerificationCode,Recipe,ChefRequest
 from config import Config,WEB_SERVER,BASE_SERVER
 from utils.email_sender import send_email,form_email_message,code_template,verify_link_template
 from reusables.main import sanitizeContents ,save_base64_image,sanitize_name
@@ -215,7 +215,7 @@ class AuthService:
         logger.warning("Could not find available username for base: %s", base_username)
         return f"{base_username}_{random.randint(10000, 99999)}"
             
-        
+     
     async def update_user(self, data,user) -> Dict:
         try:
             
@@ -292,8 +292,6 @@ class AuthService:
         #TODO:send notifications to chef
         return True
      
-
-
     async def get_followers(
         self, 
         target_id: UUID, 
@@ -342,8 +340,6 @@ class AuthService:
             "count": len(result)
         }
 
-        
-    
     async def get_following(
         self, 
         target_id: UUID,      # user whose "following" list we want
@@ -523,7 +519,12 @@ class AuthService:
             "chef_directory": chef_dir
         }
 
-        
+    async def request_chef(self,chef_id):
+        await ChefRequest.create(
+            user_id=chef_id
+        )
+        return True
+    
     def generate_token(self, user) -> dict:
         # if not user.is_verified:
         #     raise HTTPException(status_code=401, detail="User unverified!!")

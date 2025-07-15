@@ -47,6 +47,10 @@ export const fetchLikes = async (token = null, recipeId, queryParams = {}) => {
   return await fetchMeta(`/recipes/${recipeId}/likes`, token, queryParams, []);
 };
 
+export const fetch_cooking_tips = async (token = null, queryParams = {}) => {
+  return await fetchMeta(`/cooking-tip`, token, queryParams, []);
+};
+
 
 // Like or Unlike a recipe (toggle)
 export const like_unlike = async (token = null, recipeId) => {

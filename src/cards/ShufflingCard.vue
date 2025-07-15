@@ -1,111 +1,61 @@
 <template>
   <div class="cards">
+    <!-- ❶  input + article pair generated PER tip → keeps :nth‑of‑type CSS working -->
+    <template v-for="(tip, index) in tips" :key="tip.id ?? index">
+      <!-- radio -->
+      <input
+        :id="`radio-${index}`"
+        type="radio"
+        name="radio-card"
+        :checked="index === 0"
+      />
 
-  <input type="radio" id="radio-1" name="radio-card" checked>
-  <article class="card" style="--angle:4deg">
-    <img class="card-img" src="https://picsum.photos/id/21/200/300">
-    <div class="card-data">
-      <span class="card-num">1/7</span>
-      <h2>Alejandro Escamilla</h2>
-        <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Natus maiores accusantium cumque atque? Ex voluptatem quisquam temporibus. Provident rerum quae nemo eligendi fugiat!</p>
-        <footer>
-          <label for="radio-7" aria-label="Previous">&#10094;</label>
-          <label for="radio-2" aria-label="Next">&#10095;</label>
-        </footer>
-    </div>
-  </article>
+      <!-- card -->
+      <article
+        class="card"
+        :style="`--angle:${tip.angle ?? defaultAngles[index % defaultAngles.length]}`"
+      >
+        <img class="card-img" :src="tip.image" :alt="tip.title"   @error="(e) => e.target.src = default_image" />
 
-  <!-- card 2 -->
-  <input type="radio" id="radio-2" name="radio-card">
-  <article class="card" style="--angle:-8deg">
-    <img class="card-img" src="https://picsum.photos/id/30/200/300">
-    <div class="card-data">
-      <span class="card-num">2/7</span>
-      <h2>Shyamanta Baruah</h2>
-        <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Natus maiores accusantium cumque atque? Ex voluptatem quisquam temporibus. Provident rerum quae nemo eligendi fugiat!</p>
-        <footer>
-          <label for="radio-1" aria-label="Previous">&#10094;</label>
-          <label for="radio-3" aria-label="Next">&#10095;</label>
-        </footer>
-    </div>
-  </article>
+        <div class="card-data">
+          <span class="card-num">{{ index + 1 }}/{{ tips.length }}</span>
 
-  <!-- card 3 -->
-  <input type="radio" id="radio-3" name="radio-card">
-  <article class="card" style="--angle:-7deg">
-    <img class="card-img" src="https://picsum.photos/id/39/200/300">
-    <div class="card-data">
-      <span class="card-num">3/7</span>
-      <h2>Luke Chesser</h2>
-        <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Natus maiores accusantium cumque atque? Ex voluptatem quisquam temporibus. Provident rerum quae nemo eligendi fugiat!</p>
-        <footer>
-          <label for="radio-2" aria-label="Previous">&#10094;</label>
-          <label for="radio-4" aria-label="Next">&#10095;</label>
-        </footer>
-    </div>
-  </article>
+          <h2>{{ tip.title }}</h2>
+          <p>{{ tip.description }}</p>
 
-  <!-- card 4 -->
-  <input type="radio" id="radio-4" name="radio-card">
-  <article class="card" style="--angle:11deg">
-    <img class="card-img" src="https://picsum.photos/id/103/200/300">
-    <div class="card-data">
-      <span class="card-num">4/7</span>
-      <h2>Ilham Rahmansyah</h2>
-        <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Natus maiores accusantium cumque atque? Ex voluptatem quisquam temporibus. Provident rerum quae nemo eligendi fugiat!</p>
-        <footer>
-          <label for="radio-3" aria-label="Previous">&#10094;</label>
-          <label for="radio-5" aria-label="Next">&#10095;</label>
-        </footer>
-    </div>
-  </article>
-
-  <!-- card 5 -->
-  <input type="radio" id="radio-5" name="radio-card">
-  <article class="card" style="--angle:13deg">
-    <img class="card-img" src="https://picsum.photos/id/175/200/300">
-    <div class="card-data">
-      <span class="card-num">5/7</span>
-      <h2>petradr</h2>
-        <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Natus maiores accusantium cumque atque? Ex voluptatem quisquam temporibus. Provident rerum quae nemo eligendi fugiat!</p>
-        <footer>
-          <label for="radio-4" aria-label="Previous">&#10094;</label>
-          <label for="radio-6" aria-label="Next">&#10095;</label>
-        </footer>
-    </div>
-  </article>
-
-  <!-- card 6 -->
-  <input type="radio" id="radio-6" name="radio-card">
-  <article class="card" style="--angle:-17deg">
-    <img class="card-img" src="https://picsum.photos/id/349/200/300">
-    <div class="card-data">
-      <span class="card-num">6/7</span>
-      <h2>Caleb George</h2>
-        <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Natus maiores accusantium cumque atque? Ex voluptatem quisquam temporibus. Provident rerum quae nemo eligendi fugiat!</p>
-        <footer>
-          <label for="radio-5" aria-label="Previous">&#10094;</label>
-          <label for="radio-7" aria-label="Next">&#10095;</label>
-        </footer>
-    </div>
-  </article>
-
-  <!-- card 7 -->
-  <input type="radio" id="radio-7" name="radio-card">
-  <article class="card" style="--angle:20deg">
-    <img class="card-img" src="https://picsum.photos/id/401/200/300">
-    <div class="card-data">
-      <span class="card-num">7/7</span>
-      <h2>Austin Ban</h2>
-        <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Natus maiores accusantium cumque atque? Ex voluptatem quisquam temporibus. Provident rerum quae nemo eligendi fugiat!</p>
-        <footer>
-          <label for="radio-6" aria-label="Previous">&#10094;</label>
-          <label for="radio-1" aria-label="Next">&#10095;</label>
-        </footer>
-    </div>
-  </article>
-</div>
+          <footer>
+            <!-- previous / next wrap‑around -->
+            <label
+              :for="`radio-${(index - 1 + tips.length) % tips.length}`"
+              aria-label="Previous"
+              >&#10094;</label
+            >
+            <label
+              :for="`radio-${(index + 1) % tips.length}`"
+              aria-label="Next"
+              >&#10095;</label
+            >
+          </footer>
+        </div>
+      </article>
+    </template>
+  </div>
 </template>
+
+
+
+<script setup>
+const props = defineProps({
+    tips:{
+        type:Array,
+        default:()=>null
+    }
+})
+const defaultAngles = ['4deg', '-8deg', '-7deg', '11deg', '13deg', '-17deg', '20deg']
+
+const default_image = "https://images.unsplash.com/photo-1586511925558-a4c6376fe65f?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=687&q=60"
+
+</script>
 <style scoped>
 *,
 ::before,

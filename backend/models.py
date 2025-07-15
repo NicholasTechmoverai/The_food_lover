@@ -399,6 +399,7 @@ class Follow(Model):
     
 class CookingTip(Model):
     id = fields.UUIDField(pk=True, default=uuid.uuid4)
+    catogory = fields.CharField(max_length=255,index=True)
 
     title = fields.CharField(max_length=255, index=True)
     content = fields.TextField()
