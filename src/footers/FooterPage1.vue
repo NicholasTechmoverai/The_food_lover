@@ -62,8 +62,10 @@
         </ul>
       </div>
 
-      <!-- Location & Newsletter -->
-      <div class="space-y-8">
+      
+    </div>
+<!-- Location & Newsletter -->
+      <div class="space-y-8 flex flex-col md:flex-row gap-9 justify-around">
         
         <!-- Map & Address -->
         <div>
@@ -78,31 +80,15 @@
             @mouseenter="startMapAnimation"
             @mouseleave="stopMapAnimation"
           >
-            <img
-              v-if="!showInteractiveMap"
-              :src="hotelPreviewImage"
-              class="w-full h-full object-cover"
-              :class="{ 'animate-pulse': mapAnimating }"
-            />
+         
             <iframe
-              v-if="showInteractiveMap"
               :src="hotelMapEmbedUrl"
               class="w-full h-full"
               allowfullscreen
               loading="lazy"
             ></iframe>
 
-            <div
-              v-if="!showInteractiveMap"
-              class="absolute inset-0 flex items-center justify-center bg-black/30"
-              :class="{ 'opacity-0': mapAnimating }"
-            >
-              <span class="px-4 py-2 rounded-lg font-medium flex items-center gap-2 text-white"
-                :style="{ backgroundColor: siteConfig.colors.primary }"
-              >
-                <i class="pi pi-compass"></i> Explore Location
-              </span>
-            </div>
+          
           </div>
 
           <address class="mt-3 text-sm not-italic space-y-2">
@@ -162,8 +148,6 @@
           </p>
         </div>
       </div>
-    </div>
-
     <!-- Footer Bottom -->
     <div class="py-6 border-t border-white/10 bg-white/5 dark:bg-black/10">
       <div class="container mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-4">

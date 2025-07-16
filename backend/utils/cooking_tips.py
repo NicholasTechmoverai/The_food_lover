@@ -2,6 +2,8 @@ from typing import Optional, List
 from uuid import UUID
 from models import CookingTip
 from config import BASE_SERVER
+from .logger import setup_logger
+logger = setup_logger("socket")
 
 class CookingTipService:
     def __init__(self, cooking_tip_repo=CookingTip):
@@ -17,7 +19,10 @@ class CookingTipService:
         category: Optional[List[str]] = None,
         is_popular: Optional[bool] = None
     ):
+        
         query = self.cooking_tip_repo.all().prefetch_related("user")
+        total_count = await query.count()
+        logger.info("Total cooking tips: %s | Offset: %s | Limit: %s", total_count, offset, limit)
 
         if user_id:
             query = query.filter(user_id=user_id)
