@@ -312,29 +312,35 @@ Stew Procedure step by step ',
 
 
 export const fetchRecipes = async (token = null, filters = null) => {
-    try {
-        const response = await axios.get(`${BACKEND_URL}/recipes/`, {
-            headers: token ? { Authorization: `Bearer ${token.token}` } : {},
-            params: filters || {},  // filters = { limit: 10, offset: 0 }
-        })
+  try {
+    const response = await axios.post(
+      `${BACKEND_URL}/recipes/get`,
+      filters || {}, // ✅ this is the body
+      {
+        headers: token
+          ? { Authorization: `Bearer ${token.token}` }
+          : {},
+      }
+    );
 
-        if (response.status === 200 || response.status === 201) {
-            return { success: true, data: response.data }
-        } else {
-            return {
-                success: false,
-                message: `Unexpected response status: ${response.status}`,
-                data: runtime_recipes,
-            }
-        }
-    } catch (error) {
-        return {
-            success: false,
-            message: error?.response?.data?.detail || error.message || 'An error occurred',
-            data: runtime_recipes,
-        }
+    if (response.status === 200 || response.status === 201) {
+      return { success: true, data: response.data };
+    } else {
+      return {
+        success: false,
+        message: `Unexpected response status: ${response.status}`,
+        data: runtime_recipes,
+      };
     }
-}
+  } catch (error) {
+    return {
+      success: false,
+      message: error?.response?.data?.detail || error.message || 'An error occurred',
+      data: runtime_recipes,
+    };
+  }
+};
+
 
 export const fetchRecipeSteps = async (token = null, name = null, id = null) => {
     try {

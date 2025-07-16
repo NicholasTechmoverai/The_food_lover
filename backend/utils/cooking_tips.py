@@ -16,46 +16,54 @@ class CookingTipService:
         offset: int = 0,
         user_id: Optional[UUID] = None,
         title: Optional[str] = None,
-        category: Optional[List[str]] = None,
+        category: Optional[str] = None,
         is_popular: Optional[bool] = None
     ):
-        
         query = self.cooking_tip_repo.all().prefetch_related("user")
-        total_count = await query.count()
-        logger.info("Total cooking tips: %s | Offset: %s | Limit: %s", total_count, offset, limit)
 
         if user_id:
             query = query.filter(user_id=user_id)
 
         if title:
-            query = query.filter(title__icontains=title)
+            query = query.filter(title__icontains=title.strip())
 
         if category:
-            query = query.filter(catogory__in=category)
+            query = query.filter(catogory__icontains=category.strip())
 
-        if is_popular is True:
+        if is_popular:
             query = query.filter(is_popular=True)
 
         query = query.order_by("-updated_at", "-created_at").offset(offset).limit(limit)
         tips = await query
 
+        logger.info(
+            "Fetched %s cooking tips | Offset: %s | Limit: %s | Title: %s | Category: %s | Popular: %s",
+            len(tips), offset, limit, title, category, is_popular
+        )
+
         result = []
         for tip in tips:
+            user = getattr(tip, "user", None)
+
             result.append({
                 "id": str(tip.id),
                 "title": tip.title,
                 "category": tip.catogory,
                 "description": tip.content,
                 "isPopular": tip.is_popular,
-                "image": tip.image_url if tip.image_url.startswith("https://") else f"{BASE_SERVER}/{tip.image_url}",
+                "image": (
+                    tip.image_url if tip.image_url and tip.image_url.startswith("https://")
+                    else f"{BASE_SERVER}/{tip.image_url}" if tip.image_url else None
+                ),
                 "createdAt": tip.created_at,
                 "user": {
-                    "id": str(tip.user.id),
-                    "name": getattr(tip.user, "name", "Unknown"),
-                    "username": getattr(tip.user, "username", "Unknown"),
-                    "avatar":tip.user.picture_url if tip.user.picture_url.startswith("https://") else f"{BASE_SERVER}/{tip.user.picture_url}",
-
-                    
+                    "id": str(user.id) if user else None,
+                    "name": getattr(user, "name", "Unknown"),
+                    "username": getattr(user, "username", "Unknown"),
+                    "avatar": (
+                        user.picture_url if user and user.picture_url.startswith("https://")
+                        else f"{BASE_SERVER}/{user.picture_url}" if user and user.picture_url else None
+                    )
                 }
             })
 

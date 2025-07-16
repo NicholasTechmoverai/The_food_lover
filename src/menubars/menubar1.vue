@@ -424,14 +424,14 @@ const rawCookingTips = {
             {
                 items: [
                     {
-                        label: 'Knife Skills',
+                        label: 'KnifeSkills',
                         icon: 'pi pi-cut',
                         subtext: 'Master chopping techniques',
                         color: '#6b7280',
                         tip: 'Keep knives sharp for safety'
                     },
                     {
-                        label: 'Flavor Pairing',
+                        label: 'FlavourPairing',
                         icon: 'pi pi-heart',
                         subtext: 'Perfect combinations',
                         color: '#6b7280',
@@ -444,7 +444,7 @@ const rawCookingTips = {
             {
                 items: [
                     {
-                        label: 'Time Saving',
+                        label: 'TimeSaving',
                         icon: 'pi pi-stopwatch',
                         subtext: 'Efficiency in kitchen',
                         color: '#6b7280',
@@ -504,7 +504,7 @@ function enhanceCookingTipsItems(data) {
                     ...item,
                     command: item.label
                         ? () => {
-                            const url = `/cooking-tips/${polishUrlName(item.label)}`;
+                            const url = `/cooking-tips/${polishUrlName(item.label).replace()}`;
                             url.includes('more-tips') ? router.push('/cooking-tips') : router.push(url);
                         }
                         : undefined

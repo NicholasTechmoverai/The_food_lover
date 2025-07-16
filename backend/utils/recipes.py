@@ -1,7 +1,6 @@
 from models import Recipe, RecipeStep, Tag, Category,Ingredient,RecipeLike,RecipeComment,ShareRecipe,Favorite,RecipeView,Follow
 from reusables.main import sanitizeContents ,save_base64_image,sanitize_name
 from uuid import  UUID
-from tortoise.expressions import Q
 from typing import Tuple
 from tortoise.exceptions import DoesNotExist
 from fastapi import HTTPException
@@ -11,9 +10,10 @@ from pydantic import BaseModel, Field
 from typing import List, Optional, Union
 
 from config import Config,BASE_SERVER
+from tortoise.expressions import Q
 
 from .logger import setup_logger
-logger = setup_logger("socket")
+logger = setup_logger("RECIPES")
 
 class CookTime(BaseModel):
     hr: int
@@ -177,19 +177,22 @@ class RecipeService:
         return recipe
 
 
-   
+
     async def list_recipes(
         self,
         public_only: bool = True,
         limit: int = 10,
         offset: int = 0,
         user_id: Optional[UUID] = None,
-        saved:Optional[bool]=False,
+        saved: Optional[bool] = False,
         tags: Optional[list] = None,
         name: Optional[str] = None,
         cuisine: Optional[str] = None,
         category: Optional[list] = None
     ):
+        logger.info("FILTERS — public: %s | user_id: %s | saved: %s | name: %s | cuisine: %s | tags: %s | category: %s",
+                    public_only, user_id, saved, name, cuisine, tags, category)
+
         query = self.recipe_repo.all().prefetch_related(
             "tags", "category", "steps__ingredients", "user"
         )
@@ -199,40 +202,50 @@ class RecipeService:
 
         if saved and user_id:
             saved_ids = await Favorite.filter(user_id=user_id).values_list("recipe_id", flat=True)
-            logger.info("Getting saved recipes %s", saved_ids)
+            logger.info("Saved recipe IDs: %s", saved_ids)
             query = query.filter(id__in=saved_ids)
         elif user_id:
-            logger.info("Getting recipes for user_id: %s", user_id)
             query = query.filter(user_id=user_id)
-            
-        if name:
-            query = query.filter(name__icontains=name)
 
-        if cuisine:
-            query = query.filter(cuisine__icontains=cuisine)
+        # Construct OR filters
+        or_filter = Q()
 
-        if category:
-            query = query.filter(category__name__icontains=category)
+        if name and name.strip():
+            or_filter |= Q(name__icontains=name.strip())
 
-        if tags:
+        if cuisine and cuisine.strip():
+            or_filter |= Q(cuisine__icontains=cuisine.strip())
+
+        if category and isinstance(category, list):
+            for cat in category:
+                if cat and isinstance(cat, str):
+                    or_filter |= Q(category__name__icontains=cat.strip())
+
+        if tags and isinstance(tags, list):
             for tag in tags:
-                query = query.filter(tags__name__icontains=tag)
+                if tag and isinstance(tag, str):
+                    or_filter |= Q(tags__name__icontains=tag.strip())
+
+        # Apply the combined OR filter
+        if or_filter:
+            query = query.filter(or_filter)
 
         query = query.order_by("-updated_at", "-created_at").offset(offset).limit(limit)
         recipes = await query
+        recipes = list({recipe.id: recipe for recipe in recipes}.values())
 
+        logger.info("Final recipe count: %s", len(recipes))     
+
+        # Format results
         def minutes_to_time(cook_time_minutes):
-            return {
-                "hr": cook_time_minutes // 60,
-                "min": cook_time_minutes % 60
-            }
+            return {"hr": cook_time_minutes // 60, "min": cook_time_minutes % 60}
 
         result = []
         for r in recipes:
-            recipe_dict = {
+            result.append({
                 "id": str(r.id),
                 "recipeName": r.name,
-                "createdAt":r.created_at,
+                "createdAt": r.created_at,
                 "repiceColor": r.theme_color,
                 "image": f"{BASE_SERVER}/{r.cover_image_url}",
                 "tags": [tag.name for tag in r.tags],
@@ -240,7 +253,7 @@ class RecipeService:
                 "description": r.description,
                 "cuisine": {
                     "name": r.cuisine,
-                    "region": "East Africa"  # Replace with dynamic data if available
+                    "region": "East Africa"
                 },
                 "complexityLevel": {
                     "name": r.difficulty_level.capitalize(),
@@ -252,21 +265,21 @@ class RecipeService:
                 },
                 "category": [cat.name for cat in r.category],
                 "user": {
-                    "username":getattr(r.user, "username", "Unknown"),
+                    "username": getattr(r.user, "username", "Unknown"),
                     "name": getattr(r.user, "name", "Unknown"),
-                    "profilePic":r.user.picture_url if r.user.picture_url.startswith("https://") else f"{BASE_SERVER}/{r.user.picture_url}",
+                    "profilePic": r.user.picture_url if r.user.picture_url.startswith("https://") else f"{BASE_SERVER}/{r.user.picture_url}",
                     "id": str(r.user.id),
                     "totalRecipes": await self.recipe_repo.filter(user=r.user).count(),
                     "isVerified": getattr(r.user, "is_verified", False),
                 }
-            }
-            result.append(recipe_dict)
+            })
 
         return {
             "recipes": result,
             "limit": limit,
             "offset": offset
         }
+
 
     async def update_view_activity(
         self, 

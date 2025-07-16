@@ -30,7 +30,7 @@ async def create_cooking_tip(
     user_id: Optional[UUID] = None,
     saved: Optional[bool] = False,
     title: Optional[str] = None,
-    category: Optional[List[str]] = None,
+    category: Optional[str] = None,
     is_popular: Optional[bool] = None,
     service: CookingTipService = Depends()
 ):

@@ -6,6 +6,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, EmailStr
 from typing import List
 import asyncio
+from fastapi import Query
 
 from .auth import get_current_user,AuthError
 from utils.limiter import limiter  
@@ -46,36 +47,41 @@ async def create_recipe(
 
 
 
-@recipe_router.get("/recipes")
-@limiter.limit("30/min")
+class RecipeFilterRequest(BaseModel):
+    limit: int = 10
+    offset: int = 0
+    public_only: bool = True
+    user_id: Optional[str] = None
+    recipe_name: Optional[str] = None
+    category: Optional[List[str]] = None
+    tags: Optional[List[str]] = None
+    cuisine: Optional[str] = None
+    saved: Optional[bool] = False
+
+@recipe_router.post("/recipes/get")
 async def fetch_recipe(
+    request_data: RecipeFilterRequest,
     request: Request,
-    limit: int = 10,
-    offset: int = 0,
-    public_only: bool = True,
-    user_id: Optional[UUID] = None,
-    saved: Optional[bool] = False,
-    recipe_name: Optional[str] = None,
-    category: Optional[List[str]] = None,
-    tags: Optional[List[str]] = None,
-    cuisine: Optional[str] = None,
     service: RecipeService = Depends()
 ):
     try:
-        print("recipes for",user_id)
-        recipes = await service.list_recipes(public_only=public_only,
-                                             limit=limit, 
-                                             offset=offset,
-                                             user_id=user_id,
-                                             name=recipe_name,
-                                             category=category,
-                                             cuisine=cuisine,
-                                             tags=tags,
-                                             saved=saved)
+        print("recipes in", request_data.category, request_data.tags)
+
+        recipes = await service.list_recipes(
+            public_only=request_data.public_only,
+            limit=request_data.limit,
+            offset=request_data.offset,
+            user_id=request_data.user_id,
+            name=request_data.recipe_name,
+            category=request_data.category,
+            cuisine=request_data.cuisine,
+            tags=request_data.tags,
+            saved=request_data.saved
+        )
         return recipes
+
     except AuthError as e:
         raise HTTPException(status_code=400, detail=str(e))
-
 
 @recipe_router.get("/recipes/{name}/{id}")
 @limiter.limit("30/min")

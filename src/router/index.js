@@ -150,8 +150,8 @@ const routes = [
     children: [
       {
         path: ':tip/',
-        name: 'CookingTipCard',
-        component: CookingTipCard,
+        name: 'CookingTipTarget',
+        component: CookingTipsPage,
       }
     ]
   },

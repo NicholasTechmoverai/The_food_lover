@@ -20,7 +20,7 @@
       <h3 class="text-xl font-semibold mb-4 text-gray-700 dark:text-gray-300">
         {{ recipe_type }} recipes
       </h3>
-      <ManyRecipesParent :recipe_name="recipe_type" :categgory="[recipe_type]" :tags="[recipe_type]"/>
+      <ManyRecipesParent :recipe_name="recipe_type" :category="[recipe_type]" :tags="[recipe_type]"/>
     </section>
   </section>
 </template>
@@ -32,7 +32,7 @@ import { ref } from "vue";
 
 const props = defineProps({
   recipe_type: {
-    type: String,
+    recipe_name: String,
     default: ()=>null
   }
 });
