@@ -29,7 +29,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 defaultAvatar = 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png'
 
 from .logger import setup_logger
-logger = setup_logger("socket")
+logger = setup_logger("AUTH")
 
 
 # Dependency: Extracts user from token
@@ -519,11 +519,14 @@ class AuthService:
             "chef_directory": chef_dir
         }
 
-    async def request_chef(self,chef_id):
-        await ChefRequest.create(
-            user_id=chef_id
-        )
-        return True
+    async def request_chef(self, chef_id: UUID) -> bool:
+        try:
+            await ChefRequest.create(user_id=chef_id)
+            return True
+        except Exception as e:
+            # Log or handle the exception as needed
+            logger.info(f"Error creating chef request: {e}")
+            return False
     
     def generate_token(self, user) -> dict:
         # if not user.is_verified:

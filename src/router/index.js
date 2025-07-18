@@ -22,6 +22,8 @@ import CookingTipCard from '../cards/CookingTipCard.vue'
 import CookingTipsPage from '../pages/CookingTipsPage.vue'
 import VerifyPage from '../cards/VerifyPage.vue'
 import ProfilePage from '../pages/ProfilePage.vue'
+import NotificationPage from '../pages/NotificationPage.vue'
+import SavedRecipes from '../pages/SavedRecipes.vue'
 
 
 const routes = [
@@ -154,6 +156,17 @@ const routes = [
         component: CookingTipsPage,
       }
     ]
+  },
+     {
+    path: '/saved',
+    name: 'Saved',
+    component: SavedRecipes,
+  },
+    {
+    path: '/notifications',
+    name: 'Notifications',
+    component: NotificationPage,
+    props: false, // parent route doesn’t need route props
   },
   {
     path: '/settings',

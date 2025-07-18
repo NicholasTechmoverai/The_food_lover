@@ -277,7 +277,8 @@
                                                 'text-xs px-3 py-1 rounded-full border transition',
                                                 'border-[var(--theme-color)] text-[var(--theme-color)]',
                                                 'hover:bg-[var(--theme-color)] hover:text-white'
-                                            ]" :style="!user_info?.userMetadata?.isFollowing ? { color: user_info?.user?.theme } : {}" />
+                                            ]"
+                                            :style="!user_info?.userMetadata?.isFollowing ? { color: user_info?.user?.theme } : {}" />
 
                                         <!-- Loading State -->
                                         <span v-else-if="NowFollowing"
@@ -383,7 +384,7 @@
                                                             <i :class="site.icon" :style="{ color: site.color }"
                                                                 class="text-lg sm:text-xl w-6 text-center" />
                                                             <span class="font-medium text-xs sm:text-sm">{{ site.name
-                                                            }}</span>
+                                                                }}</span>
                                                         </li>
                                                     </ul>
                                                 </div>
@@ -428,7 +429,7 @@
                                 </button>
 
                                 <!-- Request Chef Role -->
-                                <button v-if="!user_info.user.is_chef" @click="requestChefRole"
+                                <button v-if="!user_info.user.is_chef" @click="requestChefRole(user_info.user)"
                                     class="w-full flex items-center gap-2 sm:gap-3 px-3 py-2 sm:px-4 sm:py-3 rounded-lg border border-[var(--theme-color)]/50 bg-[var(--theme-color)]/5 text-[var(--theme-color)] font-medium hover:bg-[var(--theme-color)]/10 transition-all group text-sm sm:text-base">
                                     <i class="pi pi-user-plus text-sm sm:text-base"></i>
                                     <span>Request Chef Access</span>
@@ -1041,11 +1042,21 @@ const changePassword = () => {
 };
 
 const openNotificationSettings = () => {
+    router.push("/notifications")
     console.log('Notification settings clicked');
 };
 
-const requestChefRole = () => {
-    console.log('Request chef role clicked');
+const requestChefRole = async (user) => {
+    const res = await make_a_post(`/users/chef-request/${user.username}`, auth.token, { chef_id: user.id })
+    if (res.success) {
+        toast.add({
+            severity: 'info',
+            summary: 'Chef request sent!!',
+            detail: 'You\'ll be notified once your requset has been approved!',
+            life: 5000,
+            group: 'bc'
+        })
+    }
 };
 
 const startVerification = () => {

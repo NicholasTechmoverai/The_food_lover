@@ -108,7 +108,7 @@
             <!-- Right Icons -->
             <template #end>
                 <div v-if="user && user.id" class="flex items-center gap-3">
-                    <Button icon="pi pi-bookmark" severity="secondary" rounded aria-label="Saved"
+                    <Button @click="router.push('/saved')" icon="pi pi-bookmark" severity="secondary" rounded aria-label="Saved"
                         class="border-purple-400 dark:border-purple-300 text-purple-400 dark:text-purple-300 hover:bg-purple-400/10 dark:hover:bg-purple-300/10 w-10 h-10" />
                     <div class="relative">
                         <Button icon="pi pi-bell" @click="Notytoggle" aria-haspopup="true" severity="secondary" rounded

@@ -114,7 +114,7 @@ async def get_followers(
 
 @user_router.get("/following")
 @limiter.limit("30/min")
-async def get_followers(
+async def get_following(
     request: Request,
     limit: int = 10,
     offset: int = 0,
@@ -133,7 +133,6 @@ async def get_followers(
 @limiter.limit("5/min")
 async def request_chef(
     request: Request,
-    data: UserUpdate,
     username: str,
     user: Users = Depends(get_current_user),
     auth: AuthService = Depends()
@@ -146,10 +145,11 @@ async def request_chef(
         if not user:
             raise HTTPException(status_code=404, detail="Authenticated user not found")
 
-        if user.id != data.user_id and user.email != data.email:
-            raise HTTPException(status_code=400, detail="User ID or email does not match the authenticated user")
+        if user.username != username:
+            raise HTTPException(status_code=400, detail="User  does not match the authenticated user")
 
-        return await auth.update_user(data,user)
+        res= await auth.request_chef(user.id)
+        return res
 
     except AuthError as e:
         raise HTTPException(status_code=400, detail=str(e))
