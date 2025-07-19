@@ -599,6 +599,28 @@ class AuthService:
 
         user.is_chef = True
         await user.save()
+        
+        noty = await Notification.create(
+            user_id=user.id,
+            actor_id=user_id,
+            notification_type="system",
+            target_object_id=None,
+            target_content_type="user",
+            verb="chef upgrade",
+            thread_id=None,
+            preview="You have been upgraded to chef",
+        )
+
+        # Try to import and trigger WebSocket notification
+        try:
+            from app import notifications_namespace
+            await notifications_namespace.trigger_notification({
+                    "user_id": str(user.id),
+                    "notifications": [noty],
+                })
+
+        except ImportError as e:
+            logger.error(f"WebSocket notification import failed: {e}")
 
         return {
             "success": True,

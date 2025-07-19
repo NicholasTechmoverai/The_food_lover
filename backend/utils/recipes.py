@@ -1,4 +1,4 @@
-from models import Recipe, RecipeStep, Tag, Category,Ingredient,RecipeLike,RecipeComment,ShareRecipe,Favorite,RecipeView,Follow
+from models import Recipe, RecipeStep, Tag, Category,Ingredient,RecipeLike,RecipeComment,ShareRecipe,Favorite,RecipeView,Follow,Notification
 from reusables.main import sanitizeContents ,save_base64_image,sanitize_name
 from uuid import  UUID
 from typing import Tuple
@@ -173,6 +173,36 @@ class RecipeService:
                     unit=ing.unit,
                     recipe_step=step
                 )
+        
+        followers = await Follow.filter(following_id=user_id).prefetch_related('follower')
+        follower_ids = [f.follower.id for f in followers]
+        for uid in follower_ids:
+            noty = await Notification.create(
+                user_id=uid,
+                actor_id=user_id,
+                notification_type="new_recipe",
+                target_object_id=str(recipe.id),
+                target_content_type="recipe",
+                verb="published a new recipe",
+                thread_id=None,
+                preview=recipe.name,
+                image_url=recipe.cover_image_url
+            )
+
+            # Try to import and trigger WebSocket notification
+            try:
+                from app import notifications_namespace
+                await notifications_namespace.trigger_notification({
+                        "user_id": str(uid),
+                        "notifications": [noty],
+                    })
+    
+            except ImportError as e:
+                # Optionally log this exception
+                logger.info(f"WebSocket notification import failed: {e}")
+
+
+        
 
         return recipe
 
@@ -399,23 +429,59 @@ class RecipeService:
             logger.exception("Failed to fetch recipe ID %s: %s", recipe_id, str(e))
             raise HTTPException(status_code=500, detail="An unexpected error occurred while retrieving the recipe.")
     
+
     async def like_unlike(self, user_id: UUID, recipe_id: UUID) -> bool:
         """
         Toggle like/unlike for a given recipe by a user.
-        
+
         Returns:
             True if liked, False if unliked.
         """
         like, created = await RecipeLike.get_or_create(user_id=user_id, recipe_id=recipe_id)
 
         if not created:
-            # Already liked → unlike it
+            # Already liked → Unlike it
             await like.delete()
+
+            # Delete the existing "like" notification if any
+            await Notification.filter(
+                actor_id=user_id,
+                user__recipes__id=recipe_id,
+                notification_type="like",
+                target_object_id=str(recipe_id),
+                target_content_type="recipe"
+            ).delete()
+
             return False
 
-        # Liked just now
-        #TODO:send notifications to chef
+        recipe = await Recipe.get(id=recipe_id).prefetch_related("user")
+        chef = recipe.user
+
+        if chef.id != user_id:
+            try:
+                notification = await Notification.create(
+                    user_id=chef.id,  # Recipient
+                    actor_id=user_id,  # Liker
+                    notification_type="like",
+                    target_object_id=str(recipe_id),
+                    target_content_type="recipe",
+                    verb=f"liked your recipe '{recipe.name[:100]}'",
+                    preview=recipe.name[:100],
+                    image_url=getattr(recipe, "cover_image_url", None)
+                )
+
+                from app import notifications_namespace
+                await notifications_namespace.trigger_notification({
+                    "user_id": str(chef.id),
+                    "notifications": [notification],
+                })
+
+            except Exception as e:
+                logger.warning(f"[Notification Create] Failed to create or send notification: {e}")
+
         return True
+
+
     async def like_unlike_favourite(self, user_id: UUID, recipe_id: UUID) -> bool:
         """
         Toggle like/unlike for a given recipe by a user.
@@ -506,33 +572,74 @@ class RecipeService:
             await share.save()
 
         return True
-    
+        
     async def post_comment(self, user_id: UUID, recipe_id: UUID, comment: str) -> Union[RecipeComment, None]:
         """
         Post a new top-level comment on a recipe.
-
         Returns:
             RecipeComment object if created successfully, else None.
         """
         try:
+            # Get the recipe with the owner
+            recipe = await Recipe.get_or_none(id=recipe_id).prefetch_related("user")
+            if not recipe:
+                return None
+
+            # Create the comment
             comment_obj = await RecipeComment.create(
                 user_id=user_id,
                 recipe_id=recipe_id,
                 content=comment.strip()
             )
-            # TODO: Notify recipe author
+
+            # Notify recipe owner (not self)
+            if recipe.user_id != user_id:
+                try:
+                    noty = await Notification.create(
+                        user_id=recipe.user_id,               # recipient
+                        actor_id=user_id,                     # who commented
+                        notification_type="comment",
+                        target_object_id=str(comment_obj.id),
+                        target_content_type="recipecomment",
+                        verb="commented on your recipe",
+                        thread_id=None,
+                        preview=comment[:100]
+                    )
+
+                    # Try to emit via WebSocket
+                    try:
+                        from app import notifications_namespace
+                        await notifications_namespace.trigger_notification({
+                            "user_id": str(recipe.user_id),
+                            "notifications": [noty],
+                        })
+                    except Exception as emit_error:
+                        logger.warning(f"[WebSocket Emit] Notification failed: {emit_error}")
+
+                except Exception as notify_error:
+                    logger.warning(f"[Notification Create] Notification failed: {notify_error}")
+
             return comment_obj
+
         except Exception as e:
-            print("Error posting comment:", e)
+            logger.exception("Error posting comment")
             return None
+
+
+        
     async def reply_to_comment(self, user_id: UUID, recipe_id: UUID, parent_comment_id: int, reply: str) -> Union[RecipeComment, None]:
         """
         Reply to an existing comment on a recipe.
+        Notifies the parent comment owner and recipe owner if they are different from the replier.
         """
         try:
-            parent = await RecipeComment.get_or_none(id=parent_comment_id, recipe_id=recipe_id)
+            parent = await RecipeComment.get_or_none(id=parent_comment_id, recipe_id=recipe_id).prefetch_related("user", "recipe")
             if not parent:
-                return None  # parent doesn't exist or wrong recipe
+                return None
+
+            recipe = await Recipe.get_or_none(id=recipe_id).prefetch_related("user")
+            if not recipe:
+                return None
 
             comment_obj = await RecipeComment.create(
                 user_id=user_id,
@@ -540,11 +647,59 @@ class RecipeService:
                 content=reply.strip(),
                 parent_id=parent_comment_id
             )
-            # TODO: Optionally notify the parent commenter
+
+            try:
+                from app import notifications_namespace  # Lazy import to avoid circular import issues
+
+                # Notify parent commenter if not self
+                if parent.user_id != user_id:
+                    try:
+                        parent_notification = await Notification.create(
+                            user_id=parent.user_id,
+                            actor_id=user_id,
+                            notification_type="comment_reply",
+                            target_object_id=str(comment_obj.id),
+                            target_content_type="recipecomment",
+                            verb="replied to your comment",
+                            thread_id=None,
+                            preview=reply[:100]
+                        )
+                        await notifications_namespace.trigger_notification({
+                            "user_id": str(parent.user_id),
+                            "notifications": [parent_notification],
+                        })
+                    except Exception as e:
+                        logger.warning(f"[Notification: Parent Commenter] Failed to notify: {e}")
+
+                # Notify recipe owner if not self or already notified
+                if recipe.user_id != user_id and recipe.user_id != parent.user_id:
+                    try:
+                        recipe_owner_notification = await Notification.create(
+                            user_id=recipe.user_id,
+                            actor_id=user_id,
+                            notification_type="comment_reply",
+                            target_object_id=str(comment_obj.id),
+                            target_content_type="recipecomment",
+                            verb="commented on your recipe",
+                            thread_id=None,
+                            preview=reply[:100]
+                        )
+                        await notifications_namespace.trigger_notification({
+                            "user_id": str(recipe.user_id),
+                            "notifications": [recipe_owner_notification],
+                        })
+                    except Exception as e:
+                        logger.warning(f"[Notification: Recipe Owner] Failed to notify: {e}")
+
+            except ImportError as e:
+                logger.warning(f"[Notification Import] Failed to import notifications_namespace: {e}")
+
             return comment_obj
+
         except Exception as e:
-            print("Error posting reply:", e)
+            logger.error(f"[Reply Comment] Error creating reply: {e}")
             return None
+
         
     async def edit_comment(self, user_id: UUID, comment_id: int, new_content: str) -> Union[RecipeComment, None]:
         """

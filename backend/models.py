@@ -480,7 +480,7 @@ class Notification(models.Model):
     )
 
     # Target object info (polymorphic relationship)
-    target_object_id = fields.UUIDField(null=True)
+    target_object_id = fields.CharField(max_length=45,null=True)
     target_content_type = fields.CharField(
         max_length=50,
         null=True,
