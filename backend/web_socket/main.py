@@ -1,8 +1,13 @@
 import socketio
 from utils.recipes import RecipeService
-from utils.auth import AuthService,get_current_user
+from utils.auth import AuthService, get_current_user
+from models import Notification
+from uuid import UUID
+from datetime import datetime, timedelta
+from socketio import AsyncNamespace
 
 from utils.logger import setup_logger
+
 logger = setup_logger("socket")
 
 
@@ -15,10 +20,7 @@ class MainNamespace(socketio.AsyncNamespace):
     def on_disconnect(self, sid):
         print(f"[Main] Disconnected: {sid}")
 
-    async def on_join(self, sid, data):
-        ...
-
-
+    async def on_join(self, sid, data): ...
 
 
 class RecipesNamespace(socketio.AsyncNamespace):
@@ -54,7 +56,7 @@ class RecipesNamespace(socketio.AsyncNamespace):
 
         except Exception as e:
             logger.exception(f"[RecipesNamespace Error]: {e}")
-            
+
     async def on_update_view(self, sid, data):
         try:
             token = data.get("token")
@@ -70,44 +72,127 @@ class RecipesNamespace(socketio.AsyncNamespace):
                 return
 
             user_id = user.id
-            recipe_meta = await self.recipe_service.update_view_activity(user_id, recipe_id, active_time)
+            recipe_meta = await self.recipe_service.update_view_activity(
+                user_id, recipe_id, active_time
+            )
 
             if recipe_meta:
                 logger.debug(f"[Recipes] updated view activity  for recipe {recipe_id}")
 
         except Exception as e:
-            logger.exception(f"[RecipesNamespace Error]: {e}")            
-            
-            
+            logger.exception(f"[RecipesNamespace Error]: {e}")
 
-class UsersNamespace(socketio.AsyncNamespace,AuthService):
+
+class UsersNamespace(socketio.AsyncNamespace, AuthService):
     def __init__(self, namespace, user_service: AuthService):
         super().__init__(namespace)
         self.user_service = user_service
 
-    def on_connect(self, sid, environ):
+    async def on_connect(self, sid, environ):
         print(f"[Users] Connected: {sid}")
 
+    async def on_join_respective(self, sid, data):
+        user_id = data.get("user_id")
+        user = await self.user_service.is_user_exists(user_id)
+        if user:
+            await self.enter_room(sid, user_id)  # Use `enter_room` instead of raw `join_room`
+            logger.info(f"User {user_id} joined room {user_id}")
+            
+            await self.emit(
+            "new_notifications",
+            {"notifications": "you have joined the room"},
+            room=data["user_id"],
+           ) 
+        
+            
     async def on_check_username_availability(self, sid, data):
         try:
             username = data.get("username")
             user_id = data.get("user_id")
-            logger.debug(f"[Users] Checking availability for username: {username} from {sid}")  
+            logger.debug(
+                f"[Users] Checking availability for username: {username} from {sid}"
+            )
             if not username or not user_id:
                 logger.warning(f"[Users] Missing username or user_id from {sid}")
                 return
 
-            is_available = await self.user_service.check_username_availability(username,user_id)
-            await self.emit("check_username_availability", {"username": username, "available": is_available}, room=sid)
+            is_available = await self.user_service.check_username_availability(
+                username, user_id
+            )
+            await self.emit(
+                "check_username_availability",
+                {"username": username, "available": is_available},
+                room=sid,
+            )
         except Exception as e:
             logger.exception(f"[UsersNamespace Error]: {e}")
-            
-            
-class NotificationsNamespace(socketio.AsyncNamespace):
-    namespace = "/notifications"
 
+
+
+class NotificationsNamespace(socketio.AsyncNamespace, AuthService):
+    def __init__(self, namespace, user_service: AuthService):
+            super().__init__(namespace)
+            self.user_service = user_service
+            
     async def on_connect(self, sid, environ):
         print(f"[Notifications] Connected: {sid}")
 
+    async def on_join_respective(self, sid, data):
+        user_id = data.get("user_id")
+        user = await self.user_service.is_user_exists(user_id)
+        if user:
+            await self.enter_room(sid, user_id)  # Use `enter_room` instead of raw `join_room`
+            logger.info(f"User {user_id} joined room {user_id}")
+            
+            await self.emit(
+            "new_notifications",
+            {"notifications": "you have joined the room"},
+            room=data["user_id"],
+           ) 
+        
     async def on_check_updates(self, sid, data):
-        ...
+        try:
+            user_id = UUID(data.get("user_id"))
+            notys = await Notification.filter(user_id=user_id, is_read=False).all()
+            notifications = self.format_notifications(notys)
+
+            await self.emit(
+                "new_notifications",
+                {"notifications": notifications},
+                room=sid,
+            )
+        except Exception as err:
+            logger.exception("[Notifications] Failed to check updates", exc_info=err)
+
+    def format_notifications(self, notys):
+        return [
+            {
+                "id": str(noty.id),
+                "type": noty.notification_type,
+                "actor": getattr(noty.actor, "username", "Unknown"),
+                "avatar": getattr(noty.actor, "avatar_url", ""),
+                "action": noty.verb,
+                "target": getattr(noty, "target_preview", "Something"),
+                "contextId": str(noty.target_object_id or ""),
+                "created_at": noty.created_at.isoformat() if noty.created_at else datetime.utcnow().isoformat(),
+                "read": noty.is_read,
+                "actions": [{"label": "View", "action": "view"}]
+            }
+            for noty in notys
+        ]
+
+
+    async def trigger_notification(self, data: dict):
+        try:
+            notys = data.get("notifications", [])
+            notifications = self.format_notifications(notys)
+            logger.info("Emiitting notifications %s!! in room %s",notifications,data["user_id"])
+
+            await self.emit(
+                "new_notifications",
+                {"notifications": notifications},
+                room=data["user_id"],
+            )
+        except Exception as err:
+            logger.exception("[Notifications] Failed to trigger notification", exc_info=err)
+

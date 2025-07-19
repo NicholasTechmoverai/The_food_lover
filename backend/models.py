@@ -441,6 +441,97 @@ class ChefRequest(Model):
 
 
 
+class Notification(models.Model):
+    # Unique ID
+    id = fields.UUIDField(pk=True, default=uuid.uuid4)
+
+    # The user receiving the notification
+    user = fields.ForeignKeyField(
+        "models.User",
+        related_name="notifications",
+        on_delete=fields.CASCADE
+    )
+
+    # Who triggered the notification (may be null for system events)
+    actor = fields.ForeignKeyField(
+        "models.User",
+        related_name="triggered_notifications",
+        null=True,
+        on_delete=fields.SET_NULL
+    )
+
+    # Notification Type
+    NOTIFICATION_TYPES = (
+        ("like", "Like"),
+        ("comment", "Comment"),
+        ("mention", "Mention"),
+        ("follow", "Follow"),
+        ("share", "Share"),
+        ("message", "Message"),
+        ("system", "System"),
+        ("post", "Post"),
+        ("reaction", "Reaction"),
+        ("review", "Review"),
+        ("event", "Event"),
+    )
+    notification_type = fields.CharField(
+        max_length=20,
+        choices=NOTIFICATION_TYPES
+    )
+
+    # Target object info (polymorphic relationship)
+    target_object_id = fields.UUIDField(null=True)
+    target_content_type = fields.CharField(
+        max_length=50,
+        null=True,
+        choices=[
+            ("post", "Post"),
+            ("comment", "Comment"),
+            ("recipe", "Recipe"),
+            ("user", "User"),
+            ("event", "Event"),
+            ("message", "Message"),
+        ]
+    )
+
+    # Human-readable info
+    verb = fields.CharField(max_length=100)             # e.g. "liked your post"
+    preview = fields.TextField(null=True)               # Optional snippet or content preview
+    image_url = fields.CharField(max_length=500, null=True)  # Optional thumbnail or profile image
+
+    # Read and Time
+    is_read = fields.BooleanField(default=False)
+    created_at = fields.DatetimeField(auto_now_add=True)
+
+    # Threading/Grouping (for stacking similar notifications)
+    thread_id = fields.UUIDField(null=True)
+    parent_notification = fields.ForeignKeyField(
+        "models.Notification",
+        related_name="children",
+        null=True,
+        on_delete=fields.SET_NULL
+    )
+
+    # Arbitrary structured data
+    metadata = fields.JSONField(default=dict)
+
+    class Meta:
+        ordering = ["-created_at"]
+        table = "notifications"
+        indexes = [
+            ("user", "is_read"),
+            ("user", "created_at"),
+            ("thread_id",),
+            ("target_object_id", "target_content_type"),
+        ]
+
+    def __str__(self):
+        actor_name = self.actor.username if self.actor else "System"
+        return f"{actor_name} {self.verb} ({self.notification_type})"
+
+
+    
+
 #  Initialize Tortoise ORM
 # from tortoise import Tortoise, run_async
 

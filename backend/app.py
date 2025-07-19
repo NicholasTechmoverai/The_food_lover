@@ -46,7 +46,8 @@ sio = socketio.AsyncServer(
 sio.register_namespace(MainNamespace("/main"))
 sio.register_namespace(RecipesNamespace("/recipes", RecipeService()))
 sio.register_namespace(UsersNamespace("/users", AuthService()))
-sio.register_namespace(NotificationsNamespace("/notifications"))
+notifications_namespace = NotificationsNamespace("/notifications",AuthService())
+sio.register_namespace(notifications_namespace)
 
 socket_app = socketio.ASGIApp(
     sio,

@@ -262,7 +262,9 @@ onMounted(() => {
 });
 
 
-
+watch(() => route.query.tab, (newTab) => {
+  activeTab.value = newTab;
+});
 
 const activeTabLabel = computed(() => {
   return tabs.value.find(tab => tab.id === activeTab.value)?.label || ''
@@ -483,6 +485,7 @@ const mockApiGetNotifications = () => {
     setTimeout(() => {
       resolve({
         data: [
+          // Recipe likes group (multiple users)
           {
             id: 1,
             type: 'like',
@@ -517,8 +520,10 @@ const mockApiGetNotifications = () => {
             target: 'Spaghetti Carbonara',
             contextId: 'recipe-123',
             created_at: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
-            read: true
+            read: false
           },
+          
+          // Comment thread group
           {
             id: 4,
             type: 'comment',
@@ -548,6 +553,20 @@ const mockApiGetNotifications = () => {
             preview: 'I found this brand works really well for beginners'
           },
           {
+            id: 8,
+            type: 'comment',
+            actor: 'Alex Johnson',
+            avatar: 'https://randomuser.me/api/portraits/men/86.jpg',
+            action: 'mentioned you in a comment',
+            target: 'Knife Skills 101',
+            contextId: 'post-456',
+            created_at: new Date(Date.now() - 1000 * 60 * 60 * 1).toISOString(),
+            read: false,
+            preview: '@ChefMaster What do you think about ceramic knives?'
+          },
+          
+          // Follow notifications
+          {
             id: 6,
             type: 'follow',
             actor: 'Lisa Ray',
@@ -561,6 +580,17 @@ const mockApiGetNotifications = () => {
             ]
           },
           {
+            id: 9,
+            type: 'follow',
+            actor: 'Mark Taylor',
+            avatar: 'https://randomuser.me/api/portraits/men/95.jpg',
+            action: 'started following you',
+            created_at: new Date(Date.now() - 1000 * 60 * 60 * 12).toISOString(),
+            read: false
+          },
+          
+          // System notifications
+          {
             id: 7,
             type: 'system',
             actor: 'System',
@@ -572,13 +602,141 @@ const mockApiGetNotifications = () => {
               { label: 'View', action: 'view' },
               { label: 'Share', action: 'share' }
             ]
+          },
+          {
+            id: 10,
+            type: 'system',
+            actor: 'System',
+            action: 'Weekly digest',
+            target: '5 new recipes you might like',
+            created_at: new Date(Date.now() - 1000 * 60 * 60 * 72).toISOString(),
+            read: true,
+            preview: 'Check out these trending recipes from chefs you follow'
+          },
+          
+          // Message notifications
+          {
+            id: 11,
+            type: 'message',
+            actor: 'Sophia Lee',
+            avatar: 'https://randomuser.me/api/portraits/women/28.jpg',
+            action: 'sent you a message',
+            target: '',
+            contextId: 'message-789',
+            created_at: new Date(Date.now() - 1000 * 60 * 60 * 6).toISOString(),
+            read: false,
+            preview: 'Hey! I tried your lasagna recipe and it was amazing! Do you have any tips for...',
+            actions: [
+              { label: 'Reply', action: 'reply' }
+            ]
+          },
+          
+          // Recipe shares
+          {
+            id: 12,
+            type: 'share',
+            actor: 'Robert Brown',
+            avatar: 'https://randomuser.me/api/portraits/men/42.jpg',
+            action: 'shared your recipe',
+            target: 'Chocolate Soufflé',
+            contextId: 'recipe-789',
+            created_at: new Date(Date.now() - 1000 * 60 * 60 * 8).toISOString(),
+            read: true,
+            actions: [
+              { label: 'View', action: 'view' }
+            ]
+          },
+          
+          // Event reminders
+          {
+            id: 13,
+            type: 'reminder',
+            actor: 'System',
+            action: 'Upcoming live cooking class',
+            target: 'Italian Pasta Masterclass',
+            contextId: 'event-123',
+            created_at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2).toISOString(),
+            read: false,
+            preview: 'Starts in 2 hours - Click to join',
+            actions: [
+              { label: 'Join', action: 'join' },
+              { label: 'Remind me', action: 'remind' }
+            ]
+          },
+          
+          // New recipe from followed chef
+          {
+            id: 14,
+            type: 'new-recipe',
+            actor: 'Chef Maria',
+            avatar: 'https://randomuser.me/api/portraits/women/52.jpg',
+            action: 'published a new recipe',
+            target: 'Authentic Paella Valenciana',
+            contextId: 'recipe-890',
+            created_at: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(),
+            read: false,
+            preview: 'The traditional Spanish rice dish with seafood and chicken',
+            actions: [
+              { label: 'View recipe', action: 'view' },
+              { label: 'Save', action: 'save' }
+            ]
+          },
+          
+          // Achievement unlocked
+          {
+            id: 15,
+            type: 'achievement',
+            actor: 'System',
+            action: 'Achievement unlocked',
+            target: 'Master Chef Level 2',
+            contextId: 'achievement-456',
+            created_at: new Date(Date.now() - 1000 * 60 * 60 * 1).toISOString(),
+            read: false,
+            preview: 'You reached 100 recipe likes!',
+            actions: [
+              { label: 'Share', action: 'share' }
+            ]
+          },
+          
+          // Recipe review
+          {
+            id: 16,
+            type: 'review',
+            actor: 'James Wilson',
+            avatar: 'https://randomuser.me/api/portraits/men/67.jpg',
+            action: 'reviewed your recipe',
+            target: 'Beef Wellington',
+            contextId: 'recipe-567',
+            created_at: new Date(Date.now() - 1000 * 60 * 60 * 10).toISOString(),
+            read: true,
+            preview: '⭐️⭐️⭐️⭐️⭐️ Perfect execution! The pastry was flaky and the beef was cooked to perfection.',
+            actions: [
+              { label: 'View review', action: 'view' }
+            ]
+          },
+          
+          // Group cooking challenge
+          {
+            id: 17,
+            type: 'challenge',
+            actor: 'Cooking Club',
+            avatar: 'https://randomuser.me/api/portraits/lego/5.jpg',
+            action: 'invited you to join a challenge',
+            target: '30-Minute Meals',
+            contextId: 'challenge-123',
+            created_at: new Date(Date.now() - 1000 * 60 * 60 * 36).toISOString(),
+            read: false,
+            preview: 'Can you create a delicious meal in 30 minutes or less?',
+            actions: [
+              { label: 'Accept', action: 'accept' },
+              { label: 'Decline', action: 'decline' }
+            ]
           }
         ]
       })
     }, 800)
   })
 }
-
 // Lifecycle hooks
 onMounted(() => {
   fetchNotifications()

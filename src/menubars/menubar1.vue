@@ -191,21 +191,21 @@ const noty_menu_items = ref([
         label: () => `Likes (${likeCount.value})`,
         icon: 'pi pi-heart',
         command: () => {
-            console.log('❤️ Opening likes...');
+            router.push('/notifications?tab=likes')
         }
     },
     {
         label: () => `Messages (${messageCount.value})`,
         icon: 'pi pi-comments',
         command: () => {
-            console.log('💬 Opening messages...');
+            router.push('/notifications?tab=mentions')
         }
     },
     {
         label: () => `Mentions (${mentionCount.value})`,
         icon: 'pi pi-at',
         command: () => {
-            console.log('🔔 Viewing mentions...');
+            router.push('/notifications?tab=mentions')
         }
     }
 ]);

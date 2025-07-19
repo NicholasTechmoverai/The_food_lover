@@ -11,6 +11,7 @@ import { initializeSession, isTokenExpired, send_verify } from './apis/auth.js'
 import { useRoute } from 'vue-router'
 import ClockLoad from './loaders/ClockLoad.vue'
 import BusyFingersLoader from './loaders/BusyFingersLoader.vue'
+import { notificationsSocket, usersSocket } from './a_websocket/index.js'
 
 
 const auth = useAuthStore()
@@ -219,10 +220,27 @@ onMounted(async () => {
     await checkUserVerification()
 
     startTokenCheck()
+    if(auth.user.id){
+      usersSocket.emit("join_respective",{user_id:auth.user.id})
+      notificationsSocket.emit("join_respective",{user_id:auth.user.id})
+    }
+
   } catch (error) {
     console.error('App init error:', error)
   }
 })
+
+
+notificationsSocket.on("new_notifications", (data) => {
+  console.log("New notifications received:", data);
+
+  // Optionally show a toast popup
+  // showToast(data.notifications[0]?.action || "You have a new notification!");
+});
+usersSocket.on("new_notifications", (data) => {
+  console.log("New notifications received:", data);
+});
+
 
 // --- Reactively check route changes (e.g. from login to recipes) ---
 watch(() => route.name, async () => {
