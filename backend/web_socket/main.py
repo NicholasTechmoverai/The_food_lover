@@ -5,7 +5,7 @@ from models import Notification
 from uuid import UUID
 from datetime import datetime, timedelta
 from socketio import AsyncNamespace
-
+from utils.notification import format_notifications
 from utils.logger import setup_logger
 
 logger = setup_logger("socket")
@@ -129,6 +129,8 @@ class UsersNamespace(socketio.AsyncNamespace, AuthService):
 
 
 
+
+
 class NotificationsNamespace(socketio.AsyncNamespace, AuthService):
     def __init__(self, namespace, user_service: AuthService):
             super().__init__(namespace)
@@ -154,7 +156,7 @@ class NotificationsNamespace(socketio.AsyncNamespace, AuthService):
         try:
             user_id = UUID(data.get("user_id"))
             notys = await Notification.filter(user_id=user_id, is_read=False).all()
-            notifications = self.format_notifications(notys)
+            notifications = await format_notifications(notys)
 
             await self.emit(
                 "new_notifications",
@@ -164,28 +166,11 @@ class NotificationsNamespace(socketio.AsyncNamespace, AuthService):
         except Exception as err:
             logger.exception("[Notifications] Failed to check updates", exc_info=err)
 
-    def format_notifications(self, notys):
-        return [
-            {
-                "id": str(noty.id),
-                "type": noty.notification_type,
-                "actor": getattr(noty.actor, "username", "Unknown"),
-                "avatar": getattr(noty.actor, "avatar_url", ""),
-                "action": noty.verb,
-                "target": getattr(noty, "target_preview", "Something"),
-                "contextId": str(noty.target_object_id or ""),
-                "created_at": noty.created_at.isoformat() if noty.created_at else datetime.utcnow().isoformat(),
-                "read": noty.is_read,
-                "actions": [{"label": "View", "action": "view"}]
-            }
-            for noty in notys
-        ]
-
 
     async def trigger_notification(self, data: dict):
         try:
             notys = data.get("notifications", [])
-            notifications = self.format_notifications(notys)
+            notifications = await format_notifications(notys)
             logger.info("Emiitting notifications %s!! in room %s",notifications,data["user_id"])
 
             await self.emit(
