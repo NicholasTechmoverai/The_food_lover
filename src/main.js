@@ -54,7 +54,9 @@ import InputIcon from 'primevue/inputicon';
 import InputOtp from 'primevue/inputotp';
 import Carousel from 'primevue/carousel';
 import BlockUI from 'primevue/blockui';
-
+import ToggleSwitch from 'primevue/toggleswitch';
+import Badge from 'primevue/badge';
+import OverlayBadge from 'primevue/overlaybadge';
 
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import 'primeicons/primeicons.css';
@@ -119,6 +121,9 @@ app.component('InputIcon', InputIcon)
 app.component('InputOtp',InputOtp)
 app.component('Carousel', Carousel)
 app.component('BlockUI', BlockUI)
+app.component('ToggleSwitch', ToggleSwitch)
+app.component('OverlayBadge', OverlayBadge)
+app.component('Badge', Badge)
 
 
 

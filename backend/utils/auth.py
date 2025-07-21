@@ -302,7 +302,6 @@ class AuthService:
                 status_code=500, detail="An error occurred while updating the user."
             )
 
-
     async def follow_unfollow(self, user_id: UUID, chef_id: UUID) -> bool:
         """
         Toggle follow/unfollow for a given chef by a user.
@@ -335,27 +334,27 @@ class AuthService:
                 target_object_id=None,
                 target_content_type="user",
                 verb="followed you",
-                thread_id=None,
+                thread_id=chef_id,
                 preview="started following you.",
             )
 
             # Try to import and trigger WebSocket notification
             try:
                 from app import notifications_namespace
+
                 await notifications_namespace.trigger_notification({
-                        "user_id": str(chef_id),
-                        "notifications": [noty],
-                    })
+                    "user_id": str(chef_id),
+                    "notifications": [noty],
+                })
 
             except ImportError as e:
                 # Optionally log this exception
                 print(f"WebSocket notification import failed: {e}")
 
             return True
-        
+
         except Exception as err:
             logger.exception(err)
-
 
     async def get_followers(
         self, target_id: UUID, user_id: UUID, offset: int = 0, limit: int = 10
@@ -599,7 +598,7 @@ class AuthService:
 
         user.is_chef = True
         await user.save()
-        
+
         noty = await Notification.create(
             user_id=user.id,
             actor_id=user_id,
@@ -614,10 +613,11 @@ class AuthService:
         # Try to import and trigger WebSocket notification
         try:
             from app import notifications_namespace
+
             await notifications_namespace.trigger_notification({
-                    "user_id": str(user.id),
-                    "notifications": [noty],
-                })
+                "user_id": str(user.id),
+                "notifications": [noty],
+            })
 
         except ImportError as e:
             logger.error(f"WebSocket notification import failed: {e}")
@@ -658,6 +658,7 @@ class AuthService:
                 "name": user.username or user.name,
                 "isVerified": user.is_verified,
                 "isChef": user.is_chef,
+                "theme": user.theme,
                 "profilePic": user.picture_url
                 if user.picture_url.startswith("https://")
                 else f"{BASE_SERVER}/{user.picture_url}",

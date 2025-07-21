@@ -62,3 +62,41 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 })
+
+
+
+export const useNotificationStore = defineStore('noty', () => {
+  // State
+  const liveNotifications = ref(null)
+
+  const notificationsCount = ref({
+    likes: 0,
+    comment: 0,
+    mentions: 0,
+    follows: 0,
+    system: 0,
+    all: 0,
+  })
+
+  // Actions
+  const setLiveNotifications = (notifications) => {
+    if(!notifications)return
+    liveNotifications.value = [...notifications]
+  }
+
+  const setNotificationsCount = (count) => {
+    notificationsCount.value = count
+  }
+
+  const clearLiveNotifications = () => {
+    liveNotifications.value = null
+  }
+
+  return {
+    liveNotifications,
+    notificationsCount,
+    setLiveNotifications,
+    setNotificationsCount,
+    clearLiveNotifications,
+  }
+})

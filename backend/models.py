@@ -481,6 +481,8 @@ class Notification(models.Model):
 
     # Target object info (polymorphic relationship)
     target_object_id = fields.CharField(max_length=45,null=True)
+    second_target_object_id = fields.CharField(max_length=45,null=True)
+
     target_content_type = fields.CharField(
         max_length=50,
         null=True,
@@ -504,7 +506,7 @@ class Notification(models.Model):
     created_at = fields.DatetimeField(auto_now_add=True)
 
     # Threading/Grouping (for stacking similar notifications)
-    thread_id = fields.UUIDField(null=True)
+    thread_id = fields.CharField(max_length=500,null=True)
     parent_notification = fields.ForeignKeyField(
         "models.Notification",
         related_name="children",
@@ -529,6 +531,26 @@ class Notification(models.Model):
         actor_name = self.actor.username if self.actor else "System"
         return f"{actor_name} {self.verb} ({self.notification_type})"
 
+
+class NotificationsSettings(models.Model):
+    id = fields.UUIDField(pk=True, default=uuid.uuid4)
+
+    user = fields.OneToOneField("models.User", related_name="notification_settings", on_delete=fields.CASCADE)
+
+    email_notifications = fields.BooleanField(default=True)
+    push_notifications = fields.BooleanField(default=True)
+
+    like = fields.BooleanField(default=True)
+    comment = fields.BooleanField(default=True)
+    mention = fields.BooleanField(default=True)
+    follow = fields.BooleanField(default=True)
+    system = fields.BooleanField(default=True)
+
+    class Meta:
+        table = "notification_settings"
+
+    def __str__(self):
+        return f"NotificationSettings(user={self.user_id})"
 
     
 

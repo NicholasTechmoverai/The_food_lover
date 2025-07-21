@@ -146,11 +146,11 @@ class NotificationsNamespace(socketio.AsyncNamespace, AuthService):
             await self.enter_room(sid, user_id)  # Use `enter_room` instead of raw `join_room`
             logger.info(f"User {user_id} joined room {user_id}")
             
-            await self.emit(
-            "new_notifications",
-            {"notifications": "you have joined the room"},
-            room=data["user_id"],
-           ) 
+        #     await self.emit(
+        #     "new_notifications",
+        #     {"notifications": "you have joined the room"},
+        #     room=data["user_id"],
+        #    ) 
         
     async def on_check_updates(self, sid, data):
         try:

@@ -6,15 +6,17 @@ import { onMounted, ref, computed, onBeforeUnmount, watch } from 'vue'
 import { useControl } from './store/control.js'
 import { useConfirm } from 'primevue/useconfirm'
 import { useToast } from 'primevue/usetoast'
-import { useAuthStore } from './store/user.js'
+import { useAuthStore, useNotificationStore } from './store/user.js'
 import { initializeSession, isTokenExpired, send_verify } from './apis/auth.js'
 import { useRoute } from 'vue-router'
 import ClockLoad from './loaders/ClockLoad.vue'
 import BusyFingersLoader from './loaders/BusyFingersLoader.vue'
 import { notificationsSocket, usersSocket } from './a_websocket/index.js'
+import { make_a_post } from './apis/index.js'
 
 
 const auth = useAuthStore()
+const notificaitions = useNotificationStore()
 const control = useControl()
 const confirm = useConfirm()
 const toast = useToast()
@@ -159,7 +161,7 @@ const promptTokenRefresh = () => {
       toast.add({
         severity: success ? 'success' : 'error',
         summary: success ? 'Session Extended' : 'Session Failed',
-        detail: success 
+        detail: success
           ? ''
           : 'Unable to extend session. Please try again.',
         life: 3000,
@@ -202,6 +204,28 @@ const startTokenCheck = () => {
   }, 300000) // every 5 minutes
 }
 
+const getNotificationsCount = async () => {
+  try {
+    const res = await make_a_post(
+      `/notifications/${auth.user.name}/counts`,
+      auth.token, {}
+    )
+
+    if (res.data) {
+      notificaitions.notificationsCount = res.data
+    }
+  } catch (error) {
+    console.error('Error Getting Notifications:', error)
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: 'Failed to Get notifications Counts',
+      life: 3000
+    })
+  }
+
+}
+
 
 // --- Theme and auth on load ---
 onMounted(async () => {
@@ -220,10 +244,12 @@ onMounted(async () => {
     await checkUserVerification()
 
     startTokenCheck()
-    if(auth.user.id){
-      usersSocket.emit("join_respective",{user_id:auth.user.id})
-      notificationsSocket.emit("join_respective",{user_id:auth.user.id})
+    if (auth.user.id) {
+      usersSocket.emit("join_respective", { user_id: auth.user.id })
+      notificationsSocket.emit("join_respective", { user_id: auth.user.id })
     }
+    await getNotificationsCount()
+
 
   } catch (error) {
     console.error('App init error:', error)
@@ -231,14 +257,20 @@ onMounted(async () => {
 })
 
 
+
 notificationsSocket.on("new_notifications", (data) => {
   console.log("New notifications received:", data);
+
+  if (data) {
+    notificaitions.setLiveNotifications(data)
+    getNotificationsCount()
+  }
 
   // Optionally show a toast popup
   // showToast(data.notifications[0]?.action || "You have a new notification!");
 });
 usersSocket.on("new_notifications", (data) => {
-  console.log("New notifications received:", data);
+  // console.log("New notifications received:", data);
 });
 
 
@@ -275,9 +307,10 @@ onBeforeUnmount(() => {
     </template>
   </ConfirmDialog>
 
-  <div v-if="blocked" class="fixed top-[30%] left-1/2 -translate-x-1/2 z-[1100] bg-gray-600/100 backdrop-blur-2xl h-[200px] w-fit flex flex-col justify-center items-center rounded-2xl p-3">
+  <div v-if="blocked"
+    class="fixed top-[30%] left-1/2 -translate-x-1/2 z-[1100] bg-gray-600/100 backdrop-blur-2xl h-[200px] w-fit flex flex-col justify-center items-center rounded-2xl p-3">
     <BusyFingersLoader />
-    <p class="mt-10 flex gap-2 flex-row justify-center items-center">Waiting  for acount verification...<span>
+    <p class="mt-10 flex gap-2 flex-row justify-center items-center">Waiting for acount verification...<span>
         <ClockLoad />
       </span></p>
   </div>

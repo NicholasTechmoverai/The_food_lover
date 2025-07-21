@@ -108,17 +108,22 @@
             <!-- Right Icons -->
             <template #end>
                 <div v-if="user && user.id" class="flex items-center gap-3">
-                    <Button @click="router.push('/saved')" icon="pi pi-bookmark" severity="secondary" rounded aria-label="Saved"
+                    <Button @click="router.push('/saved')" icon="pi pi-bookmark" severity="secondary" rounded
+                        aria-label="Saved"
                         class="border-purple-400 dark:border-purple-300 text-purple-400 dark:text-purple-300 hover:bg-purple-400/10 dark:hover:bg-purple-300/10 w-10 h-10" />
                     <div class="relative">
-                        <Button icon="pi pi-bell" @click="Notytoggle" aria-haspopup="true" severity="secondary" rounded
-                            aria-label="Notifications"
-                            class="border-amber-400 dark:border-amber-300 text-amber-400 dark:text-amber-300 hover:bg-amber-400/10 dark:hover:bg-amber-300/10 w-10 h-10" />
-                        <span
-                            class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
-                            3
-                        </span>
-                        <TieredMenu ref="noty_menu" id="overlay_tmenu" :model="noty_menu_items" popup />
+                        <router-link to="/notifications">
+                            <Button icon="pi pi-bell" aria-haspopup="true" severity="secondary" rounded
+                                aria-label="Notifications"
+                                class="border-amber-400 dark:border-amber-300 text-amber-400 dark:text-amber-300 hover:bg-amber-400/10 dark:hover:bg-amber-300/10 w-10 h-10" />
+
+
+                            <span
+                                class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+                                {{ notifications.notificationsCount.all }}
+                            </span>
+                        </router-link>
+                        <!-- <TieredMenu ref="noty_menu" id="overlay_tmenu" :model="noty_menu_items" popup /> -->
                     </div>
                     <div class="card flex justify-center">
                         <Avatar :image="user.profilePic" aria-haspopup="true" @click="toggle" shape="circle"
@@ -158,12 +163,13 @@ import { ref } from "vue";
 import { useSiteStore } from '../config/siteConfig.js'
 import SignupButton from "../cards/SignupButton.vue";
 import LoginButton from "../cards/LoginButton.vue";
-import { useAuthStore } from '../store/user.js'
+import { useAuthStore, useNotificationStore } from '../store/user.js'
 import router from "../router/index.js";
 import { goHome, polishUrlName } from "../reusables/index.js"
 import { Logout } from "../apis/auth.js";
 
 const auth = useAuthStore()
+const notifications = useNotificationStore()
 const { siteConfig, getResponsiveValue } = useSiteStore()
 
 const menu = ref();
@@ -180,29 +186,25 @@ const props = defineProps({
 })
 
 
-const likeCount = ref(150);
-const messageCount = ref(9);
-const mentionCount = ref(3);
-
 
 
 const noty_menu_items = ref([
     {
-        label: () => `Likes (${likeCount.value})`,
+        label: () => `Likes (${notifications.notificationsCount.likes})`,
         icon: 'pi pi-heart',
         command: () => {
             router.push('/notifications?tab=likes')
         }
     },
     {
-        label: () => `Messages (${messageCount.value})`,
+        label: () => `Messages (${notifications.notificationsCount.comment})`,
         icon: 'pi pi-comments',
         command: () => {
             router.push('/notifications?tab=mentions')
         }
     },
     {
-        label: () => `Mentions (${mentionCount.value})`,
+        label: () => `Mentions (${notifications.notificationsCount.system})`,
         icon: 'pi pi-at',
         command: () => {
             router.push('/notifications?tab=mentions')
@@ -256,7 +258,7 @@ const Menu_items = ref([
     {
         separator: true
     },
-        {
+    {
         label: 'New recipe',
         icon: 'pi pi-plus',
         command: () => {

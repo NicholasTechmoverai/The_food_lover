@@ -15,7 +15,9 @@ from uuid import UUID
 from models import User as Users
 from typing import Optional
 from pydantic import BaseModel
+from utils.logger import setup_logger
 
+logger = setup_logger("NOTIFICATION ROUTES")
 notification_router = APIRouter()
 
 
@@ -64,7 +66,6 @@ async def fetch_user_notifications(
 async def fetch_user_notifications_counts(
     request: Request,
     username: str,
-    data: NotificationsRequest,
     user: Users = Depends(get_current_user),
     service: NotificationService = Depends(),
 ):
@@ -75,9 +76,11 @@ async def fetch_user_notifications_counts(
     - Rate-limited to 30 requests per minute.
     """
     try:
-        return {"likes": 0, "follows": 0, "all": 0}
+        r= await service.get_user_notifications_counts(user.id)
+        return r
 
     except Exception as e:
+        logger.exception(e)
         raise HTTPException(status_code=500, detail="Failed to fetch notifications.")
 
 
@@ -96,9 +99,8 @@ async def read_user_notifications(
     service: NotificationService = Depends(),
 ):
     try:
-        # Access data.read here
-        read_status = data.read
-        return {"success": True, "noty_id": noty_id, "read": read_status}
+        r = await service.read_notification(noty_id)
+        return r
 
     except Exception as e:
         raise HTTPException(status_code=500, detail="Failed to fetch notifications.")
@@ -117,10 +119,13 @@ async def mark_as_read_user_notifications(
     service: NotificationService = Depends(),
 ):
     try:
-        return {"success": True}
+        r = await service.mark_all_as_read(user.id,data.type)
+        return r
 
     except Exception as e:
+        logger.exception(e)
         raise HTTPException(status_code=500, detail="Failed to fetch notifications.")
+
 
 @notification_router.delete("/notifications/{noty_id}/delete")
 @limiter.limit("30/min")
@@ -131,8 +136,64 @@ async def delete_user_notifications(
     service: NotificationService = Depends(),
 ):
     try:
-        # Access data.read here
-        return {"success": True, "noty_id": noty_id}
+        if not user:
+            raise HTTPException(status_code=404, detail="user not found!")
+        
+        r = await service.delete_notification(noty_id)
+        return r
 
     except Exception as e:
+        logger.exception(e)
+        raise HTTPException(status_code=500, detail="Failed to fetch notifications.")
+
+
+class NotificationTypes(BaseModel):
+    like: Optional[bool] = True
+    comment: Optional[bool] = True
+    mention: Optional[bool] = True
+    follow: Optional[bool] = True
+    system: Optional[bool] = True
+
+class NotificationsSettings(BaseModel):
+    email_notifications: Optional[bool] = True
+    push_notifications: Optional[bool] = True
+    notificationTypes: NotificationTypes = NotificationTypes()
+    
+@notification_router.post("/notifications/settings")
+@limiter.limit("30/min")
+async def notifications_settings(
+    request: Request,
+    data: NotificationsSettings,
+    user: Users = Depends(get_current_user),
+    service: NotificationService = Depends(),
+):
+    try:
+        if not user:
+            raise HTTPException(status_code=404, detail="user not found!")
+        
+        r = await service.update_notification_settings(user.id,data)
+        return r
+
+    except Exception as e:
+        logger.exception(e)
+        raise HTTPException(status_code=500, detail="Failed to fetch notifications.")
+
+
+
+@notification_router.post("/notifications/settings/get")
+@limiter.limit("30/min")
+async def get_notifications_settings(
+    request: Request,
+    user: Users = Depends(get_current_user),
+    service: NotificationService = Depends(),
+):
+    try:
+        if not user:
+            raise HTTPException(status_code=404, detail="user not found!")
+        
+        r = await service.get_notification_settings(user.id)
+        return r
+
+    except Exception as e:
+        logger.exception(e)
         raise HTTPException(status_code=500, detail="Failed to fetch notifications.")
