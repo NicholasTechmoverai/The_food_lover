@@ -24,6 +24,7 @@ import VerifyPage from '../cards/VerifyPage.vue'
 import ProfilePage from '../pages/ProfilePage.vue'
 import NotificationPage from '../pages/NotificationPage.vue'
 import SavedRecipes from '../pages/SavedRecipes.vue'
+import ChefsPage from '../pages/ChefsPage.vue'
 
 
 const routes = [
@@ -32,7 +33,7 @@ const routes = [
     name: 'LandingPage',
     component: LandingPage,
   },
-    {
+  {
     path: '/:username',
     name: 'ProfilePage',
     component: ProfilePage,
@@ -157,12 +158,17 @@ const routes = [
       }
     ]
   },
-     {
+   {
+    path: '/chefs',
+    name: 'Chefs',
+    component: ChefsPage,
+  },
+  {
     path: '/saved',
     name: 'Saved',
     component: SavedRecipes,
   },
-    {
+  {
     path: '/notifications',
     name: 'Notifications',
     component: NotificationPage,

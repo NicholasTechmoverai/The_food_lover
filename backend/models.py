@@ -148,7 +148,8 @@ class Recipe(Model):
     allow_comments = fields.BooleanField(default=True)
     copy_protection = fields.CharEnumField(CopyProtection, default=CopyProtection.basic)
 
-
+    views: fields.ReverseRelation["RecipeView"]
+    likes: fields.ReverseRelation["RecipeLike"]
     class Meta:
         table = "recipes"
         ordering = ["-created_at"]

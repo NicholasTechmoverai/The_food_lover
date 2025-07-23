@@ -1,7 +1,7 @@
 <script setup>
 import Menubar from './components/menubar.vue'
 import Footer from './pages/MainFooter.vue'
-import { applyTheme } from './reusables'
+import { applyTheme, useIsMobile } from './reusables'
 import { onMounted, ref, computed, onBeforeUnmount, watch } from 'vue'
 import { useControl } from './store/control.js'
 import { useConfirm } from 'primevue/useconfirm'
@@ -13,10 +13,11 @@ import ClockLoad from './loaders/ClockLoad.vue'
 import BusyFingersLoader from './loaders/BusyFingersLoader.vue'
 import { notificationsSocket, usersSocket } from './a_websocket/index.js'
 import { make_a_post } from './apis/index.js'
+import router from './router/index.js'
 
-
+const ismobile = useIsMobile()
 const auth = useAuthStore()
-const notificaitions = useNotificationStore()
+const notifications  = useNotificationStore()
 const control = useControl()
 const confirm = useConfirm()
 const toast = useToast()
@@ -212,7 +213,7 @@ const getNotificationsCount = async () => {
     )
 
     if (res.data) {
-      notificaitions.notificationsCount = res.data
+      notifications .notificationsCount = res.data
     }
   } catch (error) {
     console.error('Error Getting Notifications:', error)
@@ -256,19 +257,54 @@ onMounted(async () => {
   }
 })
 
+const showNotification = ref(false);
 
+const showNotificationTemplate = (data) => {
+  console.log("showing notificaiton")
+    if (!showNotification.value) {
+        toast.add({
+            severity: 'info',
+            summary: 'New Notification',
+            detail: data, // Pass the full object here
+            group:"bc",
+            life:5000
+        });
+        showNotification.value = true;
+    }
+    setTimeout(() => {
+            onCloseNotification()
+    }, 5000);
+};
+
+const onReplyNotification = (url) => {
+    toast.removeGroup('bc');
+    showNotification.value = false;
+    router.push(url);
+};
+
+const onCloseNotification = () => {
+      toast.removeGroup('bc');
+    showNotification.value = false;
+};
 
 notificationsSocket.on("new_notifications", (data) => {
-  console.log("New notifications received:", data);
+    console.log("New notifications received:", data);
 
-  if (data) {
-    notificaitions.setLiveNotifications(data)
-    getNotificationsCount()
-  }
+    if (data) {
+        notifications.setLiveNotifications(data.notifications);
+        getNotificationsCount();
+    }
 
-  // Optionally show a toast popup
-  // showToast(data.notifications[0]?.action || "You have a new notification!");
+    // Pass only the first notification if multiple are received
+    if (data?.notifications?.length > 0) {
+        showNotificationTemplate(data.notifications[0]);
+    }
 });
+
+const getToastGroup = () => (ismobile.value ? 'tc' : 'bc'); // or just `ismobile ? 'tc' : 'bc'` if not a ref
+
+
+
 usersSocket.on("new_notifications", (data) => {
   // console.log("New notifications received:", data);
 });
@@ -289,14 +325,14 @@ onBeforeUnmount(() => {
 <template>
   <ConfirmDialog group="headless">
     <template #container="{ message, acceptCallback, rejectCallback }">
-      <div class="flex flex-col items-center p-8 bg-surface-0 dark:bg-surface-900 rounded">
+      <div class="flex flex-col items-center p-1 bg-surface-0 dark:bg-surface-900 rounded">
         <div
           class="rounded-full bg-primary text-primary-contrast inline-flex justify-center items-center h-24 w-24 -mt-20">
           <i :class="message.icon" class="!text-4xl"></i>
         </div>
-        <span class="font-bold text-2xl block mb-2 mt-6">{{ message.header }}</span>
+        <span class="font-bold text-2xl block mb-1 mt-3">{{ message.header }}</span>
         <p class="mb-0 text-center px-2">{{ message.message }}</p>
-        <div class="flex items-center gap-2 mt-6">
+        <div class="flex items-center gap-2 mt-3">
           <Button :label="message.acceptProps.label" :icon="message.acceptProps.icon" @click="acceptCallback"
             class="w-fit" />
           <Button v-if="message.rejectProps" :label="message.rejectProps.label" :icon="message.rejectProps.icon"
@@ -318,6 +354,32 @@ onBeforeUnmount(() => {
   <BlockUI :blocked="blocked" fullScreen />
   <Toast position="bottom-left" group="bl" />
 
+
+<div class="card flex justify-center">
+    <Toast position="bottom-center" group="bc"  @close="onCloseNotification">
+        <template #message="slotProps">
+            <div class="flex flex-col items-start flex-auto">
+                <div class="flex items-center gap-2">
+                    <Avatar :image="slotProps.message?.detail?.actor?.avatar" shape="circle" />
+                    <span class="font-bold">{{ slotProps.message?.detail?.actor?.username }}</span>
+                </div>
+                <div class="font-medium text-lg my-4">
+                    {{ slotProps.message.detail?.preview }}
+                </div>
+                <Button
+                    v-if="slotProps.message.detail?.url"
+                    size="small"
+                    label="View"
+                    severity="success"
+                    @click="onReplyNotification(slotProps.message.detail?.url)"
+                />
+            </div>
+        </template>
+    </Toast>
+</div>
+
+
+
   <div class="min-h-screen flex flex-col transition-colors duration-300">
     <div v-if="control.showNav" class="sticky top-0 z-400 backdrop-blur-sm">
       <Menubar />
@@ -328,3 +390,4 @@ onBeforeUnmount(() => {
     <Footer v-if="control.showNav" />
   </div>
 </template>
+

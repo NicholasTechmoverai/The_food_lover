@@ -1,164 +1,190 @@
 <template>
-  <section class="space-y-10 md:space-y-12 px-4 sm:px-6 lg:px-8">
-    <!-- Header -->
-    <header>
-      <h2 class="text-2xl font-bold capitalize text-gray-800 dark:text-white">
-        {{ recipe_type }}
-      </h2>
-    </header>
+    <section class="space-y-10 md:space-y-12 px-4 sm:px-6 lg:px-8">
+        <!-- Header with loading state -->
+        <header>
+            <div class="flex items-center gap-4">
+                <h2 class="text-2xl font-bold capitalize text-gray-800 dark:text-white">
+                    {{ recipe_type || '...' }}
+                </h2>
+                <Skeleton v-if="loadingHeader" width="8rem" height="2rem" />
+            </div>
+        </header>
 
-    <!-- About Section -->
-    <section>
-      <h3 class="text-xl font-semibold mb-4 text-gray-700 dark:text-gray-300">
-        More about {{ recipe_type }}
-      </h3>
-      <PileCard :recipes="recipes" />
-    </section>
+        <!-- About Section -->
+        <section>
+            <h3 class="text-xl font-semibold mb-4 text-gray-700 dark:text-gray-300">
+                More about {{ recipe_type }}
+            </h3>
 
-    <!-- Recipes List Section -->
-    <section>
-      <h3 class="text-xl font-semibold mb-4 text-gray-700 dark:text-gray-300">
-        {{ recipe_type }} recipes
-      </h3>
-      <ManyRecipesParent :recipe_name="recipe_type" :category="[recipe_type]" :tags="[recipe_type]"/>
+            <div v-if="loadingSuggestions" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <Card v-for="n in 3" :key="n">
+                    <template #content>
+                        <div class="space-y-3">
+                            <Skeleton width="100%" height="150px" />
+                            <Skeleton width="80%" />
+                            <div class="flex items-center gap-2">
+                                <Skeleton shape="circle" size="2rem" />
+                                <Skeleton width="60%" height="1rem" />
+                            </div>
+                            <div class="flex gap-4">
+                                <Skeleton width="4rem" height="1rem" />
+                                <Skeleton width="4rem" height="1rem" />
+                            </div>
+                        </div>
+                    </template>
+                </Card>
+            </div>
+            <PileCard v-else :recipes="recipes" />
+        </section>
+
+        <!-- Recipes List Section -->
+        <section>
+            <h3 class="text-xl font-semibold mb-4 text-gray-700 dark:text-gray-300">
+                {{ recipe_type }} recipes
+            </h3>
+            <div v-if="loadingMain" class="space-y-6">
+                loading...
+            </div>
+            <ManyRecipesParent v-else :recipe_name="recipe_type" :category="[recipe_type]" :tags="[recipe_type]"
+                @loading="handleChildLoading" />
+        </section>
     </section>
-  </section>
 </template>
 
 <script setup>
 import PileCard from "../cards/PileCards.vue"
-import ManyRecipesParent from "../cards/ManyReipesParent.vue" // fix if actual file uses 'Reipes'
-import { ref } from "vue";
+import ManyRecipesParent from "../cards/ManyReipesParent.vue"
+import { ref, watch, onMounted } from "vue";
+import { useAuthStore } from "../store/user";
+import { make_a_post } from "../apis";
+import { useToast } from 'primevue/usetoast'
+import { useRoute } from 'vue-router'
+
+const toast = useToast()
+const auth = useAuthStore()
+const route = useRoute()
 
 const props = defineProps({
-  recipe_type: {
-    recipe_name: String,
-    default: ()=>null
-  }
+    recipe_type: {
+        type: String,
+        default: () => null
+    }
 });
 
-const recipes = ref([
-    {
-        title: `${props.meal_type} Pasta Carbonara`,
-        image: 'https://images.unsplash.com/photo-1555949258-eb67b1ef0ceb',
-        alt: 'creamy pasta carbonara with bacon and parsley',
-        views: 4280,
-        likes: 645,
-        chef: {
-            id: 1,
-            name: 'Chef Antonio',
-            avatar: 'https://i.pravatar.cc/40?img=1'
-        }
-    },
-    {
-        title: `${props.meal_type} Beef Burger`,
-        image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd',
-        alt: 'juicy beef burger with cheese and vegetables',
-        views: 5340,
-        likes: 798,
-        chef: {
-            id: 2,
-            name: 'Chef Maria',
-            avatar: 'https://i.pravatar.cc/40?img=2'
-        }
-    },
-    {
-        title: `${props.meal_type} Chicken Curry`,
-        image: 'https://images.unsplash.com/photo-1585937421612-70a008356fbe',
-        alt: 'spicy chicken curry in a bowl',
-        views: 3980,
-        likes: 588,
-        chef: {
-            id: 3,
-            name: 'Chef Raj',
-            avatar: 'https://i.pravatar.cc/40?img=3'
-        }
-    },
-    {
-        title: `${props.meal_type} Vegetable Stir Fry`,
-        image: 'https://images.unsplash.com/photo-1626700051175-6818013e1d4f',
-        alt: 'colorful vegetable stir fry in a wok',
-        views: 3120,
-        likes: 410,
-        chef: {
-            id: 4,
-            name: 'Chef Lin',
-            avatar: 'https://i.pravatar.cc/40?img=4'
-        }
-    },
-    {
-        title: `${props.meal_type} Grilled Salmon`,
-        image: 'https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2',
-        alt: 'grilled salmon with lemon and herbs',
-        views: 3750,
-        likes: 560,
-        chef: {
-            id: 5,
-            name: 'Chef Sofia',
-            avatar: 'https://i.pravatar.cc/40?img=5'
-        }
-    },
-    {
-        title: 'Margherita Pizza',
-        image: 'https://images.unsplash.com/photo-1574071318508-1cdbab80d002',
-        alt: 'classic margherita pizza with fresh basil',
-        views: 4890,
-        likes: 773,
-        chef: {
-            id: 6,
-            name: 'Chef Giovanni',
-            avatar: 'https://i.pravatar.cc/40?img=6'
-        }
-    },
-    {
-        title: 'Beef Tacos',
-        image: 'https://images.unsplash.com/photo-1565299585323-38d6b0865b47',
-        alt: 'three beef tacos with toppings',
-        views: 4200,
-        likes: 700,
-        chef: {
-            id: 7,
-            name: 'Chef Carlos',
-            avatar: 'https://i.pravatar.cc/40?img=7'
-        }
-    },
-    {
-        title: 'Vegetable Lasagna',
-        image: 'https://images.unsplash.com/photo-1611270629569-8b357cb88da9',
-        alt: 'slice of vegetable lasagna with melted cheese',
-        views: 2950,
-        likes: 457,
-        chef: {
-            id: 8,
-            name: 'Chef Emma',
-            avatar: 'https://i.pravatar.cc/40?img=8'
-        }
-    },
-    {
-        title: 'Chicken Parmesan',
-        image: 'https://images.unsplash.com/photo-1607923432728-1b6b2b1b1b1b',
-        alt: 'crispy chicken parmesan with pasta',
-        views: 3475,
-        likes: 538,
-        chef: {
-            id: 9,
-            name: 'Chef Luca',
-            avatar: 'https://i.pravatar.cc/40?img=9'
-        }
-    },
-    {
-        title: 'Beef Stew',
-        image: 'https://images.unsplash.com/photo-1476718406336-bb5a9690ee2a',
-        alt: 'hearty beef stew in a bowl',
-        views: 3040,
-        likes: 496,
-        chef: {
-            id: 10,
-            name: 'Chef Pierre',
-            avatar: 'https://i.pravatar.cc/40?img=10'
-        }
+const loadingHeader = ref(true)
+const loadingSuggestions = ref(false)
+const loadingMain = ref(false)
+const childLoading = ref(false)
+
+const recipes = ref([])
+
+// Watch for route changes to refetch data
+watch(() => props.recipe_type, (newVal, oldVal) => {
+    if (newVal && newVal !== oldVal) {
+        fetchAllData()
     }
-])
+})
 
+// Watch for child loading state
+const handleChildLoading = (isLoading) => {
+    childLoading.value = isLoading
+}
 
+const fetchAllData = async () => {
+    loadingHeader.value = true
+    loadingMain.value = true
+    await Promise.all([
+        fetch_recipe_suggestions(),
+        setTimeout(() => {
+            loadingMain.value = false
+        }, 50)])
+
+    loadingHeader.value = false
+}
+
+const fetch_recipe_suggestions = async () => {
+    loadingSuggestions.value = true
+    try {
+        const res = await make_a_post(
+            `/recipes/${props.recipe_type}/suggestions`,
+            auth.token,
+            {},
+            { timeout: 10000 } // 10 second timeout
+        )
+
+        if (res.data) {
+            recipes.value = res.data.map(recipe => ({
+                ...recipe,
+                // Ensure default values
+                views: recipe.views || 0,
+                likes: recipe.likes || 0,
+                chef: recipe.chef || {
+                    id: 0,
+                    name: 'Unknown Chef',
+                    avatar: '',
+                    theme: ''
+                }
+            }))
+        }
+    } catch (error) {
+        console.error('Error fetching recipe suggestions:', error)
+        toast.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'Failed to load recipe suggestions',
+            life: 3000
+        })
+        // Fallback to default recipes if API fails
+        recipes.value = [{
+            title: `${props.recipe_type} Recipe`,
+            image: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c',
+            alt: `Delicious ${props.recipe_type}`,
+            views: 1000,
+            likes: 150,
+            chef: {
+                id: 1,
+                name: 'Chef Special',
+                avatar: 'https://i.pravatar.cc/40?img=3',
+                theme: ""
+            }
+        }]
+    } finally {
+        loadingSuggestions.value = false
+    }
+}
+
+// Initial load
+onMounted(() => {
+    fetchAllData()
+})
 </script>
+
+<style scoped>
+/* Smooth transitions for loading states */
+.skeleton-enter-active,
+.skeleton-leave-active {
+    transition: opacity 0.3s ease;
+}
+
+.skeleton-enter-from,
+.skeleton-leave-to {
+    opacity: 0;
+}
+
+/* Pulse animation for loading elements */
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.5;
+    }
+}
+
+.pulse {
+    animation: pulse 1.5s ease-in-out infinite;
+}
+</style>

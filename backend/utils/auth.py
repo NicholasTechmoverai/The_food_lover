@@ -18,6 +18,7 @@ from models import (
     VerificationCode,
     Recipe,
     ChefRequest,
+    RecipeLike,
     Notification,
 )
 from config import Config, WEB_SERVER, BASE_SERVER
@@ -33,7 +34,21 @@ import secrets
 from datetime import timezone
 
 datetime.now(timezone.utc)
-
+unallowed_usernames = [
+    "saved",
+    "chefs",
+    "terms",
+    "videos",
+    "live",
+    "notifications",
+    "recipes",
+    "cooking-tips",
+    "report",
+    "faqs",
+    "about",
+    "contact",
+    "reservations",
+]
 # Password hashing context
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -114,6 +129,9 @@ class AuthService:
             return False
 
         # Check for existing user with that username
+        if username in unallowed_usernames:
+            return False
+
         user = await self.user_repo.get_or_none(username=username)
 
         # If user exists and it's not the same user (editing), it's taken
@@ -123,6 +141,124 @@ class AuthService:
             return False  # taken by another user
 
         return True  # available
+
+    async def get_chefs(self, my_user_id: Optional[UUID] = None) -> dict:
+        try:
+            chefs = await self.user_repo.filter(is_chef=True)
+            result = []
+
+            for chef in chefs:
+                likes_count = 0
+                follower_count = 0
+                recipes_count = 0
+                is_following = False
+
+                try:
+                    if my_user_id:
+                        is_following = await Follow.filter(
+                            follower_id=my_user_id, following_id=chef.id
+                        ).exists()
+                except Exception as e:
+                    logger.warning(f"[get_chefs] Failed to check following status: {e}")
+
+                try:
+                    follower_count = await Follow.filter(following_id=chef.id).count()
+                    recipes = await Recipe.filter(user=chef.id)
+                    for recipe in recipes:
+                        count = await RecipeLike.filter(recipe=recipe).count()
+                        likes_count += count
+                    recipes_count = len(recipes)
+                except Exception as e:
+                    logger.warning(
+                        f"[get_chefs] Failed to fetch follow/recipe stats: {e}"
+                    )
+
+                res = {
+                    "name": chef.name,
+                    "username": chef.username,
+                    "id": chef.id,
+                    "theme": chef.theme,
+                    "avatar": chef.picture_url
+                    if chef.picture_url.startswith("https://")
+                    else f"{BASE_SERVER}/{chef.picture_url}",
+                    "bio": chef.bio,
+                    "likes_count": likes_count,
+                    "follower_count": follower_count,
+                    "recipes_count": recipes_count,
+                    "is_following": is_following,
+                }
+                result.append(res)
+
+            return {"chefs": result, "total": len(result)}
+
+        except Exception as e:
+            logger.warning(f"[get_chefs] Failed to fetch chefs: {e}")
+            return {}
+        
+
+
+    async def get_chefs_stats(self) -> dict:
+        try:
+            # Step 1: Get all chefs
+            chefs = await self.user_repo.filter(is_chef=True).all().prefetch_related("recipes")
+            total_chefs = len(chefs)
+
+            now = datetime.now(timezone.utc)
+
+            new_chefs = sum(
+                1 for chef in chefs
+                if isinstance(chef.created_at, datetime)
+                and (now - (chef.created_at.replace(tzinfo=timezone.utc) if chef.created_at.tzinfo is None else chef.created_at)) <= timedelta(days=30)
+            )
+
+            most_popular_chef = None
+            highest_score = -1
+
+            for chef in chefs:
+                # Fetch their recipes
+                recipes = await Recipe.filter(user_id=chef.id).prefetch_related("views", "likes")
+                total_views = sum(len(r.views) for r in recipes)
+                total_likes = sum(len(r.likes) for r in recipes)
+                score = total_views + total_likes
+
+
+                if score > highest_score:
+                    highest_score = score
+                    most_popular_chef = {
+                        "name": chef.name,
+                        "username": chef.username,
+                        "id": chef.id,
+                        "theme": chef.theme,
+                        "avatar": chef.picture_url if chef.picture_url.startswith("https://")
+                            else f"{BASE_SERVER}/{chef.picture_url}",
+                        # "bio": chef.bio,
+                        "views": total_views,
+                        "likes": total_likes,
+                        "recipes_count": len(recipes),
+                    }
+
+            return {
+                "stats": [
+                    {
+                        "label": "Total Chefs",
+                        "value": f"{total_chefs:,}",
+                        "change": f"+{new_chefs}" if new_chefs else None
+                    },
+                    {
+                        "label": "New This Month",
+                        "value": str(new_chefs),
+                        "change": f"+{new_chefs}" if new_chefs else None
+                    }
+                ],
+                "popular_chef": most_popular_chef or {}
+            }
+
+        except Exception as e:
+            print(f"Error fetching chef stats: {e}")
+            return {"stats": [], "popular_chef": {}}
+
+
+        
 
     async def get_user(self, username: str, my_user_id: Optional[UUID] = None) -> dict:
         try:
@@ -228,17 +364,19 @@ class AuthService:
     async def create_username(self, name: str) -> str:
         base_username = await sanitize_name(name)
 
-        # Try base username first
-        if not await self.check_username_availability(base_username, None):
+        if (
+            await self.check_username_availability(base_username, None) is False
+            and base_username not in unallowed_usernames
+        ):
             return base_username
 
-        # Try appending random numbers up to N attempts
+        # Try appending random numbers to base username (up to 5 attempts)
         for _ in range(5):
             random_username = f"{base_username}_{random.randint(1000, 9999)}"
-            if not await self.check_username_availability(random_username, None):
+            if await self.check_username_availability(random_username, None) is False:
                 return random_username
 
-        # Final fallback (still return something, even if not ideal)
+        # Final fallback (still return something unique)
         logger.warning("Could not find available username for base: %s", base_username)
         return f"{base_username}_{random.randint(10000, 99999)}"
 
@@ -315,19 +453,20 @@ class AuthService:
             )
 
             if not created:
-                # User already followed the chef → unfollow
-                existing_notification = await Notification.get_or_none(
-                    user_id=user_id,
-                    actor_id=chef_id,
-                    notification_type="follow",
-                )
-                if existing_notification:
-                    await existing_notification.delete()
+                # Already following → perform unfollow
                 await follow.delete()
+
+                # Delete follow notification if it exists
+                follow_notif = await Notification.get_or_none(
+                    user_id=chef_id, actor_id=user_id, notification_type="follow"
+                )
+                if follow_notif:
+                    await follow_notif.delete()
+
                 return False
 
-            # Followed just now → send notification to the chef
-            noty = await Notification.create(
+            # Just followed → create notification
+            notification = await Notification.create(
                 user_id=chef_id,
                 actor_id=user_id,
                 notification_type="follow",
@@ -338,23 +477,27 @@ class AuthService:
                 preview="started following you.",
             )
 
-            # Try to import and trigger WebSocket notification
+            # Send WebSocket notification (optional)
             try:
                 from app import notifications_namespace
 
+                noty = await Notification.filter(id=notification.id).prefetch_related(
+                    "user"
+                )
+
                 await notifications_namespace.trigger_notification({
                     "user_id": str(chef_id),
-                    "notifications": [noty],
+                    "notifications": noty,  # serialize if needed
                 })
 
             except ImportError as e:
-                # Optionally log this exception
-                print(f"WebSocket notification import failed: {e}")
+                print(f"[WebSocket notification import failed]: {e}")
 
             return True
 
         except Exception as err:
-            logger.exception(err)
+            logger.exception("Error in follow_unfollow, %s", err)
+            return False
 
     async def get_followers(
         self, target_id: UUID, user_id: UUID, offset: int = 0, limit: int = 10
@@ -599,7 +742,7 @@ class AuthService:
         user.is_chef = True
         await user.save()
 
-        noty = await Notification.create(
+        notification = await Notification.create(
             user_id=user.id,
             actor_id=user_id,
             notification_type="system",
@@ -614,9 +757,13 @@ class AuthService:
         try:
             from app import notifications_namespace
 
+            noty = await Notification.filter(id=notification.id).prefetch_related(
+                "user"
+            )
+
             await notifications_namespace.trigger_notification({
                 "user_id": str(user.id),
-                "notifications": [noty],
+                "notifications": noty,
             })
 
         except ImportError as e:

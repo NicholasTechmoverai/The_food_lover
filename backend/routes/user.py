@@ -32,26 +32,7 @@ async def recipe_meta(
 
 
 
-@user_router.post("/{username}")
-@limiter.limit("30/min")
-async def get_user(
-    request: Request,
-    # userId: UUID,
-    username: str,
-    user: Users = Depends(get_current_user),
-    auth: AuthService = Depends()
-):
-    """
-    Fetch a specific user by its UUID.
-    Rate-limited to 30 requests per minute.
-    """
-    try:
-        user_data = await auth.get_user(username,user.id)
-        return user_data
-    except AuthError as e:
-        raise HTTPException(status_code=400, detail=str(e))
-    
-    
+
 
 
 class UserUpdate(BaseModel):
@@ -129,6 +110,10 @@ async def get_following(
         raise HTTPException(status_code=400, detail=str(e))
 
 
+
+
+
+
 @user_router.post("/chef-request/{username}")
 @limiter.limit("5/min")
 async def request_chef(
@@ -153,3 +138,66 @@ async def request_chef(
 
     except AuthError as e:
         raise HTTPException(status_code=400, detail=str(e))
+    
+@user_router.post("/get-chefs-stats")
+@limiter.limit("30/min")
+async def getchefs_stats(
+    request: Request,
+    user: Users = Depends(get_current_user),
+    auth: AuthService = Depends()
+):
+    """
+    Update user details by username.
+    Rate-limited to 30 requests per minute.
+    """
+    try: 
+        if not user:
+            raise HTTPException(status_code=404, detail="Authenticated user not found")
+        r = await auth.get_chefs_stats()
+        return r
+
+    except AuthError as e:
+        raise HTTPException(status_code=400, detail=str(e))  
+    
+@user_router.post("/get-chefs")
+@limiter.limit("30/min")
+async def getchefs(
+    request: Request,
+    user: Users = Depends(get_current_user),
+    auth: AuthService = Depends()
+):
+    """
+    Update user details by username.
+    Rate-limited to 30 requests per minute.
+    """
+    try: 
+        if not user:
+            raise HTTPException(status_code=404, detail="Authenticated user not found")
+        r = await auth.get_chefs( user.id if user else None)
+        return r
+
+    except AuthError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+
+@user_router.post("/{username}")
+@limiter.limit("30/min")
+async def get_user(
+    request: Request,
+    # userId: UUID,
+    username: str,
+    user: Users = Depends(get_current_user),
+    auth: AuthService = Depends()
+):
+    """
+    Fetch a specific user by its UUID.
+    Rate-limited to 30 requests per minute.
+    """
+    try:
+        user_data = await auth.get_user(username,user.id)
+        return user_data
+    except AuthError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    
+    

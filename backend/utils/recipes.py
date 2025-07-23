@@ -21,6 +21,9 @@ from typing import Any
 import os
 from pydantic import BaseModel, Field
 from typing import List, Optional, Union
+from tortoise.expressions import Q
+from tortoise.functions import Count
+from itertools import islice
 
 from config import Config, BASE_SERVER
 from tortoise.expressions import Q
@@ -204,7 +207,7 @@ class RecipeService:
         )
         follower_ids = [f.follower.id for f in followers]
         for uid in follower_ids:
-            noty = await Notification.create(
+            notification = await Notification.create(
                 user_id=uid,
                 actor_id=user_id,
                 notification_type="new_recipe",
@@ -213,15 +216,16 @@ class RecipeService:
                 verb=f"published a new recipe: {data.recipeCover.recipeName or recipe.name}",
                 thread_id=None,
                 preview=recipe.name,
-                image_url=recipe.cover_image_url,
             )
             # Try to import and trigger WebSocket notification
             try:
                 from app import notifications_namespace
+                noty = await Notification.filter(id=notification.id).prefetch_related("user")
+
 
                 await notifications_namespace.trigger_notification({
                     "user_id": str(uid),
-                    "notifications": [noty],
+                    "notifications": noty,
                 })
 
             except ImportError as e:
@@ -229,6 +233,8 @@ class RecipeService:
                 logger.info(f"WebSocket notification import failed: {e}")
 
         return recipe
+    async def minutes_to_time(self,cook_time_minutes):
+            return {"hr": cook_time_minutes // 60, "min": cook_time_minutes % 60}
 
     async def list_recipes(
         self,
@@ -299,8 +305,7 @@ class RecipeService:
         logger.info("Final recipe count: %s", len(recipes))
 
         # Format results
-        def minutes_to_time(cook_time_minutes):
-            return {"hr": cook_time_minutes // 60, "min": cook_time_minutes % 60}
+       
 
         result = []
         for r in recipes:
@@ -311,7 +316,7 @@ class RecipeService:
                 "repiceColor": r.theme_color,
                 "image": f"{BASE_SERVER}/{r.cover_image_url}",
                 "tags": [tag.name for tag in r.tags],
-                "cookTime": minutes_to_time(r.cook_time_minutes),
+                "cookTime": await self.minutes_to_time(r.cook_time_minutes),
                 "description": r.description,
                 "cuisine": {"name": r.cuisine, "region": "East Africa"},
                 "complexityLevel": {
@@ -334,6 +339,67 @@ class RecipeService:
             })
 
         return {"recipes": result, "limit": limit, "offset": offset}
+
+    async def get_recipes_suggestions(self, name: str):
+        query = self.recipe_repo.all().prefetch_related(
+            "tags", "category", "steps__ingredients", "user", "views", "likes"
+        )
+
+        or_filter = Q()
+
+        if name and name.strip():
+            name = name.strip()
+            or_filter |= Q(name__icontains=name)
+            or_filter |= Q(cuisine__icontains=name)
+            or_filter |= Q(category__name__icontains=name)
+            or_filter |= Q(tags__name__icontains=name)
+
+            filtered_recipes = await query.filter(or_filter).distinct().limit(10)
+        else:
+            filtered_recipes = []
+
+        count_found = len(filtered_recipes)
+
+        # If we found less than 10, fetch top-rated to fill the gap
+        if count_found < 10:
+            filler_limit = 10 - count_found
+
+            filler_recipes = (
+                await self.recipe_repo.all()
+                .prefetch_related(
+                    "tags", "category", "steps__ingredients", "user", "views", "likes"
+                )
+                .annotate(total_views=Count("views"), total_likes=Count("likes"))
+                .order_by("-total_views", "-total_likes")
+                .exclude(id__in=[recipe.id for recipe in filtered_recipes])
+                .limit(filler_limit)
+            )
+
+            filtered_recipes.extend(filler_recipes)
+       
+        return [
+            {
+                "title": recipe.name,
+                "image": f"{BASE_SERVER}/{recipe.cover_image_url}" or "",
+                "alt": f"{recipe.name} by {recipe.user.name}",
+                "views": await recipe.views.all().count(),
+                "likes": await recipe.likes.all().count(),
+                "url":f"/recipes/{recipe.name.strip().lower().replace(" ","-")}/{recipe.id}",
+                "cook_time":await self.minutes_to_time(recipe.cook_time_minutes),
+                "difficulty_level":recipe.difficulty_level,
+                "cuisine": {"name": recipe.cuisine, "region": "East Africa"},
+
+                "chef": {
+                    "id": recipe.user.id,
+                    "name": recipe.user.username,
+                    "avatar": recipe.user.picture_url
+                    if recipe.user.picture_url.startswith("https://")
+                    else f"{BASE_SERVER}/{recipe.user.picture_url}",
+                    "theme": recipe.user.theme if hasattr(recipe.user, "theme") else "",
+                },
+            }
+            for recipe in filtered_recipes
+        ]
 
     async def update_view_activity(
         self, user_id: UUID, recipe_id: UUID, active_time: Optional[float] = None
@@ -390,6 +456,7 @@ class RecipeService:
                 "updatedAt": recipe.updated_at.isoformat(),
                 "createdAt": recipe.created_at.isoformat(),
                 "description": recipe.description,
+                "allow_comments":recipe.allow_comments,
                 "cuisine": {
                     "name": recipe.cuisine,
                     "region": "East Africa",  # Replace with dynamic region if needed
@@ -461,14 +528,16 @@ class RecipeService:
 
     async def like_unlike(self, user_id: UUID, recipe_id: UUID) -> bool:
         """
-        Toggle like/unlike for a given recipe by a user.
+        Toggles like/unlike for a given recipe by a user.
+
         Returns:
             True if liked, False if unliked.
         """
         try:
             # Try to get or create a like entry
             like, created = await RecipeLike.get_or_create(
-                user_id=user_id, recipe_id=recipe_id
+                user_id=user_id,
+                recipe_id=recipe_id
             )
 
             if not created:
@@ -479,7 +548,7 @@ class RecipeService:
                     actor_id=user_id,
                     notification_type="like",
                     target_object_id=str(recipe_id),
-                    target_content_type="recipe",
+                    target_content_type="recipe"
                 ).delete()
 
                 return False
@@ -491,7 +560,7 @@ class RecipeService:
                 logger.error(
                     f"[Like/Unlike] Recipe or recipe.user not found for ID {recipe_id}"
                 )
-                return True  # Like created, even if notification fails
+                return True  # Like was created even if notification fails
 
             chef = recipe.user
 
@@ -507,18 +576,17 @@ class RecipeService:
                         target_content_type="recipe",
                         verb=f"liked your recipe '{recipe.name[:100]}'",
                         preview=recipe.name[:100],
-                        thread_id=recipe.id,
+                        thread_id=recipe.id
                     )
 
                     # Trigger live notification
-
                     from app import notifications_namespace
-                    noty = Notification.filter(id=notification.id).prefetch_related("user")
 
+                    noty = await Notification.filter(id=notification.id).prefetch_related("user")
 
                     await notifications_namespace.trigger_notification({
                         "user_id": str(chef.id),
-                        "notifications": [noty],
+                        "notifications": noty
                     })
 
                 except Exception as e:
@@ -529,6 +597,7 @@ class RecipeService:
         except Exception as e:
             logger.error(f"[Like/Unlike] Unexpected error: {e}")
             return False
+
 
     async def like_unlike_favourite(self, user_id: UUID, recipe_id: UUID) -> bool:
         """
@@ -669,12 +738,14 @@ class RecipeService:
                     # Try to emit via WebSocket
                     try:
                         from app import notifications_namespace
-                        noty = Notification.filter(id=notification.id).prefetch_related("user")
 
+                        noty = await Notification.filter(id=notification.id).prefetch_related(
+                            "user"
+                        )
 
                         await notifications_namespace.trigger_notification({
                             "user_id": str(recipe.user_id),
-                            "notifications": [noty],
+                            "notifications": noty,
                         })
                     except Exception as emit_error:
                         logger.warning(
@@ -738,12 +809,13 @@ class RecipeService:
                             else None,
                             preview=(reply or "")[:100],
                         )
-                        noty = Notification.filter(id=parent_notification.id).prefetch_related("user")
-
+                        noty = await Notification.filter(
+                            id=parent_notification.id
+                        ).prefetch_related("user")
 
                         await notifications_namespace.trigger_notification({
                             "user_id": str(parent.user_id),
-                            "notifications": [noty],
+                            "notifications": noty,
                         })
                     except Exception as e:
                         logger.warning(
@@ -763,12 +835,13 @@ class RecipeService:
                             thread_id=recipe.id,
                             preview=(reply or "")[:100],
                         )
-                        noty = Notification.filter(id=recipe_owner_notification.id).prefetch_related("user")
-
+                        noty = await Notification.filter(
+                            id=recipe_owner_notification.id
+                        ).prefetch_related("user")
 
                         await notifications_namespace.trigger_notification({
                             "user_id": str(recipe.user_id),
-                            "notifications": [noty],
+                            "notifications": noty,
                         })
                     except Exception as e:
                         logger.warning(

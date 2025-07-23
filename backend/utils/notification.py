@@ -58,7 +58,7 @@ async def format_notifications(notys):
                     "read": noty.is_read,
                     "created_at": noty.created_at.isoformat() if noty.created_at else datetime.utcnow().isoformat(),
                     "meta": noty.metadata or {},
-                    "url": f"/recipes/{getattr(target, 'name', '').lower().replace(' ','-')}/{getattr(target, 'id', '')}" if target else None
+                    "url": f"/recipes/{getattr(target, 'name', '').strip().lower().replace(' ','-')}/{getattr(target, 'id', '')}" if target else None
                 })
 
             except Exception as inner_err:

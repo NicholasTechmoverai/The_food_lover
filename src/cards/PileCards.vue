@@ -8,20 +8,32 @@
             <li v-for="recipe in recipes" :key="recipe.title"
                 class="relative min-w-[250px]  overflow-hidden shadow hover:shadow-lg transition duration-300 bg-white dark:bg-gray-800">
                 <!-- Recipe Image -->
-                <img :src="recipe.image" :alt="recipe.alt" class="w-full h-64 object-cover" />
+                <img @click="router.push(recipe.url)" :src="recipe.image" :alt="recipe.alt"
+                    class="w-full h-64 object-cover" />
 
                 <!-- Overlay Content -->
                 <div class="absolute inset-0 bg-black/40  text-white flex flex-col justify-end p-3">
-                    <div class="flex justify-between items-center text-xs text-white/90">
-                        <span class="font-bold text-xl">{{ recipe.title }}</span>
-                        <!-- <span><i class="pi pi-heart-fill text-red-400 mr-1"></i>{{ recipe.likes }}</span> -->
+                    <div class="flex justify-start items-center text-xs text-white/90">
+                        <router-link :to="recipe.url"><span class="underline font-bold text-2xl">{{ recipe.title
+                        }}</span></router-link>
+
+                        <span class="ml-2 flex justify-center items-center"><i
+                                class="pi pi-heart-fill text-red-400 mr-1"></i>{{ recipe.likes }}</span>
                     </div>
                     <div class="flex items-center gap-2 mb-2">
-                        <img :src="recipe.chef.avatar" :alt="recipe.chef.name"
-                            class="w-8 h-8 rounded-full border-2 border-white" />
-                        <div class="text-sm">
-                            <p class="font-semibold leading-tight">{{ recipe.chef.name }}</p>
-                            <p class="text-xs opacity-80">{{ recipe.views }} views</p>
+                        <router-link :to="`/${recipe.chef.name}`"> <img :src="recipe.chef.avatar"
+                                :alt="recipe.chef.name"
+                                class="w-8 h-8 rounded-full border-2 border-white" /></router-link>
+                        <div class="text-sm flex flex-col justify-baseline items-start">
+                            <router-link :to="`/${recipe.chef.name}`">
+                                <p class="font-semibold leading-tight ">{{ recipe.chef.name }}</p>
+                            </router-link>
+                            <div class="flex flex-row items-center gap-2">
+                                <p class="text-xs opacity-80">{{ recipe.views }} views</p>
+                                <p class="text-xs opacity-80"> {{ recipe.difficulty_level }}</p>
+                                <p class="text-xs opacity-80"> <span v-if="recipe.cook_time.hr">{{ recipe.cook_time.hr }}hr</span>.<span>{{ recipe.cook_time.min }}min</span></p>
+                            </div>
+
                         </div>
                     </div>
 
@@ -37,6 +49,8 @@
 
 
 <script setup>
+import router from '../router';
+
 const props = defineProps({
     recipes: String,
 });
@@ -71,8 +85,7 @@ html::-webkit-scrollbar-thumb {
 
 h1 {
     font-size: clamp(20px, 2.5vw, 36px);
-    color: rgba(255, 255, 255, 0.8);
-    font-weight: 600;
+    font-weight: 700;
     text-align: center;
 }
 

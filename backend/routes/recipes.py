@@ -304,3 +304,25 @@ async def delete_recipe_comment(
         raise HTTPException(status_code=401, detail=str(e))
     except Exception:
         raise HTTPException(status_code=500, detail="Failed to delete comment.")
+
+
+
+
+@recipe_router.post("/recipes/{recipe_name}/suggestions")
+@limiter.limit("30/min")
+async def suggestions_recipe(
+    request: Request,
+    recipe_name: str,
+    service: RecipeService = Depends()
+):
+    """
+    Delete a comment on a specific recipe.
+    """
+    try:
+        r = await service.get_recipes_suggestions(recipe_name)
+        return r
+    except AuthError as e:
+        raise HTTPException(status_code=401, detail=str(e))
+    except Exception as e:
+        print(e)
+        raise HTTPException(status_code=500, detail="Failed to get  suggestions.")

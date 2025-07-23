@@ -171,7 +171,9 @@ class NotificationsNamespace(socketio.AsyncNamespace, AuthService):
         try:
             notys = data.get("notifications", [])
             notifications = await format_notifications(notys)
-            logger.info("Emiitting notifications %s!! in room %s",notifications,data["user_id"])
+            # logger.info("Emiitting notifications %s!! in room %s",notifications,data["user_id"])
+            if isinstance(notifications, dict):
+                notifications = [notifications]
 
             await self.emit(
                 "new_notifications",

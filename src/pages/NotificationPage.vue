@@ -92,7 +92,7 @@
 
                     <!-- Timestamp -->
                     <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                      {{ formatTime(notification.created_at) }}
+                      {{ formatDistanceToNow(notification.created_at) }}
                     </div>
 
                     <!-- Preview Text -->
@@ -111,7 +111,7 @@
 
                   <!-- Notification Controls -->
                   <div
-                    class="flex flex-col items-center gap-2 ml-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    class="flex flex-col items-center gap-2 ml-2 opacity-0 group-hover:opacity-100 group-active:opacity-100 transition-opacity">
                     <Button @click.stop="deleteNotification(notification)" icon="pi pi-trash" text rounded
                       severity="danger"  />
                   </div>
@@ -241,6 +241,7 @@ import router from '../router'
 import { useRoute } from 'vue-router'
 import { make_a_delete, make_a_post } from '../apis'
 import { useToast } from 'primevue/usetoast'
+import { formatDistanceToNow } from 'date-fns'
 
 const toast = useToast()
 const route = useRoute()
@@ -400,6 +401,7 @@ const fetchNotifications = async () => {
   } finally {
     loading.value = false
     loadingMore.value = false
+    await getNotificationsCount()
   }
 }
 
@@ -444,13 +446,12 @@ const formatTime = (dateString) => {
 
 const toggleReadStatus = async (notification) => {
   try {
-    const newReadStatus = !notification.read
     await make_a_post(
       `/notifications/${notification.id}/read`,
       auth.token,
-      { read: newReadStatus }
+      { read: true }
     )
-    notification.read = newReadStatus
+    notification.read = true
     await getNotificationsCount()
   } catch (error) {
     console.error('Error updating read status:', error)
@@ -548,6 +549,7 @@ const deleteNotification = async (notification) => {
       detail: 'Notification deleted',
       life: 3000
     })
+        await getNotificationsCount()
   } catch (error) {
     console.error('Error deleting notification:', error)
     toast.add({
