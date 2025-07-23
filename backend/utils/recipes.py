@@ -11,6 +11,7 @@ from models import (
     RecipeView,
     Follow,
     Notification,
+    CommentLike
 )
 from reusables.main import sanitizeContents, save_base64_image, sanitize_name
 from uuid import UUID
@@ -921,6 +922,7 @@ class RecipeService:
         self,
         recipe_id: UUID,
         parent: Optional[int] = None,
+        user_id: Optional[UUID] = None,
         limit: int = 10,
         offset: int = 0,
     ) -> dict:
@@ -929,43 +931,54 @@ class RecipeService:
         - If parent is None: top-level comments with 1 reply + reply count
         - If parent is set: fetch full thread in flat structure
         """
-
         try:
             if parent is None:
-                # Fetch top-level comments
+                # Step 1: Fetch top-level comments
                 top_comments = (
                     await RecipeComment.filter(
                         recipe_id=recipe_id, is_deleted=False, parent_id=None
                     )
-                    .prefetch_related("user")
+                    .prefetch_related("user", "likes")
                     .order_by("-created_at")
                     .offset(offset)
                     .limit(limit)
                 )
 
-                result = []
+                # Step 2: Collect comment IDs
+                top_ids = [c.id for c in top_comments]
 
-                for comment in top_comments:
-                    # First reply (if exists)
-                    first_reply = (
-                        await RecipeComment.filter(
-                            recipe_id=recipe_id, parent_id=comment.id, is_deleted=False
-                        )
-                        .prefetch_related("user")
-                        .order_by("created_at")
-                        .first()
+                # Step 3: Fetch replies in batch
+                replies_map = {
+                    r.parent_id: r
+                    for r in await RecipeComment.filter(
+                        recipe_id=recipe_id,
+                        parent_id__in=top_ids,
+                        is_deleted=False,
                     )
+                    .order_by("created_at")
+                    .prefetch_related("user", "likes")
+                }
 
-                    # Count of all replies
-                    reply_count = await RecipeComment.filter(
-                        recipe_id=recipe_id, parent_id=comment.id, is_deleted=False
-                    ).count()
+                # Step 4: Batch fetch user likes for current user
+                user_likes_map = {}
+                if user_id:
+                    user_likes = await CommentLike.filter(
+                        user_id=user_id, comment_id__in=top_ids + list(replies_map.keys())
+                    )
+                    user_likes_map = {ul.comment_id: ul for ul in user_likes}
+
+                # Step 5: Build response
+                result = []
+                for comment in top_comments:
+                    user_like = user_likes_map.get(comment.id)
 
                     comment_dict = {
                         "id": comment.id,
                         "content": comment.content,
                         "is_edited": comment.is_edited,
-                        "likes": 0,
+                        "likes": len(comment.likes),
+                        "isLiked": bool(user_like),
+                        "reacted_emoji": user_like.reaction if user_like else None,
                         "created_at": comment.created_at.isoformat(),
                         "parent_id": comment.parent_id,
                         "attachments": list(comment.attachments)
@@ -979,27 +992,36 @@ class RecipeService:
                             else f"{BASE_SERVER}/{comment.user.picture_url}",
                         },
                         "replies": [],
-                        "replyCount": reply_count,
+                        "replyCount": await RecipeComment.filter(
+                            recipe_id=recipe_id,
+                            parent_id=comment.id,
+                            is_deleted=False
+                        ).count(),
                     }
 
-                    if first_reply:
+                    # Append first reply if exists
+                    reply = replies_map.get(comment.id)
+                    if reply:
+                        reply_user_like = user_likes_map.get(reply.id)
                         replied_to_name = getattr(comment.user, "name", "")
                         reply_dict = {
-                            "id": first_reply.id,
-                            "content": f"@{replied_to_name} {first_reply.content}",
-                            "is_edited": first_reply.is_edited,
-                            "likes": 0,
-                            "created_at": first_reply.created_at.isoformat(),
-                            "parent_id": first_reply.parent_id,
-                            "attachments": list(first_reply.attachments)
-                            if isinstance(first_reply.attachments, (list, tuple))
+                            "id": reply.id,
+                            "content": f"@{replied_to_name} {reply.content}",
+                            "is_edited": reply.is_edited,
+                            "likes": len(reply.likes),
+                            "isLiked": bool(reply_user_like),
+                            "reacted_emoji": reply_user_like.reaction if reply_user_like else None,
+                            "created_at": reply.created_at.isoformat(),
+                            "parent_id": reply.parent_id,
+                            "attachments": list(reply.attachments)
+                            if isinstance(reply.attachments, (list, tuple))
                             else [],
                             "user": {
-                                "id": str(first_reply.user.id),
-                                "name": getattr(first_reply.user, "name", "Unknown"),
-                                "profilePic": first_reply.user.picture_url
-                                if first_reply.user.picture_url.startswith("https://")
-                                else f"{BASE_SERVER}/{first_reply.user.picture_url}",
+                                "id": str(reply.user.id),
+                                "name": getattr(reply.user, "name", "Unknown"),
+                                "profilePic": reply.user.picture_url
+                                if reply.user.picture_url.startswith("https://")
+                                else f"{BASE_SERVER}/{reply.user.picture_url}",
                             },
                         }
                         comment_dict["replies"].append(reply_dict)
@@ -1018,23 +1040,17 @@ class RecipeService:
                 }
 
             else:
-                logger.info("Fetching replies for parent:", parent)
+                # Flat reply thread (recursive)
+                logger.info("Fetching replies for parent: %s", parent)
 
-                all_replies = (
-                    await RecipeComment.filter(recipe_id=recipe_id, is_deleted=False)
-                    .prefetch_related("user")
-                    .order_by("created_at")
-                )
+                all_replies = await RecipeComment.filter(
+                    recipe_id=recipe_id, is_deleted=False
+                ).prefetch_related("user", "likes").order_by("created_at")
 
-                parent_map = {}
-                user_map = {}
-
-                for c in all_replies:
-                    parent_map[c.id] = c.parent_id
-                    user_map[c.id] = getattr(c.user, "name", "Unknown")
+                parent_map = {c.id: c.parent_id for c in all_replies}
+                user_map = {c.id: getattr(c.user, "name", "Unknown") for c in all_replies}
 
                 def is_descendant(child_id):
-                    """Check if comment is a descendant of the parent"""
                     pid = parent_map.get(child_id)
                     while pid:
                         if pid == parent:
@@ -1042,25 +1058,27 @@ class RecipeService:
                         pid = parent_map.get(pid)
                     return False
 
-                # Filter out actual descendants (excluding the parent itself)
-                filtered_replies = [
-                    c for c in all_replies if c.id != parent and is_descendant(c.id)
-                ]
+                filtered_replies = [c for c in all_replies if c.id != parent and is_descendant(c.id)]
+                paginated_replies = filtered_replies[offset: offset + limit]
 
-                total = len(filtered_replies)  # Total replies before pagination
-
-                # Apply pagination
-                paginated_replies = filtered_replies[offset : offset + limit]
+                # Batch user likes
+                reply_ids = [c.id for c in paginated_replies]
+                reply_likes = await CommentLike.filter(user_id=user_id, comment_id__in=reply_ids) if user_id else []
+                reply_likes_map = {ul.comment_id: ul for ul in reply_likes}
 
                 replies = []
                 for c in paginated_replies:
+                    user_like = reply_likes_map.get(c.id)
                     replied_to_name = user_map.get(parent_map.get(c.id))
                     prefix = f"@{replied_to_name} " if replied_to_name else ""
+
                     replies.append({
                         "id": c.id,
                         "content": f"{prefix}{c.content}",
                         "is_edited": c.is_edited,
-                        "likes": 0,
+                        "likes": len(c.likes),
+                        "isLiked": bool(user_like),
+                        "reacted_emoji": user_like.reaction if user_like else None,
                         "created_at": c.created_at.isoformat(),
                         "parent_id": c.parent_id,
                         "attachments": list(c.attachments)
@@ -1077,15 +1095,163 @@ class RecipeService:
 
                 return {
                     "replies": replies,
-                    "total": total,
+                    "total": len(filtered_replies),
                     "limit": limit,
                     "offset": offset,
                 }
 
         except Exception as e:
-            logger.exception("Error in get_comments:", str(e))
+            logger.exception("Error in get_comments: %s", str(e))
             return {"error": "An unexpected error occurred."}
 
+
+    async def like_unlike_comment(
+        self,
+        user_id: UUID,
+        recipe_id: UUID,
+        comment_id: int,
+        is_liked: bool,
+        reaction: dict
+    ) -> bool:
+        """
+        Toggle like/unlike for a comment with optional emoji reaction.
+
+        Args:
+            user_id (UUID): ID of the user liking/unliking.
+            recipe_id (UUID): ID of the recipe the comment belongs to.
+            comment_id (int): ID of the comment.
+            is_liked (bool): Whether the comment is being liked or unliked.
+            reaction (dict): Emoji or reaction data.
+
+        Returns:
+            bool: True if liked or reaction applied, False if unliked or removed.
+        """
+        try:
+            like, created = await CommentLike.get_or_create(
+                user_id=user_id,
+                comment_id=comment_id,
+                defaults={"reaction": reaction}
+            )
+
+            if not created:
+                # Update reaction if changed
+                if is_liked:
+                    await like.update_from_dict({"reaction": reaction}).save()
+                    return True
+
+                # Unlike and remove if no reaction
+                if not is_liked and not reaction:
+                    await like.delete()
+
+                    await Notification.filter(
+                        actor_id=user_id,
+                        notification_type="like",
+                        target_object_id=str(comment_id),
+                        target_content_type="reacted",
+                        thread_id=recipe_id
+                    ).delete()
+
+                    return False
+
+                # If unliking but reaction exists, just update
+                await like.update_from_dict({"reaction": reaction}).save()
+                return True
+
+            # Notify comment owner if not self
+            recipe = await Recipe.get_or_none(id=recipe_id).prefetch_related("user")
+            if not recipe or not recipe.user:
+                logger.error(f"[Like/Unlike] Recipe or user not found for ID {recipe_id}")
+                return True
+
+            chef = recipe.user
+            if chef.id != user_id:
+                try:
+                    notification = await Notification.create(
+                        user_id=chef.id,
+                        actor_id=user_id,
+                        notification_type="like",
+                        target_object_id=str(comment_id),
+                        target_content_type="reacted",
+                        verb=f"liked your comment on '{recipe.name[:100]}'",
+                        preview=recipe.name[:100],
+                        thread_id=recipe.id
+                    )
+
+                    from app import notifications_namespace
+                    rep_comment = await RecipeComment.get_or_none(id=comment_id).prefetch_related('user')
+                    noty = await Notification.filter(id=notification.id).prefetch_related("user")
+
+                    await notifications_namespace.trigger_notification({
+                        "user_id": rep_comment.user.id,
+                        "notifications": noty
+                    })
+                except Exception as e:
+                    logger.warning(f"[Notification Create] Failed to send: {e}")
+
+            return True
+
+        except Exception as e:
+            logger.error(f"[Like/Unlike] Unexpected error: {e}")
+            return False
+
+
+
+
+    async def get_viewers(
+        self,
+        recipe_id: UUID,
+        user_id: Optional[UUID],
+        offset: int = 0,
+        limit: int = 10,
+    ) -> dict:
+        """
+        Retrieve viewers of a specific recipe, including user details and follow status.
+        """
+        # Fetch viewers for the given recipe
+        viewers = (
+            await RecipeView.filter(recipe_id=recipe_id)
+            .offset(offset)
+            .limit(limit)
+            .prefetch_related("user")
+        )
+        
+        print(viewers)
+
+        users = [view.user for view in viewers if view.user]
+        user_ids = [user.id for user in users]
+
+        # Determine which users are followed by the requesting user
+        following_ids = set()
+        if user_id:
+            following_ids = set(
+                await Follow.filter(follower_id=user_id, following_id__in=user_ids)
+                .values_list("following_id", flat=True)
+            )
+
+        result = [
+            {
+                "id": str(user.id),
+                "name": getattr(user, "name", "Unknown"),
+                "username": getattr(user, "username", "unknown"),
+                "isChef": user.is_chef,
+                "avatar": (
+                    user.picture_url
+                    if user.picture_url and user.picture_url.startswith("https://")
+                    else f"{BASE_SERVER}/{user.picture_url}"
+                    if user.picture_url
+                    else ""
+                ),
+                "isFollowing": user.id in following_ids,
+            }
+            for user in users
+        ]
+
+        return {
+            "viewers": result,
+            "offset": offset,
+            "limit": limit,
+            "count": len(result),
+        }
 
 #  {
 #         id: 1,

@@ -17,13 +17,14 @@ import router from './router/index.js'
 
 const ismobile = useIsMobile()
 const auth = useAuthStore()
-const notifications  = useNotificationStore()
+const notifications = useNotificationStore()
 const control = useControl()
 const confirm = useConfirm()
 const toast = useToast()
 
 const blocked = ref(false)
 const route = useRoute()
+const visibleBottom = ref(false);
 
 let tokenInterval
 let themeMediaQuery
@@ -214,7 +215,7 @@ const getNotificationsCount = async () => {
     )
 
     if (res.data) {
-      notifications .notificationsCount = res.data
+      notifications.notificationsCount = res.data
     }
   } catch (error) {
     console.error('Error Getting Notifications:', error)
@@ -262,44 +263,44 @@ const showNotification = ref(false);
 
 const showNotificationTemplate = (data) => {
   console.log("showing notificaiton")
-    if (!showNotification.value) {
-        toast.add({
-            severity: 'info',
-            summary: 'New Notification',
-            detail: data, // Pass the full object here
-            group:ismobile.value ? 'tc' : 'bc',
-            life:5000
-        });
-        showNotification.value = true;
-    }
-    setTimeout(() => {
-            onCloseNotification()
-    }, 5000);
+  if (!showNotification.value) {
+    toast.add({
+      severity: 'info',
+      summary: 'New Notification',
+      detail: data, // Pass the full object here
+      group: ismobile.value ? 'tc' : 'bc',
+      life: 5000
+    });
+    showNotification.value = true;
+  }
+  setTimeout(() => {
+    onCloseNotification()
+  }, 5000);
 };
 
 const onReplyNotification = (url) => {
-    toast.removeGroup('bc');
-    showNotification.value = false;
-    router.push(url);
+  toast.removeGroup('bc');
+  showNotification.value = false;
+  router.push(url);
 };
 
 const onCloseNotification = () => {
-      toast.removeGroup('bc');
-    showNotification.value = false;
+  toast.removeGroup('bc');
+  showNotification.value = false;
 };
 
 notificationsSocket.on("new_notifications", (data) => {
-    console.log("New notifications received:", data);
+  console.log("New notifications received:", data);
 
-    if (data) {
-        notifications.setLiveNotifications(data.notifications);
-        getNotificationsCount();
-    }
+  if (data) {
+    notifications.setLiveNotifications(data.notifications);
+    getNotificationsCount();
+  }
 
-    // Pass only the first notification if multiple are received
-    if (data?.notifications?.length > 0) {
-        showNotificationTemplate(data.notifications[0]);
-    }
+  // Pass only the first notification if multiple are received
+  if (data?.notifications?.length > 0) {
+    showNotificationTemplate(data.notifications[0]);
+  }
 });
 
 
@@ -355,30 +356,32 @@ onBeforeUnmount(() => {
   <Toast position="bottom-left" group="bl" />
 
 
-<div class="card flex justify-center">
-    <Toast position="bottom-center" :group="ismobile ? 'tc' : 'bc'" :position="ismobile ? 'top-center' : 'bottom-center'"  @close="onCloseNotification">
-        <template #message="slotProps">
-            <div class="flex flex-col items-start flex-auto">
-                <div class="flex items-center gap-2">
-                    <Avatar :image="slotProps.message?.detail?.actor?.avatar" shape="circle" />
-                    <span class="font-bold">{{ slotProps.message?.detail?.actor?.username }}</span>
-                </div>
-                <div class="font-medium text-lg my-0">
-                    {{ slotProps.message.detail?.verb }}
-                </div>
-                <Button
-                    v-if="slotProps.message.detail?.url"
-                    size="small"
-                    label="View"
-                    severity="secondary" variant="text"
-                    @click="onReplyNotification(slotProps.message.detail?.url)"
-                />
-            </div>
-        </template>
+  <div class="card flex justify-center">
+    <Toast position="bottom-center" :group="ismobile ? 'tc' : 'bc'"
+      :position="ismobile ? 'top-center' : 'bottom-center'" @close="onCloseNotification">
+      <template #message="slotProps">
+        <div class="flex flex-col items-start flex-auto">
+          <div class="flex items-center gap-2">
+            <Avatar :image="slotProps.message?.detail?.actor?.avatar" shape="circle" />
+            <span class="font-bold">{{ slotProps.message?.detail?.actor?.username }}</span>
+          </div>
+          <div class="font-medium text-lg my-0">
+            {{ slotProps.message.detail?.verb }}
+          </div>
+          <Button v-if="slotProps.message.detail?.url" size="small" label="View" severity="secondary" variant="text"
+            @click="onReplyNotification(slotProps.message.detail?.url)" />
+        </div>
+      </template>
     </Toast>
-</div>
+  </div>
 
-
+  <Drawer v-model:visible="visibleBottom" header="Bottom Drawer" position="bottom" style="height: auto">
+    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore
+      magna
+      aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
+      consequat.
+    </p>
+  </Drawer>
 
   <div class="min-h-screen flex flex-col transition-colors duration-300">
     <div v-if="control.showNav" class="sticky top-0 z-400 backdrop-blur-sm">
@@ -390,4 +393,3 @@ onBeforeUnmount(() => {
     <Footer v-if="control.showNav" />
   </div>
 </template>
-

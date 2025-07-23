@@ -3,7 +3,7 @@
         <!-- Category Filter Buttons -->
         <div class="flex flex-wrap gap-3 justify-center mt-6">
             <button v-for="tip in categoryTypes" :key="tip.value" @click="changeTipCategory(tip.value)" :class="[
-                'px-4 py-2 rounded-full border text-sm capitalize transition',
+                'px-4 py-2 rounded-full border text-sm capitalize transition cursor-pointer',
                 normalizedSelectedTip === tip.value
                     ? 'bg-emerald-600 text-white border-emerald-600'
                     : 'bg-white dark:bg-gray-800 text-gray-800 dark:text-white border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700'
@@ -12,7 +12,7 @@
             </button>
         </div>
 
-        <div v-if="popular_cooking_tips_loading" class="flex justify-center items-center h-60 w-full relative">
+        <div v-if="popular_cooking_tips_loading" class="flex flex-col md:flex-row justify-center items-center h-60 w-full relative">
             <div class="flex justify-center items-center h-60 relative">
                 <div class="absolute w-46 h-46 bg-gray-300 dark:bg-gray-700 rounded animate-pulse rotate-3"></div>
                 <div class="absolute w-46 h-46 bg-gray-300 dark:bg-gray-700 rounded animate-pulse -rotate-6"></div>

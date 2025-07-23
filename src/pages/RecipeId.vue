@@ -141,29 +141,29 @@
                     <div class="flex flex-col md:flex-row justify-between items-center gap-1 md:gap-4">
                         <!-- Actions (Like, Save, Share) -->
                         <div class="flex flex-wrap items-center gap-4">
-                            <button @click="toggleLike" class="flex items-center gap-1.5 text-sm font-medium transition"
+                            <button @click="toggleLike"
+                                class="flex items-center gap-1.5 text-sm font-medium transition cursor-pointer"
                                 :class="recipeMeta.isLiked
                                     ? 'text-white bg-[color:var(--like-color)] px-3 py-1.5 rounded-full shadow'
-                                    : 'text-gray-600 dark:text-gray-300 hover:text-white hover:bg-[color:var(--like-color)] px-3 py-1.5 rounded-full transition'"
-                                :style="{
-                                    '--like-color': recipe?.repiceColor || '#f97316'
-                                }">
+                                    : 'text-gray-600 dark:text-gray-300 hover:text-white hover:bg-[color:var(--like-color)] px-3 py-1.5 rounded-full transition'" :style="{
+                                        '--like-color': recipe?.repiceColor || '#f97316'
+                                    }">
                                 <i :class="recipeMeta.isLiked ? 'pi pi-heart-fill' : 'pi pi-heart'"></i>
                                 <span>{{ recipeMeta.likeCount || 0 }}</span>
                             </button>
 
-                            <button @click="toggleSave" class="flex items-center gap-1.5 text-sm font-medium transition"
+                            <button @click="toggleSave"
+                                class="flex items-center gap-1.5 text-sm font-medium transition cursor-pointer"
                                 :class="recipeMeta.isSaved
                                     ? 'text-white bg-[color:var(--save-color)] px-3 py-1.5 rounded-full shadow'
-                                    : 'text-gray-600 dark:text-gray-300 hover:text-white hover:bg-[color:var(--save-color)] px-3 py-1.5 rounded-full transition'"
-                                :style="{
-                                    '--save-color': recipe.repiceColor || '#f97316'
-                                }">
+                                    : 'text-gray-600 dark:text-gray-300 hover:text-white hover:bg-[color:var(--save-color)] px-3 py-1.5 rounded-full transition'" :style="{
+                                        '--save-color': recipe.repiceColor || '#f97316'
+                                    }">
                                 <i :class="recipeMeta.isSaved ? 'pi pi-bookmark-fill' : 'pi pi-bookmark'"></i>
                                 <span>{{ recipeMeta.isSaved ? 'Saved' : 'Save' }}</span>
                             </button>
 
-                            <div class="card flex justify-center">
+                            <div class="card flex justify-center cursor-pointer">
                                 <Button type="button" icon="pi pi-share-alt" severity="success" label="Share"
                                     @click="share" variant="outlined" size="small" rounded />
 
@@ -203,7 +203,66 @@
                         <div class="flex flex-col">
                             <p class="text-[12px]">{{ recipe?.recipeName }}</p>
                             <div class="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
-                                <span><i class="pi pi-eye"></i> {{ recipeMeta.views || 0 }} views</span>
+                                <!-- viewers -->
+                                <div class="text-center">
+                                    <span class="cursor-pointer" @click="toggle_Views">
+                                        <i class="pi pi-eye"></i> {{ recipeMeta.views || 0 }} views
+                                    </span>
+
+                                    <!-- Viewers Popover -->
+                                    <Popover ref="show_viewers">
+                                        <div
+                                            class="flex flex-col max-h-96 overflow-y-auto p-4 w-72 bg-white dark:bg-gray-900 rounded-lg shadow-lg">
+                                            <span class="font-semibold text-lg mb-3">Viewers</span>
+
+                                            <!-- Loading Spinner -->
+                                            <ul v-if="loading_views">
+                                                <i class="pi pi-spin pi-spinner" style="font-size: 2rem"></i>
+                                            </ul>
+
+                                            <!-- Viewers List -->
+                                            <ul v-else class="space-y-2">
+                                                <li v-for="viewer in Viewers" :key="viewer.id"
+                                                    class="flex items-center gap-3 p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg cursor-pointer transition">
+                                                    <img :src="viewer.avatar" alt="avatar"
+                                                        class="w-10 h-10 rounded-full object-cover" />
+
+                                                    <router-link :to="`/${viewer.username}`" class="flex-1">
+                                                        <div class="font-medium text-sm text-gray-900 dark:text-white">
+                                                            {{ viewer.name }}
+                                                        </div>
+                                                        <div class="text-xs text-gray-500 dark:text-gray-400">
+                                                            @{{ viewer.username }}
+                                                        </div>
+                                                    </router-link>
+
+                                                    <button v-if="viewer.id !== auth.user.id && viewer.isChef"
+                                                        @click.stop="toggleFollow(viewer)"
+                                                        class="text-xs px-3 py-1 rounded-full font-semibold transition duration-200"
+                                                        :class="viewer.isFollowing ? 'bg-red-100 text-red-600 hover:bg-red-200' : 'bg-blue-100 text-blue-600 hover:bg-blue-200'">
+                                                        {{ viewer.isFollowing ? 'Unfollow' : 'Follow' }}
+                                                    </button>
+                                                </li>
+                                            </ul>
+
+                                            <!-- Pagination -->
+                                            <div class="flex justify-between items-center mt-4 gap-4">
+                                                <button v-if="Viewers && viewers_offset >= viewers_limit"
+                                                    @click="fetch_viewers(viewers_limit, viewers_offset - viewers_limit)"
+                                                    class="px-4 py-1 text-sm rounded bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200">
+                                                    Prev
+                                                </button>
+
+                                                <button v-if="viewers_offset + viewers_limit < recipeMeta.views"
+                                                    @click="fetch_viewers(viewers_limit, viewers_offset + viewers_limit)"
+                                                    class="px-4 py-1 text-sm rounded bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200">
+                                                    Next
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </Popover>
+                                </div>
+
                                 <span><i class="pi pi-comment"></i> {{ recipeMeta.comments || 0 }} comments</span>
                                 <span><i class="pi pi-calendar"></i> {{ formatTimeAgo(recipe.updatedAt) }}</span>
                             </div>
@@ -213,9 +272,10 @@
                 </footer>
 
                 <div>
-                    comments
+                    <h4 class="mx-2 font-semibold text-xl"><i class="pi pi-comments">Comments</i></h4>
                     <div>
-                        <ChatsPage :theme="recipe?.repiceColor" :recipe_id="recipe_id" />
+                        <ChatsPage :theme="recipe?.repiceColor" :recipe_id="recipe_id"
+                            :allow_comments="recipe?.allow_comments" />
                     </div>
                 </div>
 
@@ -232,13 +292,23 @@
                     </button>
                 </div>
             </div>
-            <div v-if="isLoadingMeta">
-                <div class="w-full h-[50px] bg-gray-400/30 animate-pulse">loading meta...</div>
+            <div v-if="isLoadingMeta" class="mt-2 border-t border-gray-300/70">
+                <div class="mt-1 p-4 bg-white dark:bg-gray-800 rounded-xl shadow flex space-x-4 animate-pulse w-full">
+                    <div class="flex-1 space-y-2">
+                        <div class="h-4 bg-gray-300 dark:bg-gray-700 rounded w-2/3"></div>
+                        <div class="h-3 bg-gray-200 dark:bg-gray-600 rounded w-1/2"></div>
+                        <div class="h-8 w-20 bg-gray-200 dark:bg-gray-700 rounded-md mt-2"></div>
+                    </div>
+                    <div class="w-8 h-12 bg-gray-300 dark:bg-gray-700 rounded-w-2/3"></div>
+
+                </div>
+                <div class="w-full h-[50px] bg-gray-400/30 animate-pulse p-4 rounded">loading meta...</div>
             </div>
 
 
 
         </div>
+
         <Toast position="bottom-center" group="bc" />
 
     </div>
@@ -494,31 +564,114 @@ const toggleSave = async () => {
 
 const NowFollowing = ref(false)
 const follow = async (chefId) => {
-  NowFollowing.value = true
-  const res = await folow_unfollow(auth.token, chefId)
+    NowFollowing.value = true
+    const res = await folow_unfollow(auth.token, chefId)
 
-  recipeMeta.value.isFollowing = !recipeMeta.value.isFollowing
+    recipeMeta.value.isFollowing = !recipeMeta.value.isFollowing
 
-  if (!res?.success) {
+    if (!res?.success) {
+        toast.add({
+            severity: 'error',
+            summary: 'Follow Failed',
+            detail: res.message || 'Unable to follow the user. Please try again.',
+            group: 'bc',
+            life: 4000
+        })
+        return
+    }
     toast.add({
-      severity: 'error',
-      summary: 'Follow Failed',
-      detail: res.message || 'Unable to follow the user. Please try again.',
-      group: 'bc',
-      life: 4000
+        severity: res?.success ? 'info' : 'error',
+        summary: res?.success && recipeMeta.value.isFollowing ? 'Followed' : 'Unfollowed',
+        detail: res?.success && recipeMeta.value.isFollowing ? `You're now following ${recipe.value.user?.name}` : `You have unfollowed ${recipe.value.user?.name}` || 'Unable to follow the user. Please try again.',
+        group: 'bc',
+        life: 3000
     })
-    return
-  }
-  toast.add({
-    severity: res?.success ? 'info' : 'error',
-    summary: res?.success && recipeMeta.value.isFollowing ? 'Followed' : 'Unfollowed',
-    detail: res?.success && recipeMeta.value.isFollowing ? `You're now following ${recipe.value.user?.name}` : `You have unfollowed ${recipe.value.user?.name}` || 'Unable to follow the user. Please try again.',
-    group: 'bc',
-    life: 3000
-  })
 
-  NowFollowing.value = false
+    NowFollowing.value = false
 }
+
+const show_viewers = ref(null)
+const viewers_limit = ref(10)
+const viewers_offset = ref(0)
+const loading_views = ref(false)
+const Viewers = ref([])
+const likers= ref([])
+
+const fetch_viewers = async (limit = 10, offset = 0) => {
+    loading_views.value = true
+    const res = await fetchRecipeMeta("/recipes/views",null, {
+        recipe_id: props.recipe_id,
+        user_id: auth.user?.id,
+        limit: limit,
+        offset: offset
+    })
+    if (res.data) {
+        Viewers.value = res.data.viewers
+        viewers_limit.value = res.data.limit
+        viewers_offset.value = res.data.offset
+    }
+    loading_views.value = false
+}
+
+
+const toggle_Views = (event) => {
+    show_viewers.value.toggle(event);
+
+    fetch_viewers(viewers_limit.value, viewers_offset.value)
+    //   refs.show_viewers.toggle() // or however your popover is triggered
+}
+const toggleFollow = async (follow) => {
+    try {
+        const res = await folow_unfollow(auth.token, follow.id);
+
+        if (!res?.success) {
+            toast.add({
+                severity: 'error',
+                summary: 'Follow Failed',
+                detail: res.message || 'Unable to follow the user. Please try again.',
+                group: 'bc',
+                life: 4000,
+            });
+            return;
+        }
+
+        // Determine the new follow status
+        const followerItem = Viewers.value?.find(f => f.id === follow.id);
+        const newFollowStatus = followerItem ? !followerItem.isFollowing : true;
+
+        // Update viewers list
+        if (followerItem) {
+            followerItem.isFollowing = newFollowStatus;
+        }
+
+        // Update likers list (if exists)
+        const followingItem = likers.value?.find(f => f.id === follow.id);
+        if (followingItem) {
+            followingItem.isFollowing = newFollowStatus;
+        }
+
+        // Notify the user
+        toast.add({
+            severity: 'info',
+            summary: newFollowStatus ? 'Followed' : 'Unfollowed',
+            detail: `${newFollowStatus ? "You're now following" : "You have unfollowed"} ${follow.name}`,
+            group: 'bc',
+            life: 3000,
+        });
+
+    } catch (error) {
+        console.error('Follow/Unfollow error:', error);
+        toast.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'Something went wrong. Please try again.',
+            group: 'bc',
+            life: 4000,
+        });
+    }
+};
+
+
 
 const formatTimeAgo = date => formatDistanceToNow(new Date(date), { addSuffix: true })
 

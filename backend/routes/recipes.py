@@ -234,7 +234,7 @@ async def fetch_comments(
     """
     try:
         print("recipe_id received:", recipe_id)
-        comments = await service.get_comments(recipe_id,parent,10,0)
+        comments = await service.get_comments(recipe_id,parent,user.id,10,0)
         return comments
     except AuthError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -326,3 +326,55 @@ async def suggestions_recipe(
     except Exception as e:
         print(e)
         raise HTTPException(status_code=500, detail="Failed to get  suggestions.")
+
+
+
+class LikeCommentRequest(BaseModel):
+    id: int
+    reaction: dict
+    recipe_id:str   
+    is_liked: bool
+    
+@recipe_router.post("/recipes/comments/likes")
+@limiter.limit("30/min")
+async def like_unlike_comments(
+    request: Request,
+    data: LikeCommentRequest,
+    user: Users = Depends(get_current_user),
+    service: RecipeService = Depends()
+):
+    """
+    Like or unlike a comment on a recipe.
+    """
+    try:
+        result = await service.like_unlike_comment(
+            user_id=user.id,
+            recipe_id=UUID(data.recipe_id),
+            comment_id=data.id,
+            is_liked=data.is_liked,
+            reaction=data.reaction
+        )
+        return result
+    except AuthError as e:
+        raise HTTPException(status_code=401, detail=str(e))
+    except Exception as e:
+        print(f"[Comment Like Error] {e}")
+        raise HTTPException(status_code=500, detail="Failed to like or unlike comment.")
+
+
+
+@recipe_router.get("/recipes/views")
+@limiter.limit("30/min")
+async def get_viewers(
+    request: Request,
+    limit: int = 10,
+    offset: int = 0,
+    recipe_id: UUID =None,
+    user_id:Optional[UUID] = None,
+    service: RecipeService = Depends()
+):
+    try:
+        viewers= await service.get_viewers(recipe_id=recipe_id,user_id=user_id, offset=offset,limit=limit)
+        return viewers
+    except AuthError as e:
+        raise HTTPException(status_code=400, detail=str(e))

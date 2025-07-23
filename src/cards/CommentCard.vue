@@ -1,69 +1,48 @@
 <template>
   <div
     class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700/70 overflow-hidden transition-all hover:shadow-md relative backdrop-blur-sm group"
-    :class="{ 
+    :class="{
       'bg-blue-50/30 dark:bg-blue-900/10 border-blue-100 dark:border-blue-800/50': comment.user?.id === currentUser.id,
-      'ml-10 border-l-2 border-l-blue-200 dark:border-l-blue-800/50': isReply 
-    }"
-    ref="commentCard"
-    @click="showOptions = false"
-  >
+      'ml-10 border-l-2 border-l-blue-200 dark:border-l-blue-800/50': isReply
+    }" ref="commentCard" @click="showOptions = false">
     <!-- Header -->
     <div class="px-4 py-3 flex items-start gap-3 relative">
-      <Avatar 
-        :image="comment.user?.profilePic || defaultAvatar" 
-        shape="circle"
+      <Avatar :image="comment.user?.profilePic || defaultAvatar" shape="circle"
         class="w-9 h-9 flex-shrink-0 border-2 border-white dark:border-gray-700 shadow-sm hover:shadow transition-all"
-        :class="{ 'w-8 h-8': isReply }" 
-      />
+        :class="{ 'w-8 h-8': isReply }" />
 
       <div class="flex-1 min-w-0">
         <div class="flex items-center gap-2">
           <h3 class="text-sm font-semibold text-gray-800 dark:text-gray-100 truncate flex items-center">
             <span v-if="comment.user?.id === currentUser.id" class="text-blue-600 dark:text-blue-400">You</span>
             <span v-else>{{ comment.user?.name || 'Anonymous' }}</span>
-            <span 
-              v-if="isMentioned(comment.user?.name)"
-              class="ml-2 px-2 py-0.5 text-xs font-medium bg-blue-100/70 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full flex items-center gap-1"
-            >
+            <span v-if="isMentioned(comment.user?.name)"
+              class="ml-2 px-2 py-0.5 text-xs font-medium bg-blue-100/70 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full flex items-center gap-1">
               <i class="pi pi-at text-[0.65rem]"></i>
               <span>Mentioned</span>
             </span>
           </h3>
-          
-          <span 
-            v-if="comment.user?.verified"
-            class="text-blue-500 dark:text-blue-400"
-            title="Verified user"
-          >
+
+          <span v-if="comment.user?.verified" class="text-blue-500 dark:text-blue-400" title="Verified user">
             <i class="pi pi-verified text-sm"></i>
           </span>
         </div>
 
         <div class="flex items-center gap-2 mt-0.5">
-          <time 
-            :datetime="comment.created_at"
-            class="text-xs text-gray-500 dark:text-gray-400/80"
-            :title="new Date(comment.created_at).toLocaleString()"
-          >
+          <time :datetime="comment.created_at" class="text-xs text-gray-500 dark:text-gray-400/80"
+            :title="new Date(comment.created_at).toLocaleString()">
             {{ formatTimeAgo(comment.created_at) }}
           </time>
-          
-          <span 
-            v-if="comment.is_edited" 
-            class="text-xs text-amber-600 dark:text-amber-400/80 italic"
-          >
+
+          <span v-if="comment.is_edited" class="text-xs text-amber-600 dark:text-amber-400/80 italic">
             • edited
           </span>
         </div>
       </div>
-      
-      <button 
-        v-if="showOptions &&  comment.user?.id === currentUser.id"
-        @click.stop="toggleOptions"
+
+      <button v-if="showOptions && comment.user?.id === currentUser.id" @click.stop="toggleOptions"
         class="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700/50 rounded-full transition-colors cursor-pointer"
-        ref="optionsButton"
-      >
+        ref="optionsButton">
         <i class="pi pi-ellipsis-h text-sm"></i>
       </button>
     </div>
@@ -76,14 +55,9 @@
 
       <!-- Attachments -->
       <div v-if="comment.attachments?.length" class="mt-3 flex flex-wrap gap-2">
-        <a 
-          v-for="(attachment, idx) in comment.attachments" 
-          :key="idx" 
-          :href="attachment.url" 
-          target="_blank"
+        <a v-for="(attachment, idx) in comment.attachments" :key="idx" :href="attachment.url" target="_blank"
           class="flex items-center gap-2 px-3 py-1.5 bg-gray-50 dark:bg-gray-700/50 rounded-lg text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors border border-gray-100 dark:border-gray-700/50 hover:shadow-sm"
-          :class="attachment.type === 'image' ? 'p-0 overflow-hidden' : ''"
-        >
+          :class="attachment.type === 'image' ? 'p-0 overflow-hidden' : ''">
           <template v-if="attachment.type === 'file'">
             <i class="pi text-gray-500 dark:text-gray-400" :class="getFileIcon(attachment)"></i>
             <span class="max-w-[160px] truncate font-medium">{{ attachment.name }}</span>
@@ -91,13 +65,9 @@
               {{ formatFileSize(attachment.size) }}
             </span>
           </template>
-          <img 
-            v-else 
-            :src="attachment.url" 
+          <img v-else :src="attachment.url"
             class="h-24 w-auto rounded-lg object-cover border border-gray-100 dark:border-gray-700/50 hover:shadow-sm transition-all cursor-zoom-in"
-            :alt="attachment.name || 'Attachment'"
-            @click.stop="openImagePreview(attachment.url)"
-          >
+            :alt="attachment.name || 'Attachment'" @click.stop="openImagePreview(attachment.url)">
         </a>
       </div>
     </div>
@@ -106,50 +76,63 @@
     <div class="px-4 py-2.5 border-t border-gray-100 dark:border-gray-700/50 bg-gray-50/30 dark:bg-gray-800/30">
       <div class="flex justify-between items-center flex-wrap gap-2">
         <div class="flex flex-wrap gap-1.5">
-          <button 
-            @click.stop="emit('like', comment)"
-            class="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50 rounded-lg transition-colors"
-            :class="{ 'text-blue-600 dark:text-blue-400': comment.isLiked }"
-          >
-            <i class="pi" :class="comment.isLiked ? 'pi-thumbs-up-fill' : 'pi-thumbs-up'"></i>
-            <span v-if="comment.likes > 0">{{ comment.likes }}</span>
-            <span class="sr-only">Like</span>
-          </button>
+          <div class="card flex justify-center">
+            <button @click="toggle"
+              class="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50 rounded-lg transition-colors"
+              :class="{ 'text-blue-600 dark:text-blue-400': comment.isLiked }">
+              <span v-if="comment.isLiked && comment.reacted_emoji">
+                <span v-if="comment.reacted_emoji?.emoji">{{ comment.reacted_emoji.emoji }}</span>
+                <i v-else-if="comment.reacted_emoji?.icon" class="pi" :class="comment.reacted_emoji.icon"></i>
+              </span>
+              <i v-else class="pi" :class="defaultReactedEmoji.icon"></i>
+              <span v-if="comment.likes > 0">{{ comment.likes }}</span>
 
-          <button 
-            @click.stop="emit('reply', comment)"
-            class="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50 rounded-lg transition-colors"
-          >
+            </button>
+
+            <Popover ref="show_react_emoji">
+              <div class="flex flex-col gap-4">
+                <div>
+                  <span class="font-medium block mb-2">React</span>
+                  <ul class="list-none p-0 m-0 flex flex-row">
+                    <li v-for="reaction in reactEmojis" :key="reaction.name"
+                      class="flex flex-row items-center gap-2 px-2 py-2 hover:bg-emphasis cursor-pointer rounded-border"
+                      @click="selectEmoji(reaction)">
+                      <div class="text-xl">
+                        <span v-if="reaction.emoji">{{ reaction.emoji }}</span>
+                        <i v-else class="pi" :class="reaction.icon"></i>
+                      </div>
+                      <!-- <span class="font-medium">{{ reaction.name }}</span> -->
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </Popover>
+
+          </div>
+
+          <button @click.stop="emit('reply', comment)"
+            class="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50 rounded-lg transition-colors">
             <i class="pi pi-reply"></i>
             <span>Reply</span>
           </button>
 
-          <button 
-            v-if="!comment.parent_id && comment.replyCount > 0" 
-            @click.stop="emit('get_replies', comment.id)"
-            class="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50 rounded-lg transition-colors"
-          >
+          <button v-if="!comment.parent_id && comment.replyCount > 0" @click.stop="emit('get_replies', comment.id)"
+            class="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50 rounded-lg transition-colors">
             <i class="pi pi-comments"></i>
             <span>{{ comment.replyCount }} {{ comment.replyCount === 1 ? 'reply' : 'replies' }}</span>
           </button>
         </div>
 
         <!-- More Options Dropdown -->
-        <div 
-          v-if="showOptions && optionsOpen && comment.user?.id === currentUser.id"
-          class="absolute right-4 bottom-12 z-10 shadow-xl"
-          ref="dropdownMenu"
-        >
-          <div v-if="comment.user?.id === currentUser.id" class="bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700/70 overflow-hidden min-w-[160px]">
-            <button 
-              v-for="(option, index) in MoreButtons"
-              :key="index"
-              @click.stop="handleOptionClick(option)"
+        <div v-if="showOptions && optionsOpen && comment.user?.id === currentUser.id"
+          class="absolute right-4 bottom-12 z-10 shadow-xl" ref="dropdownMenu">
+          <div v-if="comment.user?.id === currentUser.id"
+            class="bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700/70 overflow-hidden min-w-[160px]">
+            <button v-for="(option, index) in MoreButtons" :key="index" @click.stop="handleOptionClick(option)"
               class="w-full px-4 py-2.5 text-sm text-left flex items-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
               :class="{
                 'text-red-500 hover:text-red-600 dark:hover:text-red-400': option.severity === 'danger'
-              }"
-            >
+              }">
               <i :class="option.icon"></i>
               <span>{{ option.label }}</span>
             </button>
@@ -199,6 +182,40 @@ const commentCard = ref(null)
 const optionsButton = ref(null)
 const dropdownMenu = ref(null)
 
+const show_react_emoji = ref();
+const defaultReactedEmoji = ref({ icon: 'pi-thumbs-up' });
+const reactEmojis = ref([
+  { icon: 'pi-thumbs-up-fill' },
+  { emoji: '❤️' },
+  { emoji: '😂' },
+  { emoji: '😮' },
+  { emoji: '😢' },
+  { emoji: '😡' }
+]);
+
+
+const toggle = (event) => {
+  show_react_emoji.value.toggle(event);
+}
+
+
+const selectEmoji = (emoji) => {
+  const comment = props.comment;
+
+  if (comment.reacted_emoji == emoji) {
+    comment.reacted_emoji = null;
+    emit('like', comment);
+    return;
+  } else {
+    comment.reacted_emoji = emoji;
+
+    show_react_emoji.value?.hide();
+    emit('like', comment);
+  }
+
+
+};
+
 const formatTimeAgo = (date) => formatDistanceToNow(new Date(date), { addSuffix: true })
 
 const renderMentions = (text) => {
@@ -221,9 +238,9 @@ const handleOptionClick = (option) => {
 }
 
 const handleClickOutside = (event) => {
-  if (optionsOpen.value && 
-      !commentCard.value.contains(event.target) && 
-      !dropdownMenu.value?.contains(event.target)) {
+  if (optionsOpen.value &&
+    !commentCard.value.contains(event.target) &&
+    !dropdownMenu.value?.contains(event.target)) {
     optionsOpen.value = false
   }
 }
@@ -248,7 +265,7 @@ const getFileIcon = (file) => {
     audio: ['mp3', 'wav', 'ogg'],
     video: ['mp4', 'mov', 'avi']
   }
-  
+
   for (const [type, exts] of Object.entries(iconMap)) {
     if (exts.includes(extension)) return `pi-file-${type}`
   }
@@ -260,12 +277,12 @@ const formatFileSize = (bytes) => {
   const units = ['B', 'KB', 'MB', 'GB']
   let size = bytes
   let unitIndex = 0
-  
+
   while (size >= 1024 && unitIndex < units.length - 1) {
     size /= 1024
     unitIndex++
   }
-  
+
   return `${size.toFixed(unitIndex > 0 ? 1 : 0)} ${units[unitIndex]}`
 }
 
@@ -277,7 +294,9 @@ const openImagePreview = (url) => {
 
 <style scoped>
 /* Smooth transitions */
-button, a, .avatar {
+button,
+a,
+.avatar {
   transition: all 0.2s ease;
 }
 
@@ -288,9 +307,17 @@ button:hover {
 
 /* Subtle pulse animation for new comments */
 @keyframes pulse {
-  0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4); }
-  70% { box-shadow: 0 0 0 6px rgba(59, 130, 246, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+  0% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4);
+  }
+
+  70% {
+    box-shadow: 0 0 0 6px rgba(59, 130, 246, 0);
+  }
+
+  100% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+  }
 }
 
 /* Apply to new comments */

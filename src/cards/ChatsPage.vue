@@ -1,7 +1,7 @@
 <template>
   <div class="w-full mx-auto py-1 px-2 ">
     <!-- Main Comment Input Section (only shown when not replying) -->
-    <section v-if="!replyTarget" class="mb-6">
+    <section v-if="!replyTarget && allow_comments" class="mb-6">
       <div class="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-100 dark:border-gray-700">
         <!-- Card Header -->
         <div class="px-4 py-3 border-b border-gray-100 dark:border-gray-700">
@@ -17,6 +17,9 @@
             @toggle-emoji-picker="toggleEmojiPicker" @trigger-file-upload="triggerFileUpload" @remove-file="removeFile"
             @submit="submitComment" @add-emoji="addEmoji" />
         </div>
+      </div>
+      <div v-if="!allow_comments">
+        <p>Comments has been disabled in this Recipe</p>
       </div>
     </section>
 
@@ -36,7 +39,7 @@
             @get_replies="fetchCommentReplies" />
 
           <!-- Reply Input Section (shown when replying to this comment) -->
-          <div v-if="replyTarget?.id === comment.id" class="ml-5 mt-3">
+          <div v-if="replyTarget?.id === comment.id && allow_comments" class="ml-5 mt-3">
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-100 dark:border-gray-700">
               <!-- Card Header -->
               <div class="px-4 py-3 border-b border-gray-100 dark:border-gray-700">
@@ -75,13 +78,16 @@
                   </div>
 
                   <!-- Card Content -->
-                  <div class="p-4">
+                  <div class="p-4" v-if="allow_comments">
                     <!-- In the reply sections of your parent component -->
                     <CommentInput v-model="commentContent" :attached-files="attachedFiles"
                       :show-emoji-picker="showEmojiPicker" :submit-button-text="submitButtonText"
                       :can-submit="canSubmit" :theme="theme" :is-reply="true" :replying-to="replyTarget?.user?.name"
                       @toggle-emoji-picker="toggleEmojiPicker" @trigger-file-upload="triggerFileUpload"
                       @remove-file="removeFile" @submit="submitComment" @add-emoji="addEmoji" @cancel="cancelComment" />
+                  </div>
+                  <div v-if="!allow_comments">
+                    <p>Comments has been disabled in this Recipe</p>
                   </div>
                 </div>
               </div>
@@ -92,9 +98,18 @@
     </section>
   </div>
   <div v-if="isLoadingComments">
+    <div v-for="i in 2" :key="i"
+      class="mt-1 p-4 bg-white dark:bg-gray-800 rounded-xl shadow flex space-x-4 animate-pulse w-full">
+      <div class="w-12 h-12 bg-gray-300 dark:bg-gray-700 rounded-full"></div>
+      <div class="flex-1 space-y-2">
+        <div class="h-4 bg-gray-300 dark:bg-gray-700 rounded w-2/3"></div>
+        <div class="h-3 bg-gray-200 dark:bg-gray-600 rounded w-1/2"></div>
+        <div class="h-8 w-20 bg-gray-200 dark:bg-gray-700 rounded-md mt-2"></div>
+      </div>
+    </div>
     <div class="w-full h-[40px] bg-gray-400/30 animate-pulse">loading...</div>
   </div>
-          <Toast position="bottom-center" group="bc" />
+  <Toast position="bottom-center" group="bc" />
 
 </template>
 
@@ -110,6 +125,7 @@ import CommentInput from './CommentInput.vue' // New component
 import { useAuthStore } from '../store/user'
 import { fetchComments, make_a_delete, make_a_post } from '../apis'
 import { useToast } from 'primevue/usetoast'
+import { boolean } from 'zod'
 
 const auth = useAuthStore()
 const toast = useToast()
@@ -122,6 +138,11 @@ const props = defineProps({
   recipe_id: {
     type: String,
     required: true
+  },
+  allow_comments: {
+    type: Boolean,
+    Default: () => true
+
   }
 })
 
@@ -251,7 +272,7 @@ const startReply = comment => {
 const MainCommentInput = ref(null)
 
 const editComment = comment => {
-  MainCommentInput.value.scrollIntoView({ behavior: 'smooth' ,block: 'center'})
+  MainCommentInput.value.scrollIntoView({ behavior: 'smooth', block: 'center' })
   editTarget.value = comment
   replyTarget.value = null
   commentContent.value = comment.content
@@ -267,7 +288,7 @@ const deleteComment = async (comment) => {
   const response = await make_a_delete(
     `/recipes/${props.recipe_id}/comments/${comment.id}`,
     auth.token,
-    {  }
+    {}
   )
   if (!response.success) {
     toast.add({
@@ -277,7 +298,7 @@ const deleteComment = async (comment) => {
       group: 'bc',
       life: 5000,
     });
-  }else {
+  } else {
     // Remove comment from local state
     comments.value = comments.value.filter(c => c.id !== comment.id)
     toast.add({
@@ -299,9 +320,44 @@ const cancelComment = () => {
 }
 
 // Like action (demo)
-const likeComment = comment => {
-  comment.likes += 1
-}
+
+const likeComment = async (comment) => {
+  if (!comment || typeof comment !== 'object') return;
+
+  // Ensure likes is always a valid number
+  if (typeof comment.likes !== 'number') {
+    comment.likes = 0;
+  }
+
+  // Case 1: User has reacted with an emoji
+  if (comment.reacted_emoji) {
+    if (!comment.isLiked) {
+      comment.likes += 1;
+      comment.isLiked = true;
+    } else {
+      comment.likes = Math.max(0, comment.likes - 1);
+      comment.isLiked = false;
+    }
+  } 
+  // Case 2: No emoji reaction
+  else {
+    // If user has somehow liked without an emoji, undo it
+    if (comment.isLiked) {
+      comment.likes = Math.max(0, comment.likes - 1);
+    }
+    comment.isLiked = false;
+  }
+
+await make_a_post("/recipes/comments/likes", auth.token, {
+    is_liked: comment.isLiked,
+    reaction: comment.reacted_emoji,
+    id: comment.id,
+    recipe_id: props.recipe_id
+})
+  
+};
+
+
 
 const fetchCommentReplies = async (parent_id) => {
   const { success, data, message } = await fetchComments(auth.token, props.recipe_id, {

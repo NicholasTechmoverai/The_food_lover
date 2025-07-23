@@ -57,6 +57,7 @@ import BlockUI from 'primevue/blockui';
 import ToggleSwitch from 'primevue/toggleswitch';
 import Badge from 'primevue/badge';
 import OverlayBadge from 'primevue/overlaybadge';
+import Drawer from 'primevue/drawer';
 
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import 'primeicons/primeicons.css';
@@ -124,8 +125,7 @@ app.component('BlockUI', BlockUI)
 app.component('ToggleSwitch', ToggleSwitch)
 app.component('OverlayBadge', OverlayBadge)
 app.component('Badge', Badge)
-
-
+app.component('Drawer', Drawer)
 
 
 app.use(router)

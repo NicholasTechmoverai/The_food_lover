@@ -213,6 +213,9 @@ class RecipeComment(Model):
 
     created_at = fields.DatetimeField(auto_now_add=True)
     updated_at = fields.DatetimeField(auto_now=True)
+    
+    likes: fields.ReverseRelation["CommentLike"]
+
 
     class Meta:
         table = "recipe_comments"
@@ -291,6 +294,8 @@ class CommentLike(Model):
     id = fields.IntField(pk=True)
     user = fields.ForeignKeyField("models.User", related_name="comment_likes")
     comment = fields.ForeignKeyField("models.RecipeComment", related_name="likes")
+    reaction = fields.JSONField(null=True)  # ← instead of CharField
+
 
     created_at = fields.DatetimeField(auto_now_add=True)
 

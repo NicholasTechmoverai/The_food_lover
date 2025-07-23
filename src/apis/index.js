@@ -29,6 +29,8 @@ const fetchMeta = async (endpoint, token = null, queryParams = {}, fallback = []
   }
 };
 
+
+
 // Fetch user folloers
 export const fetchFollowers = async (token = null, queryParams = {}) => {
   return await fetchMeta(`/users/followers`, token, queryParams, []);
