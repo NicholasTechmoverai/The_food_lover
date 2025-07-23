@@ -28,6 +28,7 @@ const route = useRoute()
 let tokenInterval
 let themeMediaQuery
 
+
 // List of routes where user must be verified
 const protectedRoutes = [
   'RecipesPage', 'RecipeType', 'RecipeId',
@@ -266,7 +267,7 @@ const showNotificationTemplate = (data) => {
             severity: 'info',
             summary: 'New Notification',
             detail: data, // Pass the full object here
-            group:"bc",
+            group:ismobile.value ? 'tc' : 'bc',
             life:5000
         });
         showNotification.value = true;
@@ -301,7 +302,6 @@ notificationsSocket.on("new_notifications", (data) => {
     }
 });
 
-const getToastGroup = () => (ismobile.value ? 'tc' : 'bc'); // or just `ismobile ? 'tc' : 'bc'` if not a ref
 
 
 
@@ -356,21 +356,21 @@ onBeforeUnmount(() => {
 
 
 <div class="card flex justify-center">
-    <Toast position="bottom-center" group="bc"  @close="onCloseNotification">
+    <Toast position="bottom-center" :group="ismobile ? 'tc' : 'bc'" :position="ismobile ? 'top-center' : 'bottom-center'"  @close="onCloseNotification">
         <template #message="slotProps">
             <div class="flex flex-col items-start flex-auto">
                 <div class="flex items-center gap-2">
                     <Avatar :image="slotProps.message?.detail?.actor?.avatar" shape="circle" />
                     <span class="font-bold">{{ slotProps.message?.detail?.actor?.username }}</span>
                 </div>
-                <div class="font-medium text-lg my-4">
-                    {{ slotProps.message.detail?.preview }}
+                <div class="font-medium text-lg my-0">
+                    {{ slotProps.message.detail?.verb }}
                 </div>
                 <Button
                     v-if="slotProps.message.detail?.url"
                     size="small"
                     label="View"
-                    severity="success"
+                    severity="secondary" variant="text"
                     @click="onReplyNotification(slotProps.message.detail?.url)"
                 />
             </div>

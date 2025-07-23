@@ -472,9 +472,9 @@ class AuthService:
                 notification_type="follow",
                 target_object_id=None,
                 target_content_type="user",
-                verb="followed you",
+                verb="started following you.",
                 thread_id=chef_id,
-                preview="started following you.",
+                preview="followed you",
             )
 
             # Send WebSocket notification (optional)
