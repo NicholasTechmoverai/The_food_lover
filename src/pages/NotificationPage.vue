@@ -59,7 +59,7 @@
           <div v-if="notifications.length > 0" class="space-y-1">
             <Card v-for="notification in notifications" :key="notification.id"
               class="cursor-pointer group " :class="{
-                'border-l-2 border-r-2 border-[var(--theme-color)]': !notification.read,
+                'border-l-4 border-r-2 border-[var(--theme-color)]': !notification.read,
                 'hover:shadow-md transition-shadow duration-200': true
               }" @click="toggleReadStatus(notification)">
               <template #content>
