@@ -93,8 +93,12 @@
                             <router-link :to="`/${popular_chef.username}`"
                                 class="text-lg font-semibold text-gray-900 dark:text-white hover:text-[var(--theme-color)] transition">
                                 {{ popular_chef.name }}
+                            </router-link><br>
+                            <router-link :to="`/${popular_chef.username}`"
+                                class="text-sm text-[var(--theme-color)]/70 hover:text-[var(--theme-color)] transition">
+                                {{ popular_chef.username }}
                             </router-link>
-                            <div class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                            <div class="mt-0 text-sm text-gray-500 dark:text-gray-400">
                                 <span>{{ popular_chef.views }} views</span> ·
                                 <span>{{ popular_chef.likes }} likes</span> ·
                                 <span>{{ popular_chef.recipes_count }} recipes</span>

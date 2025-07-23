@@ -11,12 +11,12 @@
           class="flex w-full md:w-auto flex-row md:flex-col space-x-4 md:space-x-0 md:space-y-1 overflow-x-auto md:overflow-x-visible scrollbar-hide">
           <Button v-for="tab in tabs" :key="tab.id" @click="activateTab(tab)"
             :severity="activeTab === tab.id ? 'info' : 'secondary'" text
-            class="flex-shrink-0 md:w-full justify-start !py-3 min-w-[140px] md:min-w-0" :class="{
+            class="flex-shrink-0 md:w-full justify-start !py-3  md:min-w-0" :class="{
               '!bg-[var(--theme-color)]/10 !text-[var(--theme-color)]': activeTab === tab.id,
               '!text-gray-700 dark:!text-gray-300': activeTab !== tab.id
             }">
             <i :class="tab.icon" class="mr-2"></i>
-            <span>{{ tab.label }}</span>
+            <span v-if="!isMobile">{{ tab.label }}</span>
             <Badge v-if="tab.badgeCount > 0" :value="tab.badgeCount" class="ml-auto"
               :style="{ backgroundColor: auth.user?.theme || '#f97316' }" />
           </Button>
@@ -24,9 +24,9 @@
 
 
         <!-- Notification Settings -->
-        <div class="hidden md:block mt-8 pt-4 border-t border-gray-200 dark:border-gray-700">
-          <Button @click="openSettings" icon="pi pi-cog" label="Notification Settings" text
-            class="w-full justify-start !py-3 !text-gray-700 dark:!text-gray-300" />
+        <div class=" md:mt-8 md:pt-4 md:border-t border-gray-200 dark:border-gray-700">
+          <Button @click="openSettings" icon="pi pi-cog" :label="isMobile?'':'Notification Settings'" text
+            class="w-full justify-start md:!py-3 !text-gray-700 dark:!text-gray-300" />
         </div>
       </div>
     </div>
@@ -57,11 +57,10 @@
         <template v-if="!loading">
           <!-- Notifications List -->
           <div v-if="notifications.length > 0" class="space-y-1">
-            <Card v-for="notification in notifications" :key="notification.id"
-              class="cursor-pointer group " :class="{
-                'border-l-4 border-r-2 border-[var(--theme-color)]': !notification.read,
-                'hover:shadow-md transition-shadow duration-200': true
-              }" @click="toggleReadStatus(notification)">
+            <Card v-for="notification in notifications" :key="notification.id" class="cursor-pointer group " :class="{
+              'border-l-4 border-r-2 border-[var(--theme-color)]': !notification.read,
+              'hover:shadow-md transition-shadow duration-200': true
+            }" @click="toggleReadStatus(notification)">
               <template #content>
                 <div class="flex items-start">
                   <!-- Actor Avatar -->
@@ -113,7 +112,7 @@
                   <div
                     class="flex flex-col items-center gap-2 ml-2 opacity-0 group-hover:opacity-100 group-active:opacity-100 transition-opacity">
                     <Button @click.stop="deleteNotification(notification)" icon="pi pi-trash" text rounded
-                      severity="danger"  />
+                      severity="danger" />
                   </div>
                 </div>
               </template>
@@ -144,10 +143,15 @@
         </template>
 
         <!-- Loading State -->
-        <div v-else class="h-full flex flex-col items-center justify-center">
-          <ProgressSpinner style="width: 50px; height: 50px" strokeWidth="4" :stroke="auth.user?.theme || '#f97316'"
-            fill="transparent" animationDuration=".5s" class="mb-4" />
-          <p class="text-gray-500 dark:text-gray-400">Loading notifications...</p>
+        <div v-else class="h-full flex flex-col items-center justify-start w-full" >
+          <div v-for="i in 5" class="p-4 bg-white dark:bg-gray-800 rounded-xl shadow flex space-x-4 animate-pulse w-full">
+            <div class="w-12 h-12 bg-gray-300 dark:bg-gray-700 rounded-full"></div>
+            <div class="flex-1 space-y-2">
+              <div class="h-4 bg-gray-300 dark:bg-gray-700 rounded w-2/3"></div>
+              <div class="h-3 bg-gray-200 dark:bg-gray-600 rounded w-1/2"></div>
+              <div class="h-8 w-20 bg-gray-200 dark:bg-gray-700 rounded-md mt-2"></div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -169,7 +173,7 @@
         </div>
         <div class="flex items-center justify-between">
           <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Push Notifications</label>
-          <ToggleSwitch v-model="settings.push_notifications ">
+          <ToggleSwitch v-model="settings.push_notifications">
             <template #handle="{ checked }">
               <i :class="['!text-xs pi', { 'pi-check': checked, 'pi-times': !checked }]" />
             </template>
@@ -236,13 +240,14 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import { format } from 'date-fns'
-import { useAuthStore,useNotificationStore } from '../store/user'
+import { useAuthStore, useNotificationStore } from '../store/user'
 import router from '../router'
 import { useRoute } from 'vue-router'
 import { make_a_delete, make_a_post } from '../apis'
 import { useToast } from 'primevue/usetoast'
 import { formatDistanceToNow } from 'date-fns'
-
+import { useIsMobile } from '../reusables'
+const isMobile = useIsMobile()
 const toast = useToast()
 const route = useRoute()
 const props = defineProps({
@@ -287,7 +292,7 @@ watch(
 // Settings
 const settings = ref({
   email_notifications: true,
-  push_notifications : true,
+  push_notifications: true,
   notificationTypes: { like: true, comment: true, mention: true, follow: true, system: true }
 })
 
@@ -521,7 +526,7 @@ const getNotificationsSettings = async () => {
       auth.token, {}
     )
 
-    if(res.data){
+    if (res.data) {
       settings.value = res.data
     }
   } catch (error) {
@@ -533,7 +538,7 @@ const getNotificationsSettings = async () => {
       life: 3000
     })
   }
-    loadingSettings.value = false
+  loadingSettings.value = false
 
 }
 const deleteNotification = async (notification) => {
@@ -549,7 +554,7 @@ const deleteNotification = async (notification) => {
       detail: 'Notification deleted',
       life: 3000
     })
-        await getNotificationsCount()
+    await getNotificationsCount()
   } catch (error) {
     console.error('Error deleting notification:', error)
     toast.add({
@@ -650,9 +655,10 @@ watch(() => route.query.tab, (newTab) => {
 .fade-leave-to {
   opacity: 0;
 }
-.p-card{
+
+.p-card {
   border-radius: 0;
-    background-color: transparent !important;
+  background-color: transparent !important;
 
 }
 </style>
