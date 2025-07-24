@@ -252,7 +252,7 @@ const Menu_items = ref([
         label: 'Reports',
         icon: 'pi pi-chart-bar',
         command: () => {
-            console.log('📊 Opening reports dashboard...');
+            router.push("/reports")
         }
     },
     {

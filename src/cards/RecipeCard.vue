@@ -3,7 +3,7 @@
     class="min-w-[300px] max-w-[500px] bg-white relative dark:bg-gray-900 shadow-md hover:shadow-xl rounded-lg overflow-hidden transition-all duration-300 hover:-translate-y-1 flex flex-col h-full"
     :style="{ '--theme-color': recipe?.repiceColor || '#f97316' }">
     <!-- 👤 User Header -->
-    <div class="flex justify-between items-center px-4 py-3 border-b border-gray-300 dark:border-gray-700">
+    <div class="flex justify-between items-center px-3 py-3  border-b border-gray-300 dark:border-gray-700">
       <div class="flex items-center gap-3">
         <router-link :to="`/${recipe?.user?.username || auth.user.name}`">
           <img :src="recipe.user?.profilePic || defaultAvatar" :alt="recipe.user?.name"
@@ -15,14 +15,21 @@
             formatTimeAgo(recipe?.createdAt || Date.now()) }}</span></p>
         </div>
       </div>
-      <button v-if="!NowFollowing && recipe?.user.id !== auth.user.id" @click="follow(recipe.user.id)"
-        class="text-xs px-3 py-1 rounded-full border border-[var(--theme-color)] text-[var(--theme-color)] hover:bg-[var(--theme-color)] hover:text-white transition">
-        <span v-if="recipe?.recipeMeta?.isFollowing">Following</span><span v-else>Follow</span>
-      </button>
-      <span v-else-if="NowFollowing"
-        class="text-xs px-3 py-1 rounded-full border border-[var(--theme-color)] text-[var(--theme-color)] opacity-70 cursor-not-allowed">
-        <span v-if="recipe?.recipeMeta?.isFollowing">Unfollowing...</span><span v-else>Following...</span>
-      </span>
+      <div class="">
+        <button v-if="!NowFollowing && recipe?.user.id !== auth.user.id" @click="follow(recipe.user.id)"
+          class="text-xs px-3 py-1 rounded-full border border-[var(--theme-color)] text-[var(--theme-color)] hover:bg-[var(--theme-color)] hover:text-white transition">
+          <span v-if="recipe?.recipeMeta?.isFollowing">Following</span><span v-else>Follow</span>
+        </button>
+        <span v-else-if="NowFollowing"
+          class="text-xs px-3 py-1 rounded-full border border-[var(--theme-color)] text-[var(--theme-color)] opacity-70 cursor-not-allowed">
+          <span v-if="recipe?.recipeMeta?.isFollowing">Unfollowing...</span><span v-else>Following...</span>
+        </span>
+        <div v-if="recipe?.user.id === auth.user.id" class="card flex justify-center">
+          <Button type="button" icon="pi pi-ellipsis-v" severity="success" rounded variant="text"
+            @click="toggle_more_options" aria-haspopup="true" size="small" aria-controls="overlay_menu" />
+          <Menu ref="more_options_menu" id="overlay_menu" :model="more_options_items" :popup="true" />
+        </div>
+      </div>
     </div>
 
     <!-- 📷 Recipe Image with Action Buttons -->
@@ -146,6 +153,7 @@
       </div>
     </Transition>
 
+    <ConfirmPopup></ConfirmPopup>
 
     <Toast position="bottom-center" group="bc" />
   </div>
@@ -160,14 +168,16 @@ import { ref, computed } from 'vue';
 import onerrorImage from '../assets/onerrorimage.png'
 import { useAuthStore } from '../store/user.js'
 import { useToast } from 'primevue/usetoast'
-import { like_unlike, save_unsave_favourites } from '../apis/index.js'
+import { like_unlike, make_a_post, save_unsave_favourites } from '../apis/index.js'
 import { formatDistanceToNow } from 'date-fns'
-
+import { useConfirm } from "primevue/useconfirm";
+const confirm = useConfirm();
 
 // import { ClockIcon, GlobeIcon, ArrowRightIcon } from 'your-icon-library';
 import RecipeButton from './RecipeViewButton.vue'
 import { folow_unfollow } from '../apis';
 import { boolean } from 'zod';
+import router from '../router/index.js';
 const props = defineProps({
   recipe: {
     type: Object,
@@ -212,6 +222,64 @@ const defaultAvatar = 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png';
 const placeholderImage = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?ixlib=rb-4.0.3&auto=format&fit=crop&w=880&q=80';
 
 const formatTimeAgo = date => formatDistanceToNow(new Date(date), { addSuffix: true })
+
+const more_options_menu = ref();
+
+const more_options_items = ref([
+  {
+    label: 'Options',
+    items: [
+      {
+        label: 'Edit',
+        icon: 'pi pi-pen',
+        command: () => {
+          router.push(`/recipes/new/p/${props.recipe.id}`)
+        }
+      },
+      {
+        separator: true
+      },
+      {
+        label: 'Delete',
+        icon: 'pi pi-trash',
+        severity: 'danger',
+        command: ({ originalEvent }) => {
+          confirm.require({
+            target: originalEvent.currentTarget,
+            message: 'Do you want to delete this record?',
+            icon: 'pi pi-info-circle',
+            rejectProps: {
+              label: 'Cancel',
+              severity: 'secondary',
+              outlined: true
+            },
+            acceptProps: {
+              label: 'Delete',
+              severity: 'danger'
+            },
+            accept: async () => {
+              const res = await make_a_post(`/recipes/${props.recipe.id}/delete`)
+              if (res.data) {
+                toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Recipe deleted', life: 3000 });
+              } else {
+                toast.add({ severity: 'error', summary: 'Failed', detail: 'Failed to delete recipe', life: 3000 });
+              }
+            },
+            reject: () => {
+              // toast.add({ severity: 'error', summary: 'Rejected', detail: 'You have rejected', life: 3000 });
+            }
+          });
+
+        }
+      }
+
+    ]
+  }
+]);
+
+const toggle_more_options = (event) => {
+  more_options_menu.value.toggle(event);
+};
 
 const formatCookTime = (cookTime) => {
   if (cookTime.hr > 0 && cookTime.min > 0) {
@@ -312,3 +380,10 @@ const toggleSave = async () => {
 
 
 </script>
+
+<style>
+.p-menu {
+  width: fit-content;
+  min-width: 50px !important;
+}
+</style>

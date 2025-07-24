@@ -58,6 +58,10 @@ import ToggleSwitch from 'primevue/toggleswitch';
 import Badge from 'primevue/badge';
 import OverlayBadge from 'primevue/overlaybadge';
 import Drawer from 'primevue/drawer';
+import Menu from 'primevue/menu';
+import ConfirmPopup from 'primevue/confirmpopup';
+
+import Chart from 'primevue/chart';
 
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import 'primeicons/primeicons.css';
@@ -126,6 +130,9 @@ app.component('ToggleSwitch', ToggleSwitch)
 app.component('OverlayBadge', OverlayBadge)
 app.component('Badge', Badge)
 app.component('Drawer', Drawer)
+app.component('Menu', Menu)
+app.component('ConfirmPopup', ConfirmPopup)
+app.component('Chart', Chart)
 
 
 app.use(router)

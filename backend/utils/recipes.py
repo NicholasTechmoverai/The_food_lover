@@ -87,7 +87,7 @@ class RecipeSteps(BaseModel):
     id: str
     name: str
     description: str
-    category: Optional[str] = None
+    category: Optional[list[str]] = None
     ingredients: Optional[List[IngredientInStep]] = []
     steps: Optional[List[Step]] = []
     tags: Optional[List[str]] = []
@@ -464,9 +464,7 @@ class RecipeService:
                 },
                 "complexityLevel": {
                     "name": recipe.difficulty_level.capitalize(),
-                    "value": {"Easy": 1, "Medium": 2, "Hard": 3}.get(
-                        recipe.difficulty_level.capitalize(), 1
-                    ),
+                    "value": recipe.difficulty_level,
                 },
                 "category": [cat.name for cat in recipe.category],
                 "user": {
@@ -913,6 +911,9 @@ class RecipeService:
         await RecipeLike.filter(recipe_id=recipe_id).delete()
         await Favorite.filter(recipe_id=recipe_id).delete()
         await ShareRecipe.filter(recipe_id=recipe_id).delete()
+        await RecipeView.filter(recipe_id=recipe_id).delete()
+        
+
 
         # Finally delete the recipe
         await recipe.delete()
@@ -1248,6 +1249,61 @@ class RecipeService:
 
         return {
             "viewers": result,
+            "offset": offset,
+            "limit": limit,
+            "count": len(result),
+        }
+    async def get_likes(
+        self,
+        recipe_id: UUID,
+        user_id: Optional[UUID],
+        offset: int = 0,
+        limit: int = 10,
+    ) -> dict:
+        """
+        Retrieve viewers of a specific recipe, including user details and follow status.
+        """
+        # Fetch viewers for the given recipe
+        viewers = (
+            await RecipeLike.filter(recipe_id=recipe_id)
+            .offset(offset)
+            .limit(limit)
+            .prefetch_related("user")
+        )
+        
+        print(viewers)
+
+        users = [view.user for view in viewers if view.user]
+        user_ids = [user.id for user in users]
+
+        # Determine which users are followed by the requesting user
+        following_ids = set()
+        if user_id:
+            following_ids = set(
+                await Follow.filter(follower_id=user_id, following_id__in=user_ids)
+                .values_list("following_id", flat=True)
+            )
+
+        result = [
+            {
+                "id": str(user.id),
+                "name": getattr(user, "name", "Unknown"),
+                "username": getattr(user, "username", "unknown"),
+                "isChef": user.is_chef,
+                "avatar": (
+                    user.picture_url
+                    if user.picture_url and user.picture_url.startswith("https://")
+                    else f"{BASE_SERVER}/{user.picture_url}"
+                    if user.picture_url
+                    else ""
+                ),
+                "isFollowing": user.id in following_ids,
+            }
+            for user in users
+        ]
+
+        return {
+            "likers": result,
             "offset": offset,
             "limit": limit,
             "count": len(result),

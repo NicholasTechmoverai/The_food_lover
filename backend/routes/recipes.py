@@ -378,3 +378,44 @@ async def get_viewers(
         return viewers
     except AuthError as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+
+@recipe_router.get("/recipes/likes")
+@limiter.limit("30/min")
+async def get_likes(
+    request: Request,
+    limit: int = 10,
+    offset: int = 0,
+    recipe_id: UUID =None,
+    user_id:Optional[UUID] = None,
+    service: RecipeService = Depends()
+):
+    try:
+        viewers= await service.get_likes(recipe_id=recipe_id,user_id=user_id, offset=offset,limit=limit)
+        return viewers
+    except AuthError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@recipe_router.post("/recipes/{recipe_id}/delete")
+@limiter.limit("3/min")
+async def delete_recipes(
+    request: Request,
+    recipe_id: UUID,
+    user: Users = Depends(get_current_user),
+    service: RecipeService = Depends()
+):
+    """
+    Like or unlike a comment on a recipe.
+    """
+    try:
+        if not user:
+            raise HTTPException(status_code=404, detail="Unautorized")
+
+        result = await service.delete_recipe(user_id=user.id,recipe_id=recipe_id)
+        return result
+    except AuthError as e:
+        raise HTTPException(status_code=401, detail=str(e))
+    except Exception as e:
+        print(f"[Comment Like Error] {e}")
+        raise HTTPException(status_code=500, detail="Failed to like or unlike comment.")

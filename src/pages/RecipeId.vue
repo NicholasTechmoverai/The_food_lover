@@ -141,24 +141,87 @@
                     <div class="flex flex-col md:flex-row justify-between items-center gap-1 md:gap-4">
                         <!-- Actions (Like, Save, Share) -->
                         <div class="flex flex-wrap items-center gap-4">
-                            <button @click="toggleLike"
-                                class="flex items-center gap-1.5 text-sm font-medium transition cursor-pointer"
-                                :class="recipeMeta.isLiked
-                                    ? 'text-white bg-[color:var(--like-color)] px-3 py-1.5 rounded-full shadow'
-                                    : 'text-gray-600 dark:text-gray-300 hover:text-white hover:bg-[color:var(--like-color)] px-3 py-1.5 rounded-full transition'" :style="{
+
+                            <!-- Likers -->
+                            <div class="text-center">
+                                <button
+                                    class="flex items-center gap-3 text-sm font-medium transition cursor-pointer hover:bg-[color:var(--like-color)]"
+                                    :class="recipeMeta.isLiked
+                                        ? 'text-white bg-[color:var(--like-color)]/50 px-3 py-1.5 rounded-full shadow'
+                                        : 'text-gray-600 dark:text-gray-300 hover:text-white px-3 py-1.5 rounded-full transition'"
+                                    :style="{
                                         '--like-color': recipe?.repiceColor || '#f97316'
                                     }">
-                                <i :class="recipeMeta.isLiked ? 'pi pi-heart-fill' : 'pi pi-heart'"></i>
-                                <span>{{ recipeMeta.likeCount || 0 }}</span>
-                            </button>
+                                    <i @click="toggleLike"
+                                        :class="['hover:bg-[color:var(--like-color)]/80', recipeMeta.isLiked ? 'pi pi-heart-fill' : 'pi pi-heart']"></i>
+                                    <span @click="toggle_Likers" class="hover:bg-[color:var(--like-color)]">{{
+                                        recipeMeta.likeCount || 0 }}</span>
+                                </button>
+
+
+                                <!-- Likers Popover -->
+                                <Popover ref="show_likers">
+                                    <div
+                                        class="flex flex-col max-h-96 overflow-y-auto p-4 w-72 bg-white dark:bg-gray-900 rounded-lg shadow-lg">
+                                        <span class="font-semibold text-lg mb-3">Liked by</span>
+
+                                        <!-- Loading Spinner -->
+                                        <ul v-if="loading_likers">
+                                            <i class="pi pi-spin pi-spinner" style="font-size: 2rem"></i>
+                                        </ul>
+
+                                        <!-- Likers List -->
+                                        <ul v-else class="space-y-2">
+                                            <li v-for="liker in likers" :key="liker.id"
+                                                class="flex items-center gap-3 p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg cursor-pointer transition">
+                                                <img :src="liker.avatar" alt="avatar"
+                                                    class="w-10 h-10 rounded-full object-cover" />
+
+                                                <router-link :to="`/${liker.username}`" class="flex-1">
+                                                    <div class="font-medium text-sm text-gray-900 dark:text-white">
+                                                        {{ liker.name }}
+                                                    </div>
+                                                    <div class="text-xs text-gray-500 dark:text-gray-400">
+                                                        @{{ liker.username }}
+                                                    </div>
+                                                </router-link>
+
+                                                <button v-if="liker.id !== auth.user.id && liker.isChef"
+                                                    @click.stop="toggleFollow(liker)"
+                                                    class="text-xs px-3 py-1 rounded-full font-semibold transition duration-200"
+                                                    :class="liker.isFollowing ? 'bg-red-100 text-red-600 hover:bg-red-200' : 'bg-blue-100 text-blue-600 hover:bg-blue-200'">
+                                                    {{ liker.isFollowing ? 'Unfollow' : 'Follow' }}
+                                                </button>
+                                            </li>
+                                        </ul>
+
+                                        <!-- Pagination -->
+                                        <div class="flex justify-between items-center mt-4 gap-4">
+                                            <button v-if="likers && likers_offset >= likers_limit"
+                                                @click="fetch_likers(likers_limit, likers_offset - likers_limit)"
+                                                class="px-4 py-1 text-sm rounded bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200">
+                                                Prev
+                                            </button>
+
+                                            <button v-if="likers_offset + likers_limit < recipeMeta.likeCount"
+                                                @click="fetch_likers(likers_limit, likers_offset + likers_limit)"
+                                                class="px-4 py-1 text-sm rounded bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200">
+                                                Next
+                                            </button>
+                                        </div>
+                                    </div>
+                                </Popover>
+                            </div>
+
 
                             <button @click="toggleSave"
-                                class="flex items-center gap-1.5 text-sm font-medium transition cursor-pointer"
+                                class="flex items-center gap-1.5 text-sm font-medium transition cursor-pointer hover:bg-[color:var(--save-color)]"
                                 :class="recipeMeta.isSaved
-                                    ? 'text-white bg-[color:var(--save-color)] px-3 py-1.5 rounded-full shadow'
-                                    : 'text-gray-600 dark:text-gray-300 hover:text-white hover:bg-[color:var(--save-color)] px-3 py-1.5 rounded-full transition'" :style="{
-                                        '--save-color': recipe.repiceColor || '#f97316'
-                                    }">
+                                    ? 'text-white bg-[color:var(--save-color)]/50 px-3 py-1.5 rounded-full shadow'
+                                    : 'text-gray-600 dark:text-gray-300 hover:text-white  px-3 py-1.5 rounded-full transition'"
+                                :style="{
+                                    '--save-color': recipe.repiceColor || '#f97316'
+                                }">
                                 <i :class="recipeMeta.isSaved ? 'pi pi-bookmark-fill' : 'pi pi-bookmark'"></i>
                                 <span>{{ recipeMeta.isSaved ? 'Saved' : 'Save' }}</span>
                             </button>
@@ -595,11 +658,10 @@ const viewers_limit = ref(10)
 const viewers_offset = ref(0)
 const loading_views = ref(false)
 const Viewers = ref([])
-const likers= ref([])
 
 const fetch_viewers = async (limit = 10, offset = 0) => {
     loading_views.value = true
-    const res = await fetchRecipeMeta("/recipes/views",null, {
+    const res = await fetchRecipeMeta("/recipes/views", null, {
         recipe_id: props.recipe_id,
         user_id: auth.user?.id,
         limit: limit,
@@ -618,8 +680,37 @@ const toggle_Views = (event) => {
     show_viewers.value.toggle(event);
 
     fetch_viewers(viewers_limit.value, viewers_offset.value)
-    //   refs.show_viewers.toggle() // or however your popover is triggered
 }
+
+const show_likers = ref(null)
+const likers_limit = ref(10)
+const likers_offset = ref(0)
+const loading_likers = ref(false)
+const likers = ref([])
+
+const fetch_likers = async (limit = 10, offset = 0) => {
+    loading_likers.value = true
+    const res = await fetchRecipeMeta("/recipes/likes", null, {
+        recipe_id: props.recipe_id,
+        user_id: auth.user?.id,
+        limit: limit,
+        offset: offset
+    })
+
+    if (res.data) {
+        likers.value = res.data.likers
+        likers_limit.value = res.data.limit
+        likers_offset.value = res.data.offset
+    }
+
+    loading_likers.value = false
+}
+
+const toggle_Likers = (event) => {
+    show_likers.value.toggle(event)
+    fetch_likers(likers_limit.value, likers_offset.value)
+}
+
 const toggleFollow = async (follow) => {
     try {
         const res = await folow_unfollow(auth.token, follow.id);

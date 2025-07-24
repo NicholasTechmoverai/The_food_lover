@@ -1,8 +1,9 @@
 <template>
   <div class="w-full mx-auto py-1 px-2 ">
-    <!-- Main Comment Input Section (only shown when not replying) -->
-    <section v-if="!replyTarget && allow_comments" class="mb-6">
-      <div class="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-100 dark:border-gray-700">
+    <!-- Main Comment Input Section -->
+    <section class="mb-6">
+      <div v-if="!replyTarget && allow_comments"
+        class="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-100 dark:border-gray-700">
         <!-- Card Header -->
         <div class="px-4 py-3 border-b border-gray-100 dark:border-gray-700">
           <h2 class="text-base font-semibold text-gray-800 dark:text-gray-100">
@@ -18,10 +19,15 @@
             @submit="submitComment" @add-emoji="addEmoji" />
         </div>
       </div>
-      <div v-if="!allow_comments">
-        <p>Comments has been disabled in this Recipe</p>
+
+      <!-- Disabled Message -->
+      <div v-if="!allow_comments && !replyTarget"
+        class="flex items-center gap-2 mt-3 text-sm text-red-500 dark:text-red-400">
+        <i class="pi pi-ban text-base"></i>
+        <span>Comments have been disabled for this recipe.</span>
       </div>
     </section>
+
 
     <!-- Comments List -->
     <section>
@@ -39,25 +45,29 @@
             @get_replies="fetchCommentReplies" />
 
           <!-- Reply Input Section (shown when replying to this comment) -->
-          <div v-if="replyTarget?.id === comment.id && allow_comments" class="ml-5 mt-3">
+          <div v-if="replyTarget?.id === comment.id" class="ml-5 mt-3">
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-100 dark:border-gray-700">
-              <!-- Card Header -->
               <div class="px-4 py-3 border-b border-gray-100 dark:border-gray-700">
                 <h2 class="text-base font-semibold text-gray-800 dark:text-gray-100">
                   Replying to {{ replyTarget.user?.name }}
                 </h2>
               </div>
 
-              <!-- Card Content -->
-              <div class="p-4">
+              <!-- Card Content or Disabled Message -->
+              <div class="p-4" v-if="allow_comments">
                 <CommentInput v-model="commentContent" :attached-files="attachedFiles"
                   :show-emoji-picker="showEmojiPicker" :submit-button-text="submitButtonText" :can-submit="canSubmit"
                   :theme="theme" :is-reply="true" @toggle-emoji-picker="toggleEmojiPicker"
                   @trigger-file-upload="triggerFileUpload" @remove-file="removeFile" @submit="submitComment"
                   @cancel="cancelComment" @add-emoji="addEmoji" />
               </div>
+              <div v-else class="flex items-center gap-2 px-4 py-2 text-sm text-red-500 dark:text-red-400">
+                <i class="pi pi-ban text-base"></i>
+                <span>Comments have been disabled for this recipe.</span>
+              </div>
             </div>
           </div>
+
 
           <!-- Replies Section -->
           <div v-if="comment.replies?.length"
@@ -67,30 +77,30 @@
                 @reply="startReply" @edit="editComment" @like="likeComment" @mention="mentionUser"
                 @get_replies="fetchCommentReplies" @delete="deleteComment" />
 
-              <!-- Reply Input Section (shown when replying to this reply) -->
-              <div v-if="replyTarget?.id === reply.id" class="ml-5 mt-3">
+              <!-- Reply Input Section (shown when replying to this comment) -->
+              <div v-if="replyTarget?.id === comment.id" class="ml-5 mt-3">
                 <div class="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-100 dark:border-gray-700">
-                  <!-- Card Header -->
                   <div class="px-4 py-3 border-b border-gray-100 dark:border-gray-700">
                     <h2 class="text-base font-semibold text-gray-800 dark:text-gray-100">
                       Replying to {{ replyTarget.user?.name }}
                     </h2>
                   </div>
 
-                  <!-- Card Content -->
+                  <!-- Card Content or Disabled Message -->
                   <div class="p-4" v-if="allow_comments">
-                    <!-- In the reply sections of your parent component -->
                     <CommentInput v-model="commentContent" :attached-files="attachedFiles"
                       :show-emoji-picker="showEmojiPicker" :submit-button-text="submitButtonText"
-                      :can-submit="canSubmit" :theme="theme" :is-reply="true" :replying-to="replyTarget?.user?.name"
-                      @toggle-emoji-picker="toggleEmojiPicker" @trigger-file-upload="triggerFileUpload"
-                      @remove-file="removeFile" @submit="submitComment" @add-emoji="addEmoji" @cancel="cancelComment" />
+                      :can-submit="canSubmit" :theme="theme" :is-reply="true" @toggle-emoji-picker="toggleEmojiPicker"
+                      @trigger-file-upload="triggerFileUpload" @remove-file="removeFile" @submit="submitComment"
+                      @cancel="cancelComment" @add-emoji="addEmoji" />
                   </div>
-                  <div v-if="!allow_comments">
-                    <p>Comments has been disabled in this Recipe</p>
+                  <div v-else class="flex items-center gap-2 px-4 py-2 text-sm text-red-500 dark:text-red-400">
+                    <i class="pi pi-ban text-base"></i>
+                    <span>Comments have been disabled for this recipe.</span>
                   </div>
                 </div>
               </div>
+
             </article>
           </div>
         </article>
@@ -300,7 +310,7 @@ const deleteComment = async (comment) => {
     });
   } else {
     // Remove comment from local state
-    comments.value = comments.value.filter(c => c.id !== comment.id)
+    comments.value = comments.value.filter(c => c.id !== comment.id || c.replies.id !== comment.id)
     toast.add({
       severity: 'success',
       summary: `Comment deleted`,
@@ -338,7 +348,7 @@ const likeComment = async (comment) => {
       comment.likes = Math.max(0, comment.likes - 1);
       comment.isLiked = false;
     }
-  } 
+  }
   // Case 2: No emoji reaction
   else {
     // If user has somehow liked without an emoji, undo it
@@ -348,13 +358,13 @@ const likeComment = async (comment) => {
     comment.isLiked = false;
   }
 
-await make_a_post("/recipes/comments/likes", auth.token, {
+  await make_a_post("/recipes/comments/likes", auth.token, {
     is_liked: comment.isLiked,
     reaction: comment.reacted_emoji,
     id: comment.id,
     recipe_id: props.recipe_id
-})
-  
+  })
+
 };
 
 

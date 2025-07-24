@@ -265,7 +265,7 @@
               </div>
               <div class="flex justify-between">
                 <span class="text-gray-600 dark:text-gray-300">Total Ingredients:</span>
-                <span class="font-medium">{{ recipe.ingredients.length }}</span>
+                <span class="font-medium">{{ recipe.ingredients?.length||0 }}</span>
               </div>
               <div class="flex justify-between">
                 <span class="text-gray-600 dark:text-gray-300">Estimated Time:</span>

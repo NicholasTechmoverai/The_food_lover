@@ -25,6 +25,7 @@ import ProfilePage from '../pages/ProfilePage.vue'
 import NotificationPage from '../pages/NotificationPage.vue'
 import SavedRecipes from '../pages/SavedRecipes.vue'
 import ChefsPage from '../pages/ChefsPage.vue'
+import ReportPage from '../pages/ReportPage.vue'
 
 
 const routes = [
@@ -158,7 +159,7 @@ const routes = [
       }
     ]
   },
-   {
+  {
     path: '/chefs',
     name: 'Chefs',
     component: ChefsPage,
@@ -167,6 +168,11 @@ const routes = [
     path: '/saved',
     name: 'Saved',
     component: SavedRecipes,
+  },
+  {
+    path: '/reports',
+    name: 'Reports',
+    component: ReportPage,
   },
   {
     path: '/notifications',

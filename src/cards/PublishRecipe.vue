@@ -133,7 +133,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useConfirm } from 'primevue/useconfirm';
 import { useToast } from 'primevue/usetoast';
@@ -141,34 +141,31 @@ import { useToast } from 'primevue/usetoast';
 import FlowGalleryViewer from './FlowGalleryViewer.vue';
 import GridStepsView from './GridStepsView.vue';
 import RecipeCard from './RecipeCard.vue';
+
 import { useOngoingStore } from '../store/ongoing';
 import { useIsMobile } from '../reusables';
-import { saveRecipe } from '../apis/recipes';
-import { useAuthStore } from '../store/user.js'
+import { fetchRecipeSteps, saveRecipe } from '../apis/recipes';
+import { useAuthStore } from '../store/user.js';
 
-
-const auth = useAuthStore()
+const auth = useAuthStore();
 const router = useRouter();
 const route = useRoute();
 const confirm = useConfirm();
 const toast = useToast();
 const isMobile = useIsMobile();
+
 const isPublishing = ref(false);
+const isLoading = ref(false);
 
 const ongoingStore = useOngoingStore();
+const recipe_steps = ref([]);
 const recipeCover = ref({
-  user: {
-    name: '',
-    username:'',
-    profilePic: '',
-    id: '',
-    totalRecipes: 0
-  },
+  user: { name: '', username: '', profilePic: '', id: '', totalRecipes: 0 },
   id: null,
   recipeName: '',
   repiceColor: '#f97316',
   image: null,
-  createdAt:Date.now(),
+  createdAt: Date.now(),
   tags: [],
   cookTime: { hr: 0, min: 0 },
   description: '',
@@ -177,9 +174,7 @@ const recipeCover = ref({
   category: []
 });
 
-const recipe_steps = ref([]);
 const routeRecipeId = route.params.id;
-
 const isPublic = ref(true);
 const allowComments = ref(true);
 const copyProtection = ref('basic');
@@ -199,11 +194,6 @@ const recipeUrl = computed(() => {
   if (!recipeCover.value.id) return '';
   return `${window.location.origin}/recipes/${recipeCover.value.recipeName.replace(/\s+/g, '-').toLowerCase()}/${recipeCover.value.id}`;
 });
-
-// const recipeUrl = (name, id) => {
-//   return `/recipes/${name.replace(/\s+/g, '-').toLowerCase()}/${id}`;
-// };
-
 
 const getContrastColor = (hexColor) => {
   if (!hexColor) return '#ffffff';
@@ -227,27 +217,46 @@ const copyUrl = () => {
 
 const shareOnSocial = (platform) => {
   if (!recipeUrl.value) return;
-
-  let url = '';
   const text = `Check out my recipe for ${recipeCover.value.recipeName}`;
+  const urlMap = {
+    facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(recipeUrl.value)}`,
+    twitter: `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(recipeUrl.value)}`,
+    whatsapp: `https://wa.me/?text=${encodeURIComponent(`${text} ${recipeUrl.value}`)}`
+  };
+  window.open(urlMap[platform], '_blank', 'noopener,noreferrer');
+};
+const urlToBase64 = async (url) => {
+  const response = await fetch(url);
+  const blob = await response.blob();
 
-  switch (platform) {
-    case 'facebook':
-      url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(recipeUrl.value)}`;
-      break;
-    case 'twitter':
-      url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(recipeUrl.value)}`;
-      break;
-    case 'whatsapp':
-      url = `https://wa.me/?text=${encodeURIComponent(`${text} ${recipeUrl.value}`)}`;
-      break;
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+};
+
+
+const normalizeImageBeforeSave = async () => {
+  const img = recipeCover.value.image;
+
+  if (img && img.startsWith('http')) {
+    recipeCover.value.image = await urlToBase64(img);
   }
 
-  window.open(url, '_blank', 'noopener,noreferrer');
+  for (const step of recipe_steps.value.steps) {
+    if (step.image && step.image.startsWith('http')) {
+      step.image = await urlToBase64(step.image);
+    }
+  }
 };
+
+
 
 const onSave = async () => {
   isPublishing.value = true;
+  await normalizeImageBeforeSave()
 
   toast.add({
     severity: 'info',
@@ -256,13 +265,12 @@ const onSave = async () => {
     life: 2000,
   });
 
-  const token = auth.token;
-  const res = await saveRecipe(token, {
+  const res = await saveRecipe(auth.token, {
     recipeCover: recipeCover.value,
     recipeSteps: recipe_steps.value,
-    isPublic:isPublic.value,
-    allowComments:allowComments.value,
-    copyProtection:copyProtection.value,
+    isPublic: isPublic.value,
+    allowComments: allowComments.value,
+    copyProtection: copyProtection.value,
   });
 
   isPublishing.value = false;
@@ -292,50 +300,87 @@ const onSave = async () => {
   }
 };
 
-onMounted(() => {
+onMounted(async () => {
   const cover = ongoingStore.coverRecipe;
   const steps = ongoingStore.recipeSteps;
 
-  if (!cover) {
-    MissingCover('Info');
+  if (cover && cover.id === routeRecipeId) {
+    recipeCover.value = { ...cover };
+    recipe_steps.value = steps || [];
+    validateCoverFields(cover);
     return;
   }
 
-  if (cover.id !== routeRecipeId) {
-    MissingRecipeId(routeRecipeId);
-    return;
-  }
-
-  if (!cover.recipeName) {
-    MissingCover('Recipe Name');
-  } else if (!cover.image) {
-    MissingCover('Image');
-  } else if (!cover.description) {
-    MissingCover('Description / Editor Content');
-  }
-
-  recipeCover.value = { ...cover };
-  recipe_steps.value = steps || [];
+  await fetchAndLoadRecipe();
 });
 
-function MissingCover(msg) {
+const fetchAndLoadRecipe = async () => {
+  isLoading.value = true;
+  try {
+    const res = await fetchRecipeSteps(auth.token, 'edit', routeRecipeId);
+
+    if (res?.message && !res.success) {
+      toast.add({
+        severity: 'error',
+        summary: 'Failed to load recipe',
+        detail: res.message,
+        life: 5000,
+      });
+      return;
+    }
+
+    if (res?.data) {
+      ongoingStore.setCoverRecipe({ ...res.data.cover });
+      ongoingStore.setRecipeSteps({ ...res.data.steps });
+      
+      recipeCover.value = { ...res.data.cover };
+      recipe_steps.value = res.data.steps || [];
+      validateCoverFields(res.data.cover);
+    } else {
+      showMissingRecipeId(routeRecipeId);
+    }
+  } catch (err) {
+    console.error('Error loading recipe:', err);
+    toast.add({
+      severity: 'error',
+      summary: 'Unexpected Error',
+      detail: 'An unexpected error occurred while loading the recipe.',
+      life: 5000,
+    });
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+const validateCoverFields = (cover) => {
+  if (!cover.recipeName) {
+    showMissingCover('Recipe Name');
+  } else if (!cover.image) {
+    showMissingCover('Image');
+  } else if (!cover.description) {
+    showMissingCover('Description / Editor Content');
+  }
+};
+
+function showMissingCover(msg) {
   confirm.require({
     message: 'You have an incomplete Recipe Cover page. Would you like to complete it?',
     header: `Missing Cover: ${msg}`,
     icon: 'pi pi-exclamation-triangle',
     rejectLabel: 'Skip',
     rejectProps: { label: 'Skip', severity: 'secondary', outlined: true },
-    acceptProps: { label: `Set Cover`, severity: 'primary' },
+    acceptProps: { label: 'Set Cover', severity: 'primary' },
     accept: () => router.push('/recipes/new/cover'),
     reject: () => {
-      if (ongoingStore.coverRecipe) {
-        recipeCover.value = { ...ongoingStore.coverRecipe };
+      const cover = ongoingStore.coverRecipe;
+      if (cover) {
+        recipeCover.value = { ...cover };
       }
     }
   });
 }
 
-function MissingRecipeId(id) {
+function showMissingRecipeId(id) {
   confirm.require({
     message: `No recipe found with ID: ${id}.`,
     header: 'Recipe Not Found',
@@ -346,6 +391,7 @@ function MissingRecipeId(id) {
   });
 }
 </script>
+
 
 
 <style scoped>
