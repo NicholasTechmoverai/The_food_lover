@@ -509,7 +509,7 @@
                         leave-to-class="opacity-0">
                         <div v-show="activeTab === 'myRecipes'" class="py-4 md:px-2 lg:px-5">
                             <MainRecipeCardsParent v-if="activeTab === 'myRecipes' && user_info.user.id"
-                                :user_id="user_info.user.id" @recipes_count="update_fetched_user_recipes" />
+                                :user_id="user_info.user.id" :public_only="true" @recipes_count="update_fetched_user_recipes" />
 
                             <!-- Empty State for Posted Recipes -->
                             <div v-if="totalPostedRecipes < 1" class="text-center py-12">

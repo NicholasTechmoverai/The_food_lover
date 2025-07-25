@@ -214,14 +214,14 @@ class RecipeService:
                 notification_type="new_recipe",
                 target_object_id=str(recipe.id),
                 target_content_type="recipe",
-                verb=f"published a new recipe: {data.recipeCover.recipeName or recipe.name}",
+                verb=f"published a new recipe '{data.recipeCover.recipeName or recipe.name}'",
                 thread_id=None,
                 preview=recipe.name,
             )
             # Try to import and trigger WebSocket notification
             try:
                 from app import notifications_namespace
-                noty = await Notification.filter(id=notification.id).prefetch_related("user")
+                noty = await Notification.filter(id=notification.id).prefetch_related("user","actor")
 
 
                 await notifications_namespace.trigger_notification({
@@ -581,7 +581,7 @@ class RecipeService:
                     # Trigger live notification
                     from app import notifications_namespace
 
-                    noty = await Notification.filter(id=notification.id).prefetch_related("user")
+                    noty = await Notification.filter(id=notification.id).prefetch_related("user","actor")
 
                     await notifications_namespace.trigger_notification({
                         "user_id": str(chef.id),
@@ -739,7 +739,7 @@ class RecipeService:
                         from app import notifications_namespace
 
                         noty = await Notification.filter(id=notification.id).prefetch_related(
-                            "user"
+                            "user","actor"
                         )
 
                         await notifications_namespace.trigger_notification({
@@ -810,7 +810,7 @@ class RecipeService:
                         )
                         noty = await Notification.filter(
                             id=parent_notification.id
-                        ).prefetch_related("user")
+                        ).prefetch_related("user","actor")
 
                         await notifications_namespace.trigger_notification({
                             "user_id": str(parent.user_id),
@@ -836,7 +836,7 @@ class RecipeService:
                         )
                         noty = await Notification.filter(
                             id=recipe_owner_notification.id
-                        ).prefetch_related("user")
+                        ).prefetch_related("user","actor")
 
                         await notifications_namespace.trigger_notification({
                             "user_id": str(recipe.user_id),
@@ -1141,12 +1141,11 @@ class RecipeService:
                     return True
 
                 # Unlike and remove if no reaction
-                if not is_liked and not reaction:
+                if not is_liked :
                     await like.delete()
 
                     await Notification.filter(
                         actor_id=user_id,
-                        notification_type="like",
                         target_object_id=str(comment_id),
                         target_content_type="reacted",
                         thread_id=recipe_id
@@ -1158,32 +1157,34 @@ class RecipeService:
                 await like.update_from_dict({"reaction": reaction}).save()
                 return True
 
-            # Notify comment owner if not self
             recipe = await Recipe.get_or_none(id=recipe_id).prefetch_related("user")
             if not recipe or not recipe.user:
                 logger.error(f"[Like/Unlike] Recipe or user not found for ID {recipe_id}")
                 return True
 
-            chef = recipe.user
-            if chef.id != user_id:
+            from app import notifications_namespace
+            rep_comment = await RecipeComment.get_or_none(id=comment_id).prefetch_related('user')
+            logger.info("sending nitificaiton to %s",rep_comment.user.username)
+
+            if rep_comment.user.id != user_id:
                 try:
+                    logger.info("sending nitificaiton to %s",rep_comment.user.username)
                     notification = await Notification.create(
-                        user_id=chef.id,
+                        user_id=rep_comment.user.id,
                         actor_id=user_id,
                         notification_type="like",
-                        target_object_id=str(comment_id),
+                        target_object_id=str(recipe.id),
                         target_content_type="reacted",
-                        verb=f"liked your comment on '{recipe.name[:100]}'",
+                        verb=f"reacted to your comment on '{recipe.name[:100]}'",
                         preview=recipe.name[:100],
-                        thread_id=recipe.id
+                        thread_id=str(recipe.id)
                     )
 
-                    from app import notifications_namespace
-                    rep_comment = await RecipeComment.get_or_none(id=comment_id).prefetch_related('user')
-                    noty = await Notification.filter(id=notification.id).prefetch_related("user")
+                    
+                    noty = await Notification.filter(id=notification.id).prefetch_related("user","actor")
 
                     await notifications_namespace.trigger_notification({
-                        "user_id": rep_comment.user.id,
+                        "user_id": str(rep_comment.user.id),
                         "notifications": noty
                     })
                 except Exception as e:

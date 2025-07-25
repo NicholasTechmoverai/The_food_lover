@@ -482,7 +482,7 @@ class AuthService:
                 from app import notifications_namespace
 
                 noty = await Notification.filter(id=notification.id).prefetch_related(
-                    "user"
+                    "user","actor"
                 )
 
                 await notifications_namespace.trigger_notification({
@@ -758,7 +758,7 @@ class AuthService:
             from app import notifications_namespace
 
             noty = await Notification.filter(id=notification.id).prefetch_related(
-                "user"
+                "user","actor"
             )
 
             await notifications_namespace.trigger_notification({

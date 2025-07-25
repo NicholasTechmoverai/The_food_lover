@@ -70,6 +70,10 @@ const props = defineProps({
     type: Boolean,
     default: () => false
   },
+  public_only: {
+    type: Boolean,
+    default: () => false
+  },
   recipe_name: {
     type: String,
     default: () => null
@@ -113,7 +117,8 @@ const getRecipes = async (
     recipe_name: props.recipe_name,
     category: props.category,  // ✅ no wrapping
     tags: props.tags,
-    saved: props.saved
+    saved: props.saved,
+    public_only:props.public_only,
   });
 
 

@@ -202,7 +202,7 @@ const toggle = (event) => {
 const selectEmoji = (emoji) => {
   const comment = props.comment;
 
-  if (comment.reacted_emoji == emoji) {
+  if (comment.reacted_emoji === emoji) {
     comment.reacted_emoji = null;
     emit('like', comment);
     return;

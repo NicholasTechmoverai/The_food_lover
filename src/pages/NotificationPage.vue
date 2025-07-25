@@ -81,7 +81,7 @@
                     <!-- Notification Content -->
                     <div class="text-sm">
                       <router-link :to="`/${notification.actor?.username}`">
-                        <span class="font-medium">{{ notification.actor?.username || 'System' }}</span>
+                        <span class="font-medium text-[var(--theme-color)]/70">{{ notification.actor?.username || 'System' }}</span>
                       </router-link>
                       {{ notification.verb }}
                       <span v-if="notification.target" class="font-medium text-[var(--theme-color)]">
@@ -310,11 +310,11 @@ const userAvatar = computed(() => auth.user?.avatar || 'https://ui-avatars.com/a
 
 const tabs = computed(() => [
   { id: 'all', label: 'All ', icon: 'pi pi-bell', badgeCount: live_notification.notificationsCount.all },
-  { id: 'mentions', label: 'Mentions', icon: 'pi pi-at', badgeCount: live_notification.notificationsCount.mentions },
-  { id: 'follows', label: 'Followers', icon: 'pi pi-users', badgeCount: live_notification.notificationsCount.follows },
-  { id: 'likes', label: 'Likes', icon: 'pi pi-heart', badgeCount: live_notification.notificationsCount.likes },
-  { id: 'comments', label: 'Comments', icon: 'pi pi-comments', badgeCount: live_notification.notificationsCount.comment },
-  { id: 'system', label: 'System', icon: 'pi pi-cog', badgeCount: live_notification.notificationsCount.system }
+  { id: 'mention', label: 'Mentions', icon: 'pi pi-at', badgeCount: live_notification.notificationsCount.mentions },
+  { id: 'follow', label: 'Followers', icon: 'pi pi-users', badgeCount: live_notification.notificationsCount.follows },
+  { id: 'like', label: 'Likes', icon: 'pi pi-heart', badgeCount: live_notification.notificationsCount.likes },
+  { id: 'comment', label: 'Comments', icon: 'pi pi-comments', badgeCount: live_notification.notificationsCount.comment },
+  { id: 'system', label: 'System', icon: 'pi pi-shield', badgeCount: live_notification.notificationsCount.system }
 ])
 
 const activeTabLabel = computed(() => {

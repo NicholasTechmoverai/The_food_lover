@@ -21,17 +21,18 @@ async def format_notifications(notys):
                 target = None
 
                 # Check for recipe related notification
-                if noty.notification_type in ['comment', 'like']:
+                if noty.notification_type in ['comment', 'like','recipe','new_recipe']:
                     recipe_id = noty.target_object_id if isinstance(noty.target_object_id, str) else noty.parent_notification_id
                     if recipe_id:
-                        logger.info("found recipe id")
+                        # logger.info("found recipe id")
                         recipe = await Recipe.get_or_none(id=recipe_id)
                         if recipe:
                             target = recipe
-                            logger.info("found recipe %s",recipe)
+                            # logger.info("found recipe %s",recipe)
 
 
-                actor = noty.user
+                actor = noty.actor
+
                 image_url = ""
                 if target:
                     if target.cover_image_url.startswith("https://"):
@@ -117,18 +118,20 @@ class NotificationService:
 
     async def get_notifications(self, user_id: UUID, filters: dict):
         try:
-            query = self.noty_repo.filter(user_id=user_id).prefetch_related("user")
+            query = self.noty_repo.filter(user_id=user_id).prefetch_related("user","actor")
+            
+            logger.info(filters)
 
             if 'is_read' in filters:
                 query = query.filter(is_read=filters['is_read'])
 
-            if filters.get("likes"):
+            if filters.get("like"):
                 query = query.filter(notification_type="like")
 
-            if filters.get("follows"):
+            if filters.get("follow"):
                 query = query.filter(notification_type="follow")
 
-            if filters.get("mentions"):
+            if filters.get("mention"):
                 query = query.filter(notification_type__icontains="comment")
 
             if filters.get("comment"):
@@ -175,7 +178,7 @@ class NotificationService:
     async def mark_all_as_read(self, user_id: UUID, type: Optional[str] = None):
         try:
             query = self.noty_repo.filter(user_id=user_id, is_read=False)
-            if type:
+            if type  and type != "all":
                 query = query.filter(notification_type=type)
 
             await query.update(is_read=True)
@@ -226,3 +229,5 @@ class NotificationService:
         except Exception as err:
             logger.exception("ERROR UPDATING SETTINGS: %s", err)
             return {"status": "error", "message": "Failed to update notification settings."}
+
+

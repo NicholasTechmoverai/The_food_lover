@@ -26,6 +26,7 @@ import NotificationPage from '../pages/NotificationPage.vue'
 import SavedRecipes from '../pages/SavedRecipes.vue'
 import ChefsPage from '../pages/ChefsPage.vue'
 import ReportPage from '../pages/ReportPage.vue'
+import VideosPage from '../pages/VideosPage.vue'
 
 
 const routes = [
@@ -173,6 +174,11 @@ const routes = [
     path: '/reports',
     name: 'Reports',
     component: ReportPage,
+  },
+    {
+    path: '/videos',
+    name: 'Videos',
+    component: VideosPage,
   },
   {
     path: '/notifications',

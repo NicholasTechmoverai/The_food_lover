@@ -22,11 +22,11 @@ notification_router = APIRouter()
 
 
 class NotificationsRequest(BaseModel):
-    all: Optional[bool] = False
+    all: Optional[bool] = None
     is_read: Optional[bool] = None
-    follows: Optional[bool] = None
-    likes: Optional[bool] = None
-    mentions: Optional[bool] = None
+    follow: Optional[bool] = None
+    like: Optional[bool] = None
+    mention: Optional[bool] = None
     system: Optional[bool] = None
     offset: Optional[int] = 0
     limit: Optional[int] = 10
