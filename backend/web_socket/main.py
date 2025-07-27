@@ -6,6 +6,7 @@ from uuid import UUID
 from datetime import datetime, timedelta
 from socketio import AsyncNamespace
 from utils.notification import format_notifications
+from utils.cooking_tips import CookingTipService
 from utils.logger import setup_logger
 
 logger = setup_logger("socket")
@@ -190,6 +191,34 @@ class RecipesNamespace(socketio.AsyncNamespace):
         except Exception as e:
             logger.exception("[RecipesNamespace Error] Failed to process recipe suggestion: %s", str(e))
 
+    async def on_search_cookingTip_suggestion(self, sid, data):
+        try:
+            logger.info("[Recipes] Recipe suggestion search invoked by SID: %s", sid)
+
+            token = data.get("token")
+            search_val = data.get("search_val")
+            return_unsimilar = data.get("return_unsimilar")
+
+            if not search_val:
+                logger.warning("[Recipes] Missing search value from SID: %s", sid)
+                return
+            
+            user = await get_current_user(token)
+
+            logger.info("[Recipes] Searching for recipe suggestions matching: '%s' ,%s", search_val,return_unsimilar)
+
+            # Fetch recipe suggestions from service
+            suggestions = await CookingTipService().list_cooking_tips(user_id=user.id if user else None,title=search_val,category=search_val)
+
+            # Emit suggestions back to client
+            await self.emit("response_search_cookingTip_suggestion", suggestions, room=sid)
+
+        except Exception as e:
+            logger.exception("[RecipesNamespace Error] Failed to process recipe suggestion: %s", str(e))
+
+
+
+
 
 class UsersNamespace(socketio.AsyncNamespace, AuthService):
     def __init__(self, namespace, user_service: AuthService):
@@ -200,18 +229,21 @@ class UsersNamespace(socketio.AsyncNamespace, AuthService):
         print(f"[Users] Connected: {sid}")
 
     async def on_join_respective(self, sid, data):
-        user_id = data.get("user_id")
-        user = await self.user_service.is_user_exists(user_id)
-        if user:
-            await self.enter_room(sid, user_id)  # Use `enter_room` instead of raw `join_room`
-            logger.info(f"User {user_id} joined room {user_id}")
-            
-            await self.emit(
-            "new_notifications",
-            {"notifications": "you have joined the room"},
-            room=data["user_id"],
-           ) 
+        token = data.get("token")
+        user = await get_current_user(token)
+        if not user:
+            logger.warning(f"[Recipes] Invalid token from {sid}")
+            return
         
+        await self.enter_room(sid, str(user.id))  
+        logger.info(f"User {user.id} joined room {user.id}")
+        
+        # await self.emit(
+        # "new_notifications",
+        # {"notifications": "you have joined the room"},
+        # room=user.id,
+        # ) 
+    
             
     async def on_check_username_availability(self, sid, data):
         try:
@@ -234,6 +266,39 @@ class UsersNamespace(socketio.AsyncNamespace, AuthService):
             )
         except Exception as e:
             logger.exception(f"[UsersNamespace Error]: {e}")
+            
+            
+    async def on_search_chef_suggestion(self, sid, data):
+        try:
+            # logger.info("[ChefSearch] Suggestion search initiated by SID: %s", sid)
+
+            token = data.get("token")
+            search_val = data.get("search_val")
+            return_unsimilar = data.get("return_unsimilar")
+
+            if not search_val:
+                logger.warning("[ChefSearch] Missing 'search_val' from SID: %s", sid)
+                return
+
+            user = await get_current_user(token)
+            # if not user:
+            #     logger.warning("[ChefSearch] Invalid or missing token from SID: %s", sid)
+            #     return
+
+            logger.info(
+                "[ChefSearch] Searching for chef suggestions matching '%s' (Return Unsimilar: %s)",
+                search_val, return_unsimilar
+            )
+
+            suggestions = await self.user_service.get_chefs(
+                my_user_id=user.id if user else None,
+                name=search_val
+            )
+
+            await self.emit("response_search_chef_suggestion", suggestions, room=sid)
+
+        except Exception as e:
+            logger.exception("[ChefSearch Error] Failed to process chef suggestions: %s", str(e))
 
 
 
@@ -248,17 +313,21 @@ class NotificationsNamespace(socketio.AsyncNamespace, AuthService):
         print(f"[Notifications] Connected: {sid}")
 
     async def on_join_respective(self, sid, data):
-        user_id = data.get("user_id")
-        user = await self.user_service.is_user_exists(user_id)
-        if user:
-            await self.enter_room(sid, user_id)  # Use `enter_room` instead of raw `join_room`
-            logger.info(f"User {user_id} joined room {user_id}")
+        token = data.get("token")
+        user = await get_current_user(token)
+        if not user:
+            logger.warning(f"[Recipes] Invalid token from {sid}")
+            return
+
+   
+        await self.enter_room(sid, str(user.id))  
+        logger.info(f"User {user.id} joined room {user.id}")
             
-        #     await self.emit(
-        #     "new_notifications",
-        #     {"notifications": "you have joined the room"},
-        #     room=data["user_id"],
-        #    ) 
+        # await self.emit(
+        # "new_notifications",
+        # {"notifications": "you have joined the room"},
+        # room=user.id,
+        # ) 
         
     async def on_check_updates(self, sid, data):
         try:

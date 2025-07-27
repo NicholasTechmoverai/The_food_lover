@@ -3,7 +3,7 @@ import { ref } from "vue";
 
 
 // export const B_URl = 'http://localhost:8000'
-export const B_URl = 'https://twins-damages-stamps-comprehensive.trycloudflare.com'
+export const B_URl = 'https://strict-yarn-lace-banner.trycloudflare.com'
 
 const BACKEND_URL = `${B_URl}/api`
 

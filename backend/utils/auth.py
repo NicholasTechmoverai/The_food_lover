@@ -142,9 +142,16 @@ class AuthService:
 
         return True  # available
 
-    async def get_chefs(self, my_user_id: Optional[UUID] = None) -> dict:
+    async def get_chefs(self, my_user_id: Optional[UUID] = None,name: Optional[str] = None) -> dict:
         try:
-            chefs = await self.user_repo.filter(is_chef=True)
+            chefs = []
+            if name:
+                chefs = await self.user_repo.filter(
+                    Q(is_chef=True) & (Q(name__icontains=name) | Q(username__icontains=name))
+                )
+            else:
+                chefs = await self.user_repo.filter(is_chef=True)
+                
             result = []
 
             for chef in chefs:
@@ -176,7 +183,7 @@ class AuthService:
                 res = {
                     "name": chef.name,
                     "username": chef.username,
-                    "id": chef.id,
+                    "id": str(chef.id),
                     "theme": chef.theme,
                     "avatar": chef.picture_url
                     if chef.picture_url.startswith("https://")

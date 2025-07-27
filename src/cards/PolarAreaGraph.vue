@@ -1,6 +1,6 @@
 
 <template>
-    <div class="card flex f justify-center h-fit">
+    <div class="card flex justify-center ">
         <Chart type="polarArea" :data="chartData" :options="chartOptions"  />
     </div>
 </template>

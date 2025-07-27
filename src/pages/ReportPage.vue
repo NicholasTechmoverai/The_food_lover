@@ -246,7 +246,7 @@
                                 </h4>
                                 <div v-if="loadingReports"
                                     class="h-64 bg-gray-100 dark:bg-gray-700 rounded-xl animate-pulse"></div>
-                                <VerticalBarGraph v-else :data="engagementData" />
+                                <VerticalBarGraph v-else :data="engagementData" />       
                             </div>
                             <div
                                 class="bg-white dark:bg-gray-800 rounded-xl shrink-0 shadow-sm p-4 md:p-6 border border-gray-200 dark:border-gray-700/60">
@@ -263,7 +263,7 @@
                         </div>
                     </section>
                     <!-- Empty State -->
-                    <section v-if="!selectedRecipe" class="grid grid-cols-2 gap-2 ">
+                    <section v-if="!selectedRecipe" class="grid grid-cols-1 md:grid-cols-2 gap-2 ">
                         <div
                             class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 md:p-12 text-center border border-gray-200 dark:border-gray-700/60 max-w-md mx-auto">
                             <PolarAreaGraph :data="distributionData" />

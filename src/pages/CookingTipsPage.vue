@@ -12,7 +12,8 @@
             </button>
         </div>
 
-        <div v-if="popular_cooking_tips_loading" class="flex flex-col md:flex-row justify-center items-center h-60 w-full relative">
+        <div v-if="popular_cooking_tips_loading"
+            class="flex flex-col md:flex-row justify-center items-center h-60 w-full relative">
             <div class="flex justify-center items-center h-60 relative">
                 <div class="absolute w-46 h-46 bg-gray-300 dark:bg-gray-700 rounded animate-pulse rotate-3"></div>
                 <div class="absolute w-46 h-46 bg-gray-300 dark:bg-gray-700 rounded animate-pulse -rotate-6"></div>
@@ -63,7 +64,8 @@ import ShufflingCard from '../cards/ShufflingCard.vue'
 import CookingTipCard from '../cards/CookingTipCard.vue'
 import { fetch_cooking_tips } from '../apis'
 import { useAuthStore } from '../store/user'
-
+import { useControl } from "../store/control.js";
+const control = useControl()
 // Define categories with labels and values
 const categoryTypes = [
     { label: 'Time Saving', value: 'timesaving' },
@@ -156,8 +158,10 @@ const changeTipCategory = (tip) => {
 }
 
 // Initial load (optional if using watch with immediate: true)
-onMounted(() => {
-    get_cooking_tips()
-    get_popular_cooking_tips()
+onMounted( async() => {
+    control.setShowSearch(false)
+    await Promise.all([get_cooking_tips(),
+    get_popular_cooking_tips()])
+
 })
 </script>

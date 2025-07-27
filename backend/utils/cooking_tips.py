@@ -55,7 +55,7 @@ class CookingTipService:
                     tip.image_url if tip.image_url and tip.image_url.startswith("https://")
                     else f"{BASE_SERVER}/{tip.image_url}" if tip.image_url else None
                 ),
-                "createdAt": tip.created_at,
+                "createdAt": tip.created_at.isoformat(),
                 "user": {
                     "id": str(user.id) if user else None,
                     "name": getattr(user, "name", "Unknown"),

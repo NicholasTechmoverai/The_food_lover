@@ -71,19 +71,7 @@
       </section>
     </div>
 
-    <Transition enter-active-class="transition transform duration-300 ease-out"
-      enter-from-class="translate-y-10 opacity-0" enter-to-class="translate-y-0 opacity-100"
-      leave-active-class="transition transform duration-200 ease-in" leave-from-class="translate-y-0 opacity-100"
-      leave-to-class="translate-y-10 opacity-0">
 
-      <div v-if="control.showSearch"
-        class="fixed z-100 w-full h-screen inset-0 bg-white/70 dark:bg-gray-900/70 backdrop-blur-sm   md:rounded-lg shadow-2xl !overflow-hidden"
-        @click.self="control.setShowSearch(false) ">
-        <div class="py-6 md:p-6">
-         <SearchCard />
-        </div>
-      </div>
-    </Transition>
 
     <Toast />
 
@@ -92,6 +80,20 @@
   <transition name="slide-fade" mode="out-in">
     <router-view v-if="isRouterViewActive" class="inset-0 bg-white dark:bg-gray-900 z-50 overflow-y-auto" />
   </transition>
+
+  <Transition enter-active-class="transition transform duration-300 ease-out"
+    enter-from-class="translate-y-10 opacity-0" enter-to-class="translate-y-0 opacity-100"
+    leave-active-class="transition transform duration-200 ease-in" leave-from-class="translate-y-0 opacity-100"
+    leave-to-class="translate-y-10 opacity-0">
+
+    <div v-if="control.showSearch"
+      class="fixed z-100 w-full h-screen inset-0 bg-white/70 dark:bg-gray-900/70 backdrop-blur-sm   md:rounded-lg shadow-2xl !overflow-hidden"
+      @click.self="control.setShowSearch(false)">
+      <div class="py-6 md:p-6">
+        <SearchCard />
+      </div>
+    </div>
+  </Transition>
 
 </template>
 
@@ -161,6 +163,7 @@ const getRecipeTypes = async (params = null) => {
   }
 }
 onMounted(async () => {
+  control.setShowSearch(false)
   recipes_types_loading.value = true
   recipes_loading.value = true
   liveRecipes.value = await fetchLiveRecipes()

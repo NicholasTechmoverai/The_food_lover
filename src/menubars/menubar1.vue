@@ -161,7 +161,7 @@
 
 
 <script setup>
-import { ref } from "vue";
+import { ref,computed } from "vue";
 // import {  useIsMobile } from '../reusables';
 import { useSiteStore } from '../config/siteConfig.js'
 import SignupButton from "../cards/SignupButton.vue";
@@ -171,6 +171,8 @@ import router from "../router/index.js";
 import { goHome, polishUrlName } from "../reusables/index.js"
 import { Logout } from "../apis/auth.js";
 import { useControl } from "../store/control.js";
+import { useRoute } from 'vue-router'
+
 const control = useControl()
 const auth = useAuthStore()
 const notifications = useNotificationStore()
@@ -189,8 +191,20 @@ const props = defineProps({
     }
 })
 
+const route = useRoute()
 
-const showSearchButton = ref(true)
+const showSearchButton = computed(() =>
+  [
+    'CookingTipsPage',
+    'RecipesPage',
+    'Saved',
+    'RecipeId',
+    'RecipeType'
+  ].includes(route.name)
+)
+
+
+
 
 const showSearchBar = async()=>{
     control.setShowSearch(control.showSearch = !control.showSearch)

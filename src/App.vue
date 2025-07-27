@@ -248,8 +248,8 @@ onMounted(async () => {
 
     startTokenCheck()
     if (auth.user.id) {
-      usersSocket.emit("join_respective", { user_id: auth.user.id })
-      notificationsSocket.emit("join_respective", { user_id: auth.user.id })
+      usersSocket.emit("join_respective", { token: auth.token.token })
+      notificationsSocket.emit("join_respective", { token: auth.token.token })
     }
     await getNotificationsCount()
 

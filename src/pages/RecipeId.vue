@@ -390,6 +390,8 @@ import RecipeStepCard from '../loaders/Skeleton1.vue'
 import { recipesSocket, usersSocket } from "../a_websocket/index.js";
 import { formatDistanceToNow } from 'date-fns'
 import InputChatBar from '../cards/CommentInput.vue'
+import { useControl } from "../store/control.js";
+const control = useControl()
 const auth = useAuthStore()
 
 const listType = ref('grid')
@@ -771,6 +773,7 @@ const toast = useToast()
 
 
 onMounted(async () => {
+    control.setShowSearch(false)
     await Promise.all([fetchRecipe(), fetchMeta()]);
     update_view();
     IntervalledGetMeta();
@@ -817,6 +820,7 @@ const IntervalledGetMeta = () => {
 
 
 watch(() => props.recipe_id, (newId) => {
+    control.setShowSearch(false)
     if (newId) {
         update_view();
     }

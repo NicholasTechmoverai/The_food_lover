@@ -637,7 +637,8 @@ import { useToast } from 'primevue/usetoast'
 import { useSiteStore } from '../config/siteConfig.js';
 import { Cropper } from 'vue-advanced-cropper';
 import MainRecipeCardsParent from "../cards/ManyReipesParent.vue"
-
+import { useControl } from "../store/control.js";
+const control = useControl()
 import 'vue-advanced-cropper/dist/style.css';
 import router from '../router/index.js';
 const { siteConfig } = useSiteStore()
@@ -709,6 +710,8 @@ const topHeight = ref(0)
 let observer
 
 onMounted(() => {
+    control.setShowSearch(false)
+
     if (topElementRef.value) {
         topHeight.value = topElementRef.value.offsetHeight
 
