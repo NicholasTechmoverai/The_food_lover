@@ -1,21 +1,30 @@
 <template>
     <div class="wrapper  flex justify-center items-center px-4">
         <div class="carousel w-full max-w-md space-y-6">
-            <div v-for="(dish, index) in dishes" :key="index"
-                class="carousel__item  flex items-center  overflow-hidden">
-                <div class="carousel__item-head w-24 h-24 flex-shrink-0 m-2">
-                    <img :src="dish.image" :alt="dish.name"
+            <div v-for="(dish, index) in data" :key="index" class="carousel__item  flex items-center  overflow-hidden">
+                <div class="carousel__item-head w-24 h-24 flex-shrink-0 m-2" :style="{ backgroundColor: dish.theme }">
+                    <img :src="dish.image" :alt="dish.alt"
                         class="w-full h-full object-cover rounded-full border border-gray-200 dark:border-gray-700"
                         @error="(e) => e.target.src = onerrorImage" />
                 </div>
                 <div
-                    class="carousel__item-body hover:ring ring-gray-400/50 duration-300 bg-white dark:bg-gray-900 flex flex-col justify-center pr-4">
-                    <p class="title text-lg font-semibold text-gray-900 dark:text-white">
-                        {{ dish.name }}
-                    </p>
-                    <p class="cook-time text-sm text-gray-500 dark:text-gray-400">
-                        Cook Time: {{ dish.cookTime }}
-                    </p>
+                    class="carousel__item-body hover:ring ring-gray-400/50 border-b duration-300 bg-white dark:bg-gray-900 flex flex-col justify-center pr-4">
+                    <router-link :to="dish.url" class="title text-lg font-semibold text-gray-900 dark:text-white whitespace-nowrap">
+                        {{ dish.title }}
+                    </router-link>
+                    <div
+                        class="cook-info text-sm text-gray-600 dark:text-gray-400 space-x-1 flex flex-wrap items-center mb-1">
+                        <span>{{ dish.cook_time?.hr }}hr</span>
+                        <span>{{ dish.cook_time?.min }}min</span>
+                        <span class="px-1">•</span>
+                        <span>{{ dish.difficulty_level }}</span>
+                    </div>
+
+                    <div
+                        class="cuisine-info text-sm text-gray-500 dark:text-gray-400 flex flex-wrap items-center gap-x-2">
+                        <span v-if="dish.cuisine?.name">{{ dish.cuisine.name }}</span>
+                        <span v-if="dish.cuisine?.region">({{ dish.cuisine.region }})</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -27,58 +36,64 @@
 <script setup>
 import { ref } from 'vue';
 import onerrorImage from '../assets/onerrorimage.png'
+
+const props = defineProps({
+    data: {
+        type: Object
+    }
+})
 const dishes = ref([
     {
-        name: "Ugali & Sukuma Wiki",
-        cookTime: "30 mins",
+        title: "Ugali & Sukuma Wiki",
+        cook_time: "30 mins",
         description: "Kenya's staple food with collard greens",
         image: "https://images.unsplash.com/photo-1563805042-7684c019e1cb"
     },
     {
-        name: "Nyama Choma",
-        cookTime: "2-3 hours",
+        title: "Nyama Choma",
+        cook_time: "2-3 hours",
         description: "Grilled meat, Kenya's favorite delicacy",
         image: "https://images.unsplash.com/photo-1563805042-7684c019e1cb"
     },
     {
-        name: "Githeri",
-        cookTime: "1 hour",
+        title: "Githeri",
+        cook_time: "1 hour",
         description: "Boiled maize and beans mixture",
         image: "https://www.kenyans.co.ke/files/styles/article_style/public/images/media/githeri.jpg"
     },
     {
-        name: "Chapati",
-        cookTime: "45 mins",
+        title: "Chapati",
+        cook_time: "45 mins",
         description: "Flatbread with East African origins",
         image: "https://www.kenyans.co.ke/files/styles/article_style/public/images/media/chapati.jpg"
     },
     {
-        name: "Pilau",
-        cookTime: "1 hour",
+        title: "Pilau",
+        cook_time: "1 hour",
         description: "Spiced rice dish with meat",
         image: "https://www.kenyans.co.ke/files/styles/article_style/public/images/media/pilau.jpg"
     },
     {
-        name: "Mukimo",
-        cookTime: "50 mins",
+        title: "Mukimo",
+        cook_time: "50 mins",
         description: "Mashed potatoes with greens and maize",
         image: "https://www.kenyans.co.ke/files/styles/article_style/public/images/media/mukimo.jpg"
     },
     {
-        name: "Matoke",
-        cookTime: "40 mins",
+        title: "Matoke",
+        cook_time: "40 mins",
         description: "Stewed plantains with meat",
         image: "https://www.kenyans.co.ke/files/styles/article_style/public/images/media/matoke.jpg"
     },
     {
-        name: "Mandazi",
-        cookTime: "30 mins",
+        title: "Mandazi",
+        cook_time: "30 mins",
         description: "Swahili coconut doughnuts",
         image: "https://www.kenyans.co.ke/files/styles/article_style/public/images/media/mandazi.jpg"
     },
     {
-        name: "Samaki Wa Kupaka",
-        cookTime: "45 mins",
+        title: "Samaki Wa Kupaka",
+        cook_time: "45 mins",
         description: "Coconut fish curry",
         image: "https://www.kenyans.co.ke/files/styles/article_style/public/images/media/samaki-wa-kupaka.jpg"
     }
@@ -177,10 +192,9 @@ body {
 
 .carousel__item-head {
     border-radius: 50%;
-    background-color: #d7f7fc;
     width: 90px;
     height: 90px;
-    padding: 14px;
+    padding: 7px;
     position: relative;
     margin-right: -45px;
     flex-shrink: 0;

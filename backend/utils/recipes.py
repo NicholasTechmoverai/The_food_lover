@@ -389,6 +389,7 @@ class RecipeService:
                 "alt": f"{recipe.name} by {recipe.user.name}",
                 "views": await recipe.views.all().count(),
                 "likes": await recipe.likes.all().count(),
+                "theme":recipe.theme_color,
                 "url": f"/recipes/{recipe.name.strip().lower().replace(' ', '-')}/{recipe.id}",
                 "cook_time": await self.minutes_to_time(recipe.cook_time_minutes),
                 "difficulty_level": recipe.difficulty_level,

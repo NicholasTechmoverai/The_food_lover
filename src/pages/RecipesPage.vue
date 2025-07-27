@@ -1,6 +1,6 @@
 <template>
   <div v-if="!isRouterViewActive"
-    class="min-h-screen overflow-hidden relative bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-100">
+    class="min-h-screen overflow-hidden flex flex-col justify-center items-center content-center relative bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-100">
     <!-- Hero Section -->
     <!-- <section class="relative h-96 overflow-hidden">
       <img
@@ -30,21 +30,24 @@
       <aside class="order-1 lg:order-2 space-y-10 lg:sticky top-16 self-start">
 
         <!-- Live Recipes -->
-        <section>
-          <h2 class="text-xl font-semibold mb-4">Live Recipes & In the Kitchen</h2>
-          <RevolveCards :render="'live'" :loop_through="liveRecipes" />
-        </section>
+        <div class="flex flex-col justify-center gap-2 sm:flex-col  md:flex-row lg:flex-col">
 
-        <!-- Featured Video -->
-        <section>
-          <h2 class=" text-xl font-semibold mb-4">Watch & Learn</h2>
-          <VideoPage />
-        </section>
+          <section>
+            <h2 class="text-xl font-semibold mb-4">Live Recipes & In the Kitchen</h2>
+            <RevolveCards :render="'live'" :loop_through="liveRecipes" />
+          </section>
+
+          <!-- Featured Video -->
+          <section>
+            <h2 class=" text-xl font-semibold mb-4">Watch & Learn</h2>
+            <VideoPage />
+          </section>
+        </div>
 
         <!-- Trending Recipes -->
         <section>
           <h2 class="text-xl font-semibold mb-4">Trending Recipes This Week</h2>
-          <TrendingDishesCard class="mt-45 mb-45" />
+          <TrendingDishesCard :data="trending_recipes" class="mt-45 mb-45" />
         </section>
       </aside>
 
@@ -111,6 +114,7 @@ import RecipeTypesLoader from '../loaders/Skeleton1.vue'
 import MainRecipeCardsParent from "../cards/ManyReipesParent.vue"
 import SearchCard from '../cards/SearchCard.vue'
 import { useControl } from "../store/control.js";
+import { make_a_post } from '../apis/index.js'
 const control = useControl()
 const auth = useAuthStore()
 const toast = useToast()
@@ -162,13 +166,49 @@ const getRecipeTypes = async (params = null) => {
     }
   }
 }
+
+const trending_recipes = ref(null)
+const loadingSuggestions = ref(false)
+
+const get_trending_recipes = async () => {
+  loadingSuggestions.value = true
+
+  try {
+    const res = await make_a_post(
+      `/recipes/trending/suggestions`,
+      auth.token,
+      {},
+      { timeout: 10000 }
+    )
+
+    const data = res?.data || []
+
+    trending_recipes.value = data.map(recipe => ({
+      ...recipe,
+      views: recipe.views ?? 0,
+      likes: recipe.likes ?? 0,
+      chef: {
+        id: recipe.chef?.id ?? 0,
+        name: recipe.chef?.name ?? 'Unknown Chef',
+        avatar: recipe.chef?.avatar ?? '',
+        theme: recipe.chef?.theme ?? ''
+      }
+    }))
+  } catch (error) {
+    console.error('Error fetching trending recipes:', error)
+  } finally {
+    loadingSuggestions.value = false
+  }
+}
+
+
 onMounted(async () => {
   control.setShowSearch(false)
   recipes_types_loading.value = true
   recipes_loading.value = true
   liveRecipes.value = await fetchLiveRecipes()
 
-  await Promise.all([getRecipeTypes()]);
+  await Promise.all([getRecipeTypes(), get_trending_recipes()]);
 });
 
 </script>

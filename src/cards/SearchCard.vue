@@ -177,8 +177,9 @@
             <img 
               :src="tip.image" 
               :alt="tip.title"
-              class="w-16 h-16 rounded-full object-cover border border-gray-200 dark:border-gray-600 shadow-sm"
+              class="w-16 h-16 object-cover border border-gray-200 dark:border-gray-600 shadow-sm"
               loading="lazy"
+              @error="(e) => e.target.src = default_image"
             />
             <div class="flex-1 min-w-0">
               <p class="font-medium text-gray-800 dark:text-gray-100 truncate">
@@ -297,6 +298,7 @@ const recipes_suggestions = ref([]);
 const chef_suggestions = ref([]);
 const cooking_tip_suggestions = ref([]);
 const activeTab = ref('all');
+const default_image = "https://images.unsplash.com/photo-1586511925558-a4c6376fe65f?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=687&q=60"
 
 // Computed properties
 const tabs = computed(() => [

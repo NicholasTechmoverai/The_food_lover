@@ -650,33 +650,33 @@ const foodLovers = {
     root: true,
     items: [
         // First column - Featured recipes
-        [
-            {
-                label: 'Featured Recipes',
-                items: [
-                    // {
-                    //     image: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c',
-                    //     label: 'VIEW RECIPE',
-                    //     subtext: 'Rainbow Buddha Bowl with Tahini Dressing',
-                    //     rating: 4.8,
-                    //     reviews: 5243,
-                    //     time: '25 mins',
-                    //     difficulty: 'Easy',
-                    //     calories: 420
-                    // },
-                    {
-                        image: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd',
-                        label: 'LEARN TECHNIQUE',
-                        subtext: 'Perfect Pan-Seared Salmon with Crispy Skin',
-                        rating: 4.7,
-                        reviews: 3891,
-                        time: '15 mins',
-                        difficulty: 'Medium',
-                        calories: 320
-                    }
-                ]
-            }
-        ],
+        // [
+        //     {
+        //         label: 'Featured Recipes',
+        //         items: [
+        //             // {
+        //             //     image: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c',
+        //             //     label: 'VIEW RECIPE',
+        //             //     subtext: 'Rainbow Buddha Bowl with Tahini Dressing',
+        //             //     rating: 4.8,
+        //             //     reviews: 5243,
+        //             //     time: '25 mins',
+        //             //     difficulty: 'Easy',
+        //             //     calories: 420
+        //             // },
+        //             {
+        //                 image: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd',
+        //                 label: 'LEARN TECHNIQUE',
+        //                 subtext: 'Perfect Pan-Seared Salmon with Crispy Skin',
+        //                 rating: 4.7,
+        //                 reviews: 3891,
+        //                 time: '15 mins',
+        //                 difficulty: 'Medium',
+        //                 calories: 320
+        //             }
+        //         ]
+        //     }
+        // ],
 
         // Second column - Quick meals
         [
@@ -732,34 +732,34 @@ const foodLovers = {
             }
         ],
 
-        // Fourth column - Seasonal picks
-        [
-            {
-                label: 'Seasonal Picks',
-                items: [
-                    // {
-                    //     image: 'https://images.unsplash.com/photo-1490645935967-10de6ba17061',
-                    //     label: 'COOK NOW',
-                    //     subtext: 'Summer Berry Pavlova with Whipped Cream',
-                    //     rating: 4.9,
-                    //     reviews: 2104,
-                    //     time: '1.5 hrs',
-                    //     difficulty: 'Medium',
-                    //     calories: 280
-                    // },
-                    {
-                        image: 'https://images.unsplash.com/photo-1473093295043-cdd812d0e601',
-                        label: 'SAVE RECIPE',
-                        subtext: 'Hearty Winter Beef Stew with Root Vegetables',
-                        rating: 4.8,
-                        reviews: 4321,
-                        time: '3 hrs',
-                        difficulty: 'Easy',
-                        calories: 380
-                    }
-                ]
-            }
-        ]
+        // // Fourth column - Seasonal picks
+        // [
+        //     {
+        //         label: 'Seasonal Picks',
+        //         items: [
+        //             // {
+        //             //     image: 'https://images.unsplash.com/photo-1490645935967-10de6ba17061',
+        //             //     label: 'COOK NOW',
+        //             //     subtext: 'Summer Berry Pavlova with Whipped Cream',
+        //             //     rating: 4.9,
+        //             //     reviews: 2104,
+        //             //     time: '1.5 hrs',
+        //             //     difficulty: 'Medium',
+        //             //     calories: 280
+        //             // },
+        //             {
+        //                 image: 'https://images.unsplash.com/photo-1473093295043-cdd812d0e601',
+        //                 label: 'SAVE RECIPE',
+        //                 subtext: 'Hearty Winter Beef Stew with Root Vegetables',
+        //                 rating: 4.8,
+        //                 reviews: 4321,
+        //                 time: '3 hrs',
+        //                 difficulty: 'Easy',
+        //                 calories: 380
+        //             }
+        //         ]
+        //     }
+        // ]
     ]
 };
 const menuItems = ref([recipes, cookingTips, foodLovers]);
