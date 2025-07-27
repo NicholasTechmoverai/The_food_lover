@@ -281,12 +281,13 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue';
 import { recipesSocket, usersSocket } from '../a_websocket';
 import { useAuthStore } from '../store/user';
 import debounce from 'lodash/debounce';
 import { useRouter } from 'vue-router';
-
+import { useControl } from "../store/control.js";
+const control = useControl()
 const router = useRouter();
 const auth = useAuthStore();
 
@@ -432,6 +433,10 @@ const triggerSuggestions = async () => {
     search_val_loading.value = false;
   }
 };
+
+onBeforeUnmount(()=>{
+  control.setShowSearch(false)
+})
 
 const debouncedLiveSuggestion = debounce(triggerSuggestions, 400);
 </script>
