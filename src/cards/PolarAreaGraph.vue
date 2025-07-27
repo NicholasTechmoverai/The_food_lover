@@ -1,13 +1,17 @@
 
 <template>
-    <div class="card flex justify-center">
+    <div class="card flex f justify-center h-fit">
         <Chart type="polarArea" :data="chartData" :options="chartOptions"  />
     </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from "vue";
+const props = defineProps({
+    data:Object
+})
 
+console.log(props.data)
 onMounted(() => {
     chartData.value = setChartData();
     chartOptions.value = setChartOptions();
@@ -19,7 +23,7 @@ const chartOptions = ref();
 const setChartData = () => {
     const documentStyle = getComputedStyle(document.documentElement);
 
-    return {
+    return props.data?props.data:{
         datasets: [
             {
                 data: [11, 16, 7, 3, 14],
@@ -30,7 +34,7 @@ const setChartData = () => {
                     documentStyle.getPropertyValue('--p-purple-500'),
                     documentStyle.getPropertyValue('--p-cyan-500')
                 ],
-                label: 'My dataset'
+                label: 'recipes pairing'
             }
         ],
         labels: ['Pink', 'Gray', 'Orange', 'Purple', 'Cyan']

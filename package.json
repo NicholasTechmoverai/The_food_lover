@@ -24,6 +24,7 @@
     "gsap": "^3.13.0",
     "heroicons": "^2.2.0",
     "jose": "^6.0.11",
+    "lodash": "^4.17.21",
     "lucide-vue-next": "^0.516.0",
     "pinia": "^3.0.3",
     "pinia-plugin-persistedstate": "^4.3.0",

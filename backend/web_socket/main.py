@@ -81,6 +81,114 @@ class RecipesNamespace(socketio.AsyncNamespace):
 
         except Exception as e:
             logger.exception(f"[RecipesNamespace Error]: {e}")
+            
+    async def on_get_all_recipes(self, sid, data):
+        try:
+            token = data.get("token")
+            if not token:
+                logger.warning(f"[Recipes] Missing recipe_id from {sid}")
+                return
+            
+            user = await get_current_user(token)
+            if not user:
+                logger.warning(f"[Recipes] Invalid token from {sid}")
+                return
+
+            user_id = user.id
+            r =  await self.recipe_service.get_all_recipes( user_id)
+
+            
+            await self.emit("response_get_all_recipes", r, room=sid)
+
+        except Exception as e:
+            logger.exception(f"[RecipesNamespace Error]: {e}")
+
+
+    async def on_get_all_recipes_stats(self, sid, data):
+        try:
+            token = data.get("token")
+            if not token:
+                logger.warning(f"[Recipes] Missing recipe_id from {sid}")
+                return
+            
+            user = await get_current_user(token)
+            if not user:
+                logger.warning(f"[Recipes] Invalid token from {sid}")
+                return
+
+            user_id = user.id
+            r =  await self.recipe_service.get_general_recipes_stats( user_id)
+
+            
+            await self.emit("response_get_all_recipes_stats", r, room=sid)
+        except Exception as e:
+                    logger.exception(f"[RecipesNamespace Error]: {e}")
+                    
+    async def on_get_recipe_report(self, sid, data):
+        try:
+            token = data.get("token")
+            recipe_id = data.get("recipe_id")
+            if not recipe_id and not token:
+                logger.warning(f"[Recipes] Missing recipe_id from {sid}")
+                return
+            
+            user = await get_current_user(token)
+            if not user:
+                logger.warning(f"[Recipes] Invalid token from {sid}")
+                return
+
+            user_id = user.id
+            recipe_meta =  await self.recipe_service.get_recipe_report( user_id=user_id,recipe_id=recipe_id)
+            chart_meta_data = await self.recipe_service.get_recipe_chart_report(user_id=user_id,recipe_id=recipe_id)
+            
+            await self.emit("response_get_recipe_report", {"chart_meta_data":chart_meta_data,"recipe_meta":recipe_meta}, room=sid)
+        except Exception as e:
+                    logger.exception(f"[RecipesNamespace Error]: {e}")                
+
+
+    async def on_get_recipe_performance(self, sid, data):
+        try:
+            token = data.get("token")
+            recipe_id = data.get("recipe_id")
+            if not recipe_id and not token:
+                logger.warning(f"[Recipes] Missing recipe_id from {sid}")
+                return
+            
+            user = await get_current_user(token)
+            if not user:
+                logger.warning(f"[Recipes] Invalid token from {sid}")
+                return
+
+            user_id = user.id
+            recipe_performance=  await self.recipe_service.get_dynamic_recipe_chart( user_id=user_id,recipe_id=recipe_id)
+            
+            await self.emit("response_get_recipe_performance", recipe_performance, room=sid)
+        except Exception as e:
+                    logger.exception(f"[RecipesNamespace Error]: {e}")                
+
+
+    async def on_search_recipes_suggestion(self, sid, data):
+        try:
+            logger.info("[Recipes] Recipe suggestion search invoked by SID: %s", sid)
+
+            token = data.get("token")
+            search_val = data.get("search_val")
+            return_unsimilar = data.get("return_unsimilar")
+
+            if not search_val:
+                logger.warning("[Recipes] Missing search value from SID: %s", sid)
+                return
+
+            logger.info("[Recipes] Searching for recipe suggestions matching: '%s' ,%s", search_val,return_unsimilar)
+
+            # Fetch recipe suggestions from service
+            suggestions = await self.recipe_service.get_recipes_suggestions(name=search_val,return_unsimilar=return_unsimilar)
+
+            # Emit suggestions back to client
+            await self.emit("response_search_recipes_suggestion", suggestions, room=sid)
+
+        except Exception as e:
+            logger.exception("[RecipesNamespace Error] Failed to process recipe suggestion: %s", str(e))
 
 
 class UsersNamespace(socketio.AsyncNamespace, AuthService):

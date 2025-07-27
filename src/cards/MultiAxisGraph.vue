@@ -1,12 +1,12 @@
 
 <template>
     <div class="card">
-        <Chart type="line" :data="chartData" :options="chartOptions" class="h-[30rem]" />
+        <Chart type="line" :data="chartData" :options="chartOptions" class="" />
     </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted,watch } from "vue";
 
 onMounted(() => {
     chartData.value = setChartData();
@@ -15,11 +15,13 @@ onMounted(() => {
 
 const chartData = ref();
 const chartOptions = ref();
-        
+const props = defineProps({
+    data:Object
+})
 const setChartData = () => {
     const documentStyle = getComputedStyle(document.documentElement);
-
-    return {
+  
+    return props.data?props.data: {
         labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July'],
         datasets: [
             {
@@ -28,7 +30,7 @@ const setChartData = () => {
                 borderColor: documentStyle.getPropertyValue('--p-cyan-500'),
                 yAxisID: 'y',
                 tension: 0.4,
-                data: [65, 59, 80, 81, 56, 55, 10]
+                data: [0, 0, 0, 0, 0, 0, 0]
             },
             {
                 label: 'Dataset 2',
@@ -36,7 +38,7 @@ const setChartData = () => {
                 borderColor: documentStyle.getPropertyValue('--p-gray-500'),
                 yAxisID: 'y1',
                 tension: 0.4,
-                data: [28, 48, 40, 19, 86, 27, 90]
+                data: [0, 0, 0, 0, 0, 0, 0]
             }
         ]
     };
@@ -93,4 +95,8 @@ const setChartOptions = () => {
         }
     };
 }
+
+watch(() => props.data, (newVal) => {
+    chartData.value = setChartData(newVal);
+}, { immediate: true });
 </script>

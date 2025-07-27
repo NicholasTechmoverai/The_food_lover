@@ -108,6 +108,9 @@
             <!-- Right Icons -->
             <template #end>
                 <div v-if="user && user.id" class="flex items-center gap-3">
+                    <Button v-if="showSearchButton" @click="showSearchBar" icon="pi pi-search" severity="secondary" rounded
+                        aria-label="Search"
+                        class="border-purple-400 dark:border-purple-300 text-purple-400 dark:text-purple-300 hover:bg-purple-400/10 dark:hover:bg-purple-300/10 w-10 h-10" />
                     <Button @click="router.push('/saved')" icon="pi pi-bookmark" severity="secondary" rounded
                         aria-label="Saved"
                         class="border-purple-400 dark:border-purple-300 text-purple-400 dark:text-purple-300 hover:bg-purple-400/10 dark:hover:bg-purple-300/10 w-10 h-10" />
@@ -167,7 +170,8 @@ import { useAuthStore, useNotificationStore } from '../store/user.js'
 import router from "../router/index.js";
 import { goHome, polishUrlName } from "../reusables/index.js"
 import { Logout } from "../apis/auth.js";
-
+import { useControl } from "../store/control.js";
+const control = useControl()
 const auth = useAuthStore()
 const notifications = useNotificationStore()
 const { siteConfig, getResponsiveValue } = useSiteStore()
@@ -186,31 +190,11 @@ const props = defineProps({
 })
 
 
+const showSearchButton = ref(true)
 
-
-const noty_menu_items = ref([
-    {
-        label: () => `Likes (${notifications.notificationsCount.likes})`,
-        icon: 'pi pi-heart',
-        command: () => {
-            router.push('/notifications?tab=likes')
-        }
-    },
-    {
-        label: () => `Messages (${notifications.notificationsCount.comment})`,
-        icon: 'pi pi-comments',
-        command: () => {
-            router.push('/notifications?tab=mentions')
-        }
-    },
-    {
-        label: () => `Mentions (${notifications.notificationsCount.system})`,
-        icon: 'pi pi-at',
-        command: () => {
-            router.push('/notifications?tab=mentions')
-        }
-    }
-]);
+const showSearchBar = async()=>{
+    control.setShowSearch(control.showSearch = !control.showSearch)
+}
 
 const Menu_items = ref([
 
@@ -287,130 +271,130 @@ const Notytoggle = (event) => {
 };
 
 const rawRecipes = {
-  label: 'Recipe Categories',
-  root: true,
-  items: [
-    [
-      {
-        items: [
-          {
-            label: 'Breakfast',
-            icon: 'pi pi-sun',
-            subtext: 'Morning favorites to start your day',
-            color: '#f59e0b',
-            tip: 'Try oats or eggs for a protein-packed start',
-            command: () => router.push('/recipes/breakfast')
-          },
-          {
-            label: 'Lunch',
-            icon: 'pi pi-utensils',
-            subtext: 'Midday meals to recharge',
-            color: '#84cc16',
-            tip: 'Balance carbs with lean proteins',
-            command: () => router.push('/recipes/lunch')
-          },
-          {
-            label: 'Dinner',
-            icon: 'pi pi-moon',
-            subtext: 'Evening classics and hearty dishes',
-            color: '#10b981',
-            tip: 'Go light for better sleep',
-            command: () => router.push('/recipes/dinner')
-          }
+    label: 'Recipe Categories',
+    root: true,
+    items: [
+        [
+            {
+                items: [
+                    {
+                        label: 'Breakfast',
+                        icon: 'pi pi-sun',
+                        subtext: 'Morning favorites to start your day',
+                        color: '#f59e0b',
+                        tip: 'Try oats or eggs for a protein-packed start',
+                        command: () => router.push('/recipes/breakfast')
+                    },
+                    {
+                        label: 'Lunch',
+                        icon: 'pi pi-utensils',
+                        subtext: 'Midday meals to recharge',
+                        color: '#84cc16',
+                        tip: 'Balance carbs with lean proteins',
+                        command: () => router.push('/recipes/lunch')
+                    },
+                    {
+                        label: 'Dinner',
+                        icon: 'pi pi-moon',
+                        subtext: 'Evening classics and hearty dishes',
+                        color: '#10b981',
+                        tip: 'Go light for better sleep',
+                        command: () => router.push('/recipes/dinner')
+                    }
+                ]
+            }
+        ],
+        [
+            {
+                items: [
+                    {
+                        label: 'Appetizer',
+                        icon: 'pi pi-sliders-h',
+                        subtext: 'Starters to impress',
+                        color: '#6366f1',
+                        tip: 'Think bite-sized & bold flavors',
+                        command: () => router.push('/recipes/appetizer')
+                    },
+                    {
+                        label: 'Dessert',
+                        icon: 'pi pi-pie-chart',
+                        subtext: 'Sweet endings & bakes',
+                        color: '#f97316',
+                        tip: 'Use real vanilla for depth',
+                        command: () => router.push('/recipes/dessert')
+                    },
+                    {
+                        label: 'Snack',
+                        icon: 'pi pi-apple',
+                        subtext: 'Quick bites & nibbles',
+                        color: '#a855f7',
+                        tip: 'Air-fried snacks are lighter',
+                        command: () => router.push('/recipes/snack')
+                    }
+                ]
+            }
+        ],
+        [
+            {
+                items: [
+                    {
+                        label: 'Quick Meal',
+                        icon: 'pi pi-clock',
+                        subtext: 'Ready in under 30 mins',
+                        color: '#f43f5e',
+                        tip: 'Pre-cut veggies save time',
+                        command: () => router.push('/recipes/quick-meal')
+                    },
+                    {
+                        label: 'Gluten-Free',
+                        icon: 'pi pi-ban',
+                        subtext: 'Wheat-free alternatives',
+                        color: '#ef4444',
+                        tip: 'Rice flour is a great substitute',
+                        command: () => router.push('/recipes/gluten-free')
+                    },
+                    {
+                        label: 'Healthy',
+                        icon: 'pi pi-heart',
+                        subtext: 'Nutritious & balanced',
+                        color: '#22c55e',
+                        tip: 'Go for colorful veggies',
+                        command: () => router.push('/recipes/healthy')
+                    }
+                ]
+            }
+        ],
+        [
+            {
+                items: [
+                    {
+                        label: 'Comfort Food',
+                        icon: 'pi pi-thumbs-up',
+                        subtext: 'Warm, familiar flavors',
+                        color: '#eab308',
+                        tip: 'Cheese and gravy are staples',
+                        command: () => router.push('/recipes/comfort-food')
+                    },
+                    {
+                        label: 'Holiday',
+                        icon: 'pi pi-gift',
+                        subtext: 'Festive & seasonal',
+                        color: '#ec4899',
+                        tip: 'Plan ahead for big dinners',
+                        command: () => router.push('/recipes/holiday')
+                    },
+                    {
+                        image: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=800&q=80',
+                        label: 'VIEW ALL RECIPES',
+                        subtext: 'Explore all categories and recipes',
+                        rating: 4.5,
+                        reviews: 1852,
+                        command: () => router.push('/recipes')
+                    }
+                ]
+            }
         ]
-      }
-    ],
-    [
-      {
-        items: [
-          {
-            label: 'Appetizer',
-            icon: 'pi pi-sliders-h',
-            subtext: 'Starters to impress',
-            color: '#6366f1',
-            tip: 'Think bite-sized & bold flavors',
-            command: () => router.push('/recipes/appetizer')
-          },
-          {
-            label: 'Dessert',
-            icon: 'pi pi-pie-chart',
-            subtext: 'Sweet endings & bakes',
-            color: '#f97316',
-            tip: 'Use real vanilla for depth',
-            command: () => router.push('/recipes/dessert')
-          },
-          {
-            label: 'Snack',
-            icon: 'pi pi-apple',
-            subtext: 'Quick bites & nibbles',
-            color: '#a855f7',
-            tip: 'Air-fried snacks are lighter',
-            command: () => router.push('/recipes/snack')
-          }
-        ]
-      }
-    ],
-    [
-      {
-        items: [
-          {
-            label: 'Quick Meal',
-            icon: 'pi pi-clock',
-            subtext: 'Ready in under 30 mins',
-            color: '#f43f5e',
-            tip: 'Pre-cut veggies save time',
-            command: () => router.push('/recipes/quick-meal')
-          },
-          {
-            label: 'Gluten-Free',
-            icon: 'pi pi-ban',
-            subtext: 'Wheat-free alternatives',
-            color: '#ef4444',
-            tip: 'Rice flour is a great substitute',
-            command: () => router.push('/recipes/gluten-free')
-          },
-          {
-            label: 'Healthy',
-            icon: 'pi pi-heart',
-            subtext: 'Nutritious & balanced',
-            color: '#22c55e',
-            tip: 'Go for colorful veggies',
-            command: () => router.push('/recipes/healthy')
-          }
-        ]
-      }
-    ],
-    [
-      {
-        items: [
-          {
-            label: 'Comfort Food',
-            icon: 'pi pi-thumbs-up',
-            subtext: 'Warm, familiar flavors',
-            color: '#eab308',
-            tip: 'Cheese and gravy are staples',
-            command: () => router.push('/recipes/comfort-food')
-          },
-          {
-            label: 'Holiday',
-            icon: 'pi pi-gift',
-            subtext: 'Festive & seasonal',
-            color: '#ec4899',
-            tip: 'Plan ahead for big dinners',
-            command: () => router.push('/recipes/holiday')
-          },
-          {
-            image: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=800&q=80',
-            label: 'VIEW ALL RECIPES',
-            subtext: 'Explore all categories and recipes',
-            rating: 4.5,
-            reviews: 1852,
-            command: () => router.push('/recipes')
-          }
-        ]
-      }
     ]
-  ]
 }
 
 

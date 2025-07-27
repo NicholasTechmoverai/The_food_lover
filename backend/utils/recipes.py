@@ -11,7 +11,7 @@ from models import (
     RecipeView,
     Follow,
     Notification,
-    CommentLike
+    CommentLike,
 )
 from reusables.main import sanitizeContents, save_base64_image, sanitize_name
 from uuid import UUID
@@ -25,9 +25,11 @@ from typing import List, Optional, Union
 from tortoise.expressions import Q
 from tortoise.functions import Count
 from itertools import islice
-
+from datetime import datetime, timedelta, timezone
+import random
 from config import Config, BASE_SERVER
 from tortoise.expressions import Q
+from collections import defaultdict
 
 from .logger import setup_logger
 
@@ -221,8 +223,10 @@ class RecipeService:
             # Try to import and trigger WebSocket notification
             try:
                 from app import notifications_namespace
-                noty = await Notification.filter(id=notification.id).prefetch_related("user","actor")
 
+                noty = await Notification.filter(id=notification.id).prefetch_related(
+                    "user", "actor"
+                )
 
                 await notifications_namespace.trigger_notification({
                     "user_id": str(uid),
@@ -234,8 +238,9 @@ class RecipeService:
                 logger.info(f"WebSocket notification import failed: {e}")
 
         return recipe
-    async def minutes_to_time(self,cook_time_minutes):
-            return {"hr": cook_time_minutes // 60, "min": cook_time_minutes % 60}
+
+    async def minutes_to_time(self, cook_time_minutes):
+        return {"hr": cook_time_minutes // 60, "min": cook_time_minutes % 60}
 
     async def list_recipes(
         self,
@@ -306,7 +311,6 @@ class RecipeService:
         logger.info("Final recipe count: %s", len(recipes))
 
         # Format results
-       
 
         result = []
         for r in recipes:
@@ -341,7 +345,7 @@ class RecipeService:
 
         return {"recipes": result, "limit": limit, "offset": offset}
 
-    async def get_recipes_suggestions(self, name: str):
+    async def get_recipes_suggestions(self, name: str,return_unsimilar:bool=True):
         query = self.recipe_repo.all().prefetch_related(
             "tags", "category", "steps__ingredients", "user", "views", "likes"
         )
@@ -362,7 +366,7 @@ class RecipeService:
         count_found = len(filtered_recipes)
 
         # If we found less than 10, fetch top-rated to fill the gap
-        if count_found < 10:
+        if count_found < 10 and return_unsimilar:
             filler_limit = 10 - count_found
 
             filler_recipes = (
@@ -377,7 +381,7 @@ class RecipeService:
             )
 
             filtered_recipes.extend(filler_recipes)
-       
+
         return [
             {
                 "title": recipe.name,
@@ -385,13 +389,12 @@ class RecipeService:
                 "alt": f"{recipe.name} by {recipe.user.name}",
                 "views": await recipe.views.all().count(),
                 "likes": await recipe.likes.all().count(),
-                "url":f"/recipes/{recipe.name.strip().lower().replace(" ","-")}/{recipe.id}",
-                "cook_time":await self.minutes_to_time(recipe.cook_time_minutes),
-                "difficulty_level":recipe.difficulty_level,
+                "url": f"/recipes/{recipe.name.strip().lower().replace(' ', '-')}/{recipe.id}",
+                "cook_time": await self.minutes_to_time(recipe.cook_time_minutes),
+                "difficulty_level": recipe.difficulty_level,
                 "cuisine": {"name": recipe.cuisine, "region": "East Africa"},
-
                 "chef": {
-                    "id": recipe.user.id,
+                    "id": str(recipe.user.id),
                     "name": recipe.user.username,
                     "avatar": recipe.user.picture_url
                     if recipe.user.picture_url.startswith("https://")
@@ -457,7 +460,7 @@ class RecipeService:
                 "updatedAt": recipe.updated_at.isoformat(),
                 "createdAt": recipe.created_at.isoformat(),
                 "description": recipe.description,
-                "allow_comments":recipe.allow_comments,
+                "allow_comments": recipe.allow_comments,
                 "cuisine": {
                     "name": recipe.cuisine,
                     "region": "East Africa",  # Replace with dynamic region if needed
@@ -535,8 +538,7 @@ class RecipeService:
         try:
             # Try to get or create a like entry
             like, created = await RecipeLike.get_or_create(
-                user_id=user_id,
-                recipe_id=recipe_id
+                user_id=user_id, recipe_id=recipe_id
             )
 
             if not created:
@@ -547,7 +549,7 @@ class RecipeService:
                     actor_id=user_id,
                     notification_type="like",
                     target_object_id=str(recipe_id),
-                    target_content_type="recipe"
+                    target_content_type="recipe",
                 ).delete()
 
                 return False
@@ -575,17 +577,19 @@ class RecipeService:
                         target_content_type="recipe",
                         verb=f"liked your recipe '{recipe.name[:100]}'",
                         preview=recipe.name[:100],
-                        thread_id=recipe.id
+                        thread_id=recipe.id,
                     )
 
                     # Trigger live notification
                     from app import notifications_namespace
 
-                    noty = await Notification.filter(id=notification.id).prefetch_related("user","actor")
+                    noty = await Notification.filter(
+                        id=notification.id
+                    ).prefetch_related("user", "actor")
 
                     await notifications_namespace.trigger_notification({
                         "user_id": str(chef.id),
-                        "notifications": noty
+                        "notifications": noty,
                     })
 
                 except Exception as e:
@@ -596,7 +600,6 @@ class RecipeService:
         except Exception as e:
             logger.error(f"[Like/Unlike] Unexpected error: {e}")
             return False
-
 
     async def like_unlike_favourite(self, user_id: UUID, recipe_id: UUID) -> bool:
         """
@@ -738,9 +741,9 @@ class RecipeService:
                     try:
                         from app import notifications_namespace
 
-                        noty = await Notification.filter(id=notification.id).prefetch_related(
-                            "user","actor"
-                        )
+                        noty = await Notification.filter(
+                            id=notification.id
+                        ).prefetch_related("user", "actor")
 
                         await notifications_namespace.trigger_notification({
                             "user_id": str(recipe.user_id),
@@ -810,7 +813,7 @@ class RecipeService:
                         )
                         noty = await Notification.filter(
                             id=parent_notification.id
-                        ).prefetch_related("user","actor")
+                        ).prefetch_related("user", "actor")
 
                         await notifications_namespace.trigger_notification({
                             "user_id": str(parent.user_id),
@@ -836,7 +839,7 @@ class RecipeService:
                         )
                         noty = await Notification.filter(
                             id=recipe_owner_notification.id
-                        ).prefetch_related("user","actor")
+                        ).prefetch_related("user", "actor")
 
                         await notifications_namespace.trigger_notification({
                             "user_id": str(recipe.user_id),
@@ -912,8 +915,6 @@ class RecipeService:
         await Favorite.filter(recipe_id=recipe_id).delete()
         await ShareRecipe.filter(recipe_id=recipe_id).delete()
         await RecipeView.filter(recipe_id=recipe_id).delete()
-        
-
 
         # Finally delete the recipe
         await recipe.delete()
@@ -964,7 +965,8 @@ class RecipeService:
                 user_likes_map = {}
                 if user_id:
                     user_likes = await CommentLike.filter(
-                        user_id=user_id, comment_id__in=top_ids + list(replies_map.keys())
+                        user_id=user_id,
+                        comment_id__in=top_ids + list(replies_map.keys()),
                     )
                     user_likes_map = {ul.comment_id: ul for ul in user_likes}
 
@@ -994,9 +996,7 @@ class RecipeService:
                         },
                         "replies": [],
                         "replyCount": await RecipeComment.filter(
-                            recipe_id=recipe_id,
-                            parent_id=comment.id,
-                            is_deleted=False
+                            recipe_id=recipe_id, parent_id=comment.id, is_deleted=False
                         ).count(),
                     }
 
@@ -1011,7 +1011,9 @@ class RecipeService:
                             "is_edited": reply.is_edited,
                             "likes": len(reply.likes),
                             "isLiked": bool(reply_user_like),
-                            "reacted_emoji": reply_user_like.reaction if reply_user_like else None,
+                            "reacted_emoji": reply_user_like.reaction
+                            if reply_user_like
+                            else None,
                             "created_at": reply.created_at.isoformat(),
                             "parent_id": reply.parent_id,
                             "attachments": list(reply.attachments)
@@ -1044,12 +1046,16 @@ class RecipeService:
                 # Flat reply thread (recursive)
                 logger.info("Fetching replies for parent: %s", parent)
 
-                all_replies = await RecipeComment.filter(
-                    recipe_id=recipe_id, is_deleted=False
-                ).prefetch_related("user", "likes").order_by("created_at")
+                all_replies = (
+                    await RecipeComment.filter(recipe_id=recipe_id, is_deleted=False)
+                    .prefetch_related("user", "likes")
+                    .order_by("created_at")
+                )
 
                 parent_map = {c.id: c.parent_id for c in all_replies}
-                user_map = {c.id: getattr(c.user, "name", "Unknown") for c in all_replies}
+                user_map = {
+                    c.id: getattr(c.user, "name", "Unknown") for c in all_replies
+                }
 
                 def is_descendant(child_id):
                     pid = parent_map.get(child_id)
@@ -1059,12 +1065,18 @@ class RecipeService:
                         pid = parent_map.get(pid)
                     return False
 
-                filtered_replies = [c for c in all_replies if c.id != parent and is_descendant(c.id)]
-                paginated_replies = filtered_replies[offset: offset + limit]
+                filtered_replies = [
+                    c for c in all_replies if c.id != parent and is_descendant(c.id)
+                ]
+                paginated_replies = filtered_replies[offset : offset + limit]
 
                 # Batch user likes
                 reply_ids = [c.id for c in paginated_replies]
-                reply_likes = await CommentLike.filter(user_id=user_id, comment_id__in=reply_ids) if user_id else []
+                reply_likes = (
+                    await CommentLike.filter(user_id=user_id, comment_id__in=reply_ids)
+                    if user_id
+                    else []
+                )
                 reply_likes_map = {ul.comment_id: ul for ul in reply_likes}
 
                 replies = []
@@ -1105,14 +1117,13 @@ class RecipeService:
             logger.exception("Error in get_comments: %s", str(e))
             return {"error": "An unexpected error occurred."}
 
-
     async def like_unlike_comment(
         self,
         user_id: UUID,
         recipe_id: UUID,
         comment_id: int,
         is_liked: bool,
-        reaction: dict
+        reaction: dict,
     ) -> bool:
         """
         Toggle like/unlike for a comment with optional emoji reaction.
@@ -1129,9 +1140,7 @@ class RecipeService:
         """
         try:
             like, created = await CommentLike.get_or_create(
-                user_id=user_id,
-                comment_id=comment_id,
-                defaults={"reaction": reaction}
+                user_id=user_id, comment_id=comment_id, defaults={"reaction": reaction}
             )
 
             if not created:
@@ -1141,14 +1150,14 @@ class RecipeService:
                     return True
 
                 # Unlike and remove if no reaction
-                if not is_liked :
+                if not is_liked:
                     await like.delete()
 
                     await Notification.filter(
                         actor_id=user_id,
                         target_object_id=str(comment_id),
                         target_content_type="reacted",
-                        thread_id=recipe_id
+                        thread_id=recipe_id,
                     ).delete()
 
                     return False
@@ -1159,16 +1168,21 @@ class RecipeService:
 
             recipe = await Recipe.get_or_none(id=recipe_id).prefetch_related("user")
             if not recipe or not recipe.user:
-                logger.error(f"[Like/Unlike] Recipe or user not found for ID {recipe_id}")
+                logger.error(
+                    f"[Like/Unlike] Recipe or user not found for ID {recipe_id}"
+                )
                 return True
 
             from app import notifications_namespace
-            rep_comment = await RecipeComment.get_or_none(id=comment_id).prefetch_related('user')
-            logger.info("sending nitificaiton to %s",rep_comment.user.username)
+
+            rep_comment = await RecipeComment.get_or_none(
+                id=comment_id
+            ).prefetch_related("user")
+            logger.info("sending nitificaiton to %s", rep_comment.user.username)
 
             if rep_comment.user.id != user_id:
                 try:
-                    logger.info("sending nitificaiton to %s",rep_comment.user.username)
+                    logger.info("sending nitificaiton to %s", rep_comment.user.username)
                     notification = await Notification.create(
                         user_id=rep_comment.user.id,
                         actor_id=user_id,
@@ -1177,15 +1191,16 @@ class RecipeService:
                         target_content_type="reacted",
                         verb=f"reacted to your comment on '{recipe.name[:100]}'",
                         preview=recipe.name[:100],
-                        thread_id=str(recipe.id)
+                        thread_id=str(recipe.id),
                     )
 
-                    
-                    noty = await Notification.filter(id=notification.id).prefetch_related("user","actor")
+                    noty = await Notification.filter(
+                        id=notification.id
+                    ).prefetch_related("user", "actor")
 
                     await notifications_namespace.trigger_notification({
                         "user_id": str(rep_comment.user.id),
-                        "notifications": noty
+                        "notifications": noty,
                     })
                 except Exception as e:
                     logger.warning(f"[Notification Create] Failed to send: {e}")
@@ -1195,9 +1210,6 @@ class RecipeService:
         except Exception as e:
             logger.error(f"[Like/Unlike] Unexpected error: {e}")
             return False
-
-
-
 
     async def get_viewers(
         self,
@@ -1216,7 +1228,7 @@ class RecipeService:
             .limit(limit)
             .prefetch_related("user")
         )
-        
+
         print(viewers)
 
         users = [view.user for view in viewers if view.user]
@@ -1226,8 +1238,9 @@ class RecipeService:
         following_ids = set()
         if user_id:
             following_ids = set(
-                await Follow.filter(follower_id=user_id, following_id__in=user_ids)
-                .values_list("following_id", flat=True)
+                await Follow.filter(
+                    follower_id=user_id, following_id__in=user_ids
+                ).values_list("following_id", flat=True)
             )
 
         result = [
@@ -1254,6 +1267,7 @@ class RecipeService:
             "limit": limit,
             "count": len(result),
         }
+
     async def get_likes(
         self,
         recipe_id: UUID,
@@ -1271,7 +1285,7 @@ class RecipeService:
             .limit(limit)
             .prefetch_related("user")
         )
-        
+
         print(viewers)
 
         users = [view.user for view in viewers if view.user]
@@ -1281,8 +1295,9 @@ class RecipeService:
         following_ids = set()
         if user_id:
             following_ids = set(
-                await Follow.filter(follower_id=user_id, following_id__in=user_ids)
-                .values_list("following_id", flat=True)
+                await Follow.filter(
+                    follower_id=user_id, following_id__in=user_ids
+                ).values_list("following_id", flat=True)
             )
 
         result = [
@@ -1310,65 +1325,431 @@ class RecipeService:
             "count": len(result),
         }
 
-#  {
-#         id: 1,
-#         content: 'This is a great recipe! I tried it with coconut milk and it was amazing. 😍',
-#         is_edited: false,
-#         likes: 5,
-#         parent_id: null,
-#         created_at: new Date(),
-#         user: {
-#             id: 456,
-#             name: 'Jane Doe',
-#             profilePic: defaultAvatar,
-#         },
-#         replies: [
-#             {
-#                 id: 2,
-#                 content: '@Jane Doe I\'ll definitely try that! Thanks Jane!',
-#                 is_edited: true,
-#                 likes: 2,
-#                 parent_id: 1,
-#                 created_at: new Date(),
-#                 user: {
-#                     id: 789,
-#                     name: 'John Smith',
-#                     profilePic: defaultAvatar,
-#                 },
-#             },
-#             {
-#                 id: 3,
-#                 content: 'Coconut milk is a great alternative! Did you use full-fat or light?',
-#                 is_edited: false,
-#                 likes: 0,
-#                 parent_id: 1,
-#                 created_at: new Date(Date.now() - 3600000),
-#                 user: {
-#                     id: 101,
-#                     name: 'Alex Johnson',
-#                     profilePic: defaultAvatar,
-#                 },
-#             },
-#         ],
+    async def get_all_recipes(self, user_id: UUID) -> dict:
+        recipes = await self.recipe_repo.filter(user_id=user_id).order_by("-updated_at")
+
+        r_recipes = [
+            {
+                "id": str(r.id),
+                "image": f"{BASE_SERVER}/{r.cover_image_url}" or "",
+                "name": r.name,
+                "created_at": r.updated_at.isoformat() or r.created_at.isoformat(),
+            }
+            for r in recipes
+        ]
+
+          
+        return {"all_recipes": r_recipes}
+
+    async def get_general_recipes_stats(self, user_id: UUID) -> dict:
+        recipes = await self.recipe_repo.filter(user_id=user_id)
+
+        now = datetime.now(timezone.utc)
+        last_7_days = now - timedelta(days=7)
+        prev_7_days = now - timedelta(days=14)
+
+        total_views = total_engagements = total_active_time = 0
+        recent_views = recent_engagements = recent_active_time = 0
+        previous_views = previous_engagements = previous_active_time = 0
+
+        recipe_views = []
+        labels = []
+        recipe_colors = []
+        for recipe in recipes:
+            # All-time views
+            views = await RecipeView.filter(recipe=recipe)
+            total_views += len(views)
+            total_active_time += sum(v.active_time for v in views)
+            total_engagements += len(views)
+            labels.append(recipe.name[:10])
+            recipe_colors.append(recipe.theme_color if hasattr(recipe, "theme_color") else "#ccc")
+            recipe_views.append(len(views))
+
+            # Views in last 7 days
+            recent_views_qs = await RecipeView.filter(
+                recipe=recipe, viewed_on__gte=last_7_days
+            )
+            recent_views += len(recent_views_qs)
+            recent_active_time += sum(v.active_time for v in recent_views_qs)
+            recent_engagements += len(recent_views_qs)
+
+            # Views in previous 7 days
+            prev_views_qs = await RecipeView.filter(
+                recipe=recipe, viewed_on__gte=prev_7_days, viewed_on__lt=last_7_days
+            )
+            previous_views += len(prev_views_qs)
+            previous_active_time += sum(v.active_time for v in prev_views_qs)
+            previous_engagements += len(prev_views_qs)
+
+            # All-time likes/shares/favorites
+            total_engagements += await RecipeLike.filter(recipe=recipe).count()
+            total_engagements += await ShareRecipe.filter(recipe=recipe).count()
+            total_engagements += await Favorite.filter(recipe=recipe).count()
+
+            # Replace the created_at fields below based on actual model fields
+            recent_engagements += await RecipeLike.filter(
+                recipe=recipe, created_at__gte=last_7_days
+            ).count()
+            recent_engagements += await ShareRecipe.filter(
+                recipe=recipe, created_at__gte=last_7_days
+            ).count()
+            recent_engagements += await Favorite.filter(
+                recipe=recipe, added_at__gte=last_7_days
+            ).count()
+
+            previous_engagements += await RecipeLike.filter(
+                recipe=recipe, created_at__gte=prev_7_days, created_at__lt=last_7_days
+            ).count()
+            previous_engagements += await ShareRecipe.filter(
+                recipe=recipe, created_at__gte=prev_7_days, created_at__lt=last_7_days
+            ).count()
+            previous_engagements += await Favorite.filter(
+                recipe=recipe, added_at__gte=prev_7_days, added_at__lt=last_7_days
+            ).count()
+
+        def calc_change(current, previous):
+            diff = current - previous
+            percent = (diff / previous * 100) if previous else 100 if current > 0 else 0
+            return round(diff), round(percent, 2)
+
+        view_change, view_percent = calc_change(recent_views, previous_views)
+        engage_change, engage_percent = calc_change(
+            recent_engagements, previous_engagements
+        )
+        active_change, active_percent = calc_change(
+            recent_active_time, previous_active_time
+        )
+
+        eng = [
+            {
+                "label": "Total Views",
+                "value": str(total_views),
+                "change": view_change,
+                "percent": view_percent,
+                "icon": "pi pi-eye",
+            },
+            {
+                "label": "Total Engagements",
+                "value": str(total_engagements),
+                "change": engage_change,
+                "percent": engage_percent,
+                "icon": "pi pi-heart",
+            },
+            {
+                "label": "Total ActiveTime",
+                "value": str(total_active_time),
+                "change": active_change,
+                "percent": active_percent,
+                "icon": "pi pi-users",
+            },
+        ]
+        return {
+            "stats": eng,
+            "stats_graph_meta": {
+                "data": recipe_views,
+                "colors": recipe_colors,
+                "labels": labels,
+            },
+        }
+
+    async def get_recipe_report(self, user_id: UUID, recipe_id: UUID) -> dict:
+        recipe = await self.recipe_repo.filter(id=recipe_id).first()
+        if not recipe:
+            return {}
+
+        now = datetime.now(timezone.utc)
+        last_7_days = now - timedelta(days=7)
+
+        # Likes
+        total_likes = await RecipeLike.filter(recipe_id=recipe_id).count()
+        likes_last_7_days = await RecipeLike.filter(
+            recipe_id=recipe_id, created_at__gte=last_7_days
+        ).count()
+        likes_change = (likes_last_7_days / total_likes * 100) if total_likes else 0
+
+        # Comments
+        total_comments = await RecipeComment.filter(
+            recipe_id=recipe_id, is_deleted=False
+        ).count()
+        comments_last_7_days = await RecipeComment.filter(
+            recipe_id=recipe_id, is_deleted=False, created_at__gte=last_7_days
+        ).count()
+        comments_change = (
+            (comments_last_7_days / total_comments * 100) if total_comments else 0
+        )
+
+        # Views and Active Time
+        views = await RecipeView.filter(recipe_id=recipe_id)
+        total_views = len(views)
+        active_time = sum(view.active_time for view in views)
+        views_last_7_days = await RecipeView.filter(
+            recipe_id=recipe_id, viewed_on__gte=last_7_days
+        ).count()
+        views_change = (views_last_7_days / total_views * 100) if total_views else 0
+
+        # Shares
+        total_shares = await ShareRecipe.filter(recipe_id=recipe_id).count()
+        shares_last_7_days = await ShareRecipe.filter(
+            recipe_id=recipe_id, created_at__gte=last_7_days
+        ).count()
+        shares_change = (shares_last_7_days / total_shares * 100) if total_shares else 0
+
+        # Saves
+        total_saves = await Favorite.filter(recipe_id=recipe_id).count()
+        saves_last_7_days = await Favorite.filter(
+            recipe_id=recipe_id, added_at__gte=last_7_days
+        ).count()
+        saves_change = (saves_last_7_days / total_saves * 100) if total_saves else 0
+
+        # Completion Rate (random for now, can be refined)
+        completion_rate = random.randint(87, 97)
+
+        return {
+            "id": str(recipe.id),
+            "name": recipe.name,
+            "image": f"{BASE_SERVER}/{recipe.cover_image_url}" or "",
+            "created_at": recipe.updated_at.isoformat()
+            or recipe.created_at.isoformat(),
+            "views": total_views,
+            "views_change": round(views_change, 2),
+            "likes": total_likes,
+            "likes_change": round(likes_change, 2),
+            "comments": total_comments,
+            "comments_change": round(comments_change, 2),
+            "shares": total_shares,
+            "shares_change": round(shares_change, 2),
+            "saves": total_saves,
+            "saves_change": round(saves_change, 2),
+            "active_time": active_time,
+            "completion_rate": completion_rate,
+        }
+
+    async def get_recipe_chart_report(
+        self, user_id: UUID, recipe_id: UUID, days: int = 30
+    ) -> dict:
+        now = datetime.now(timezone.utc)
+        last_7_days = now - timedelta(days=days)
+
+        # Last 7 days stats
+        likes = await RecipeLike.filter(
+            recipe_id=recipe_id, created_at__gte=last_7_days
+        ).count()
+        comments = await RecipeComment.filter(
+            recipe_id=recipe_id, is_deleted=False, created_at__gte=last_7_days
+        ).count()
+        views_qs = await RecipeView.filter(
+            recipe_id=recipe_id, viewed_on__gte=last_7_days
+        )
+        shares = await ShareRecipe.filter(
+            recipe_id=recipe_id, created_at__gte=last_7_days
+        ).count()
+        saves = await Favorite.filter(
+            recipe_id=recipe_id, added_at__gte=last_7_days
+        ).count()
+
+        active_time = sum(view.active_time for view in views_qs)
+
+        return {
+            "labels": ["Likes", "Comments", "Views", "Shares", "Saves", "Active Time"],
+            "datasets": [
+                {
+                    "label": f"Recipe Report (Last {days} Days)",
+                    "data": [
+                        likes,
+                        comments,
+                        len(views_qs),
+                        shares,
+                        saves,
+                        active_time,
+                    ],
+                    "backgroundColor": [
+                        "rgba(249, 115, 22, 0.2)",
+                        "rgba(6, 182, 212, 0.2)",
+                        "rgba(107, 114, 128, 0.2)",
+                        "rgba(139, 92, 246, 0.2)",
+                        "rgba(34, 197, 94, 0.2)",
+                        "rgba(239, 68, 68, 0.2)",
+                    ],
+                    "borderColor": [
+                        "rgb(249, 115, 22)",
+                        "rgb(6, 182, 212)",
+                        "rgb(107, 114, 128)",
+                        "rgb(139, 92, 246)",
+                        "rgb(34, 197, 94)",
+                        "rgb(239, 68, 68)",
+                    ],
+                    "borderWidth": 1,
+                }
+            ],
+        }
+
+    # Helper to generate time buckets
+    def generate_time_labels(self, recipe_created_at, now):
+        delta = now - recipe_created_at
+        if delta.days >= 365:
+            return [
+                now - timedelta(days=30 * i) for i in reversed(range(12))
+            ], "monthly"
+        elif delta.days >= 90:
+            return [now - timedelta(days=10 * i) for i in reversed(range(9))], "10days"
+        else:
+            return [now - timedelta(days=i) for i in reversed(range(7))], "daily"
+
+    async def get_dynamic_recipe_chart(self, user_id: UUID, recipe_id: UUID):
+        now = datetime.now(timezone.utc)
+        recipe = await self.recipe_repo.filter(id=recipe_id).first()
+        if not recipe:
+            return {}
+
+        labels_raw, mode = self.generate_time_labels(
+            recipe.created_at or recipe.updated_at, now
+        )
+        labels = [
+            dt.strftime("%b %d") if mode == "daily" else dt.strftime("%b")
+            for dt in labels_raw
+        ]
+
+        # Bucketed results
+        data_map = defaultdict(lambda: [0] * len(labels))
+
+        # Fetch events
+        likes = await RecipeLike.filter(recipe_id=recipe_id).all()
+        comments = await RecipeComment.filter(
+            recipe_id=recipe_id, is_deleted=False
+        ).all()
+        views = await RecipeView.filter(recipe_id=recipe_id).all()
+        shares = await ShareRecipe.filter(recipe_id=recipe_id).all()
+        saves = await Favorite.filter(recipe_id=recipe_id).all()
+
+        def distribute(entries, attr_name):
+            for entry in entries:
+                time = getattr(entry, attr_name)
+                for i, label_date in enumerate(labels_raw):
+                    end = label_date + timedelta(
+                        days=10 if mode == "10days" else 1 if mode == "daily" else 30
+                    )
+                    if label_date <= time < end:
+                        data_map[attr_name][i] += 1
+                        break
+
+        distribute(likes, "created_at")
+        distribute(comments, "created_at")
+        distribute(views, "viewed_on")
+        distribute(shares, "created_at")
+        distribute(saves, "added_at")
+
+        active_time_data = [0] * len(labels)
+        for view in views:
+            for i, label_date in enumerate(labels_raw):
+                end = label_date + timedelta(
+                    days=10 if mode == "10days" else 1 if mode == "daily" else 30
+                )
+                if label_date <= view.viewed_on < end:
+                    active_time_data[i] += view.active_time
+                    break
+
+        data_map["active_time"] = active_time_data
+
+        # Prepare dataset
+        base_colors = {
+            "created_at": "rgb(249, 115, 22)",
+            "viewed_on": "rgb(107, 114, 128)",
+            "added_at": "rgb(34, 197, 94)",
+            "active_time": "rgb(239, 68, 68)",
+        }
+
+        label_map = {
+            "created_at": "Likes / Comments / Shares",
+            "viewed_on": "Views",
+            "added_at": "Saves",
+            "active_time": "Active Time",
+        }
+
+        datasets = []
+        for key, data in data_map.items():
+            color = base_colors.get(key, "rgb(6, 182, 212)")
+            datasets.append({
+                "label": label_map.get(key, key.title()),
+                "fill": False,
+                "borderColor": color,
+                "tension": 0.4,
+                "data": data,
+            })
+
+        # Optional: compare with best-performing recipe
+        top_recipe = await self.recipe_repo.filter(user_id=user_id).first()
+        if top_recipe and str(top_recipe.id) != str(recipe_id):
+            # Add dotted line for best recipe views as example
+            best_views = await RecipeView.filter(recipe_id=top_recipe.id).count()
+            datasets.append({
+                "label": f"Best Recipe (Avg Views)",
+                "fill": False,
+                "borderColor": "rgba(100,100,255,0.5)",
+                "borderDash": [5, 5],
+                "tension": 0.4,
+                "data": [best_views // len(labels)] * len(labels),
+            })
+
+        return {"labels": labels, "datasets": datasets}
+
+
+# const recipes = [
+#     {
+#         id: 0,
+#         title: "General Overview",
+#         description: "Aggregate analytics across all your recipes",
+#         name: "Dashboard",
+#         image: "https://images.unsplash.com/photo-1490645935967-10de6ba17061",
 #     },
 #     {
-#         id: 4,
-#         content: 'Has anyone tried doubling the spices? I wonder if it would be too strong.',
-#         is_edited: false,
-#         likes: 1,
-#         parent_id: null,
-#         created_at: new Date(Date.now() - 86400000),
-#         user: {
-#             id: 112,
-#             name: 'Sam Wilson',
-#             profilePic: defaultAvatar,
-#         },
-#         replies: [],
-#         attachments: [
-#             {
-#                 name: 'recipe-variation.pdf',
-#                 url: '#',
-#                 type: 'file'
-#             }
-#         ]
+#         id: 1uigoigvv,
+#         title: "Spicy Garlic Shrimp Pasta",
+#         description: "A delicious pasta dish with a spicy garlic kick and fresh shrimp",
+#         name: "Pasta",
+#         image: "https://images.unsplash.com/photo-1555949258-eb67b1ef0ceb",
+#         views: 12543,
+#         views_change: 12.5,
+#         likes: 892,
+#         likes_change: 8.2,
+#         shares: 324,
+#         shares_change: 5.7,
+#         saves: 567,
+#         saves_change: 15.3,
+#         active_time: 78,
+#         completion_rate: 65
 #     },
+#     {
+#         id: 2vkjvkjvy,
+#         title: "Avocado Toast",
+#         description: "Healthy breakfast with creamy avocado and poached eggs",
+#         name: "Breakfast",
+#         image: "https://images.unsplash.com/photo-1511690656952-34342bb7c2f2",
+#         views: 8765,
+#         views_change: -3.2,
+#         likes: 654,
+#         likes_change: 2.1,
+#         shares: 198,
+#         shares_change: -1.5,
+#         saves: 432,
+#         saves_change: 7.8,
+#         active_time: 65,
+#         completion_rate: 72
+#     },
+#     {
+#         id: uiuhuiogygy,
+#         title: "Chocolate Lava Cake",
+#         description: "Decadent chocolate dessert with a molten center",
+#         name: "Dessert",
+#         image: "https://images.unsplash.com/photo-1571115177098-24ec42ed204d",
+#         views: 15321,
+#         views_change: 18.7,
+#         likes: 1243,
+#         likes_change: 22.4,
+#         shares: 512,
+#         shares_change: 14.6,
+#         saves: 876,
+#         saves_change: 19.2,
+#         active_time: 82,
+#         completion_rate: 58
+#     }
+# ];

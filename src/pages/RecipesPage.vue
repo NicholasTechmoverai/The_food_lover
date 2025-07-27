@@ -2,7 +2,7 @@
   <div v-if="!isRouterViewActive"
     class="min-h-screen overflow-hidden relative bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-100">
     <!-- Hero Section -->
-    <section class="relative h-96 overflow-hidden">
+    <!-- <section class="relative h-96 overflow-hidden">
       <img
         src="https://images.unsplash.com/photo-1546069901-d5bfd2cbfb1f?ixlib=rb-1.2.1&auto=format&fit=crop&w=1600&h=600&q=80"
         alt="Delicious recipes" class="w-full h-full object-cover" />
@@ -21,7 +21,7 @@
           </div>
         </div>
       </div>
-    </section>
+    </section> -->
 
     <!-- Recipe and Sidebar Layout -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 px-4 md:px-6 py-10">
@@ -71,6 +71,20 @@
       </section>
     </div>
 
+    <Transition enter-active-class="transition transform duration-300 ease-out"
+      enter-from-class="translate-y-10 opacity-0" enter-to-class="translate-y-0 opacity-100"
+      leave-active-class="transition transform duration-200 ease-in" leave-from-class="translate-y-0 opacity-100"
+      leave-to-class="translate-y-10 opacity-0">
+
+      <div v-if="control.showSearch"
+        class="fixed z-100 w-full h-screen inset-0 bg-white/70 dark:bg-gray-900/70 backdrop-blur-sm   md:rounded-lg shadow-2xl !overflow-hidden"
+        @click.self="control.setShowSearch(false) ">
+        <div class="py-6 md:p-6">
+         <SearchCard />
+        </div>
+      </div>
+    </Transition>
+
     <Toast />
 
   </div>
@@ -93,7 +107,9 @@ import { useAuthStore } from '../store/user.js'
 import { useToast } from 'primevue/usetoast'
 import RecipeTypesLoader from '../loaders/Skeleton1.vue'
 import MainRecipeCardsParent from "../cards/ManyReipesParent.vue"
-
+import SearchCard from '../cards/SearchCard.vue'
+import { useControl } from "../store/control.js";
+const control = useControl()
 const auth = useAuthStore()
 const toast = useToast()
 const recipes_loading = ref(false)
