@@ -55,6 +55,19 @@
             </div>
         </div>
     </div>
+      <Transition enter-active-class="transition transform duration-300 ease-out"
+    enter-from-class="translate-y-10 opacity-0" enter-to-class="translate-y-0 opacity-100"
+    leave-active-class="transition transform duration-200 ease-in" leave-from-class="translate-y-0 opacity-100"
+    leave-to-class="translate-y-10 opacity-0">
+
+    <div v-if="control.showSearch"
+      class="fixed z-100 w-full h-screen inset-0 bg-white/70 dark:bg-gray-900/70 backdrop-blur-sm   md:rounded-lg shadow-2xl !overflow-hidden"
+      @click.self="control.setShowSearch(false)">
+      <div class="py-6 md:p-6">
+        <SearchCard />
+      </div>
+    </div>
+  </Transition>
 </template>
 
 <script setup>
@@ -65,6 +78,8 @@ import CookingTipCard from '../cards/CookingTipCard.vue'
 import { fetch_cooking_tips } from '../apis'
 import { useAuthStore } from '../store/user'
 import { useControl } from "../store/control.js";
+import SearchCard from '../cards/SearchCard.vue'
+
 const control = useControl()
 // Define categories with labels and values
 const categoryTypes = [

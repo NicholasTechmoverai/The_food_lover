@@ -62,11 +62,10 @@
                   @trigger-file-upload="triggerFileUpload" @remove-file="removeFile" @submit="submitComment"
                   @cancel="cancelComment" @add-emoji="addEmoji" />
               </div>
-                 <div v-else
-                    class="flex items-center gap-2 mt-3 text-sm text-red-500 dark:text-red-400">
-                    <i class="pi pi-ban text-base"></i>
-                    <span>Comments have been disabled for this recipe.</span>
-                  </div>
+              <div v-else class="flex items-center gap-2 mt-3 text-sm text-red-500 dark:text-red-400">
+                <i class="pi pi-ban text-base"></i>
+                <span>Comments have been disabled for this recipe.</span>
+              </div>
             </div>
           </div>
 
@@ -97,8 +96,7 @@
                       @toggle-emoji-picker="toggleEmojiPicker" @trigger-file-upload="triggerFileUpload"
                       @remove-file="removeFile" @submit="submitComment" @add-emoji="addEmoji" @cancel="cancelComment" />
                   </div>
-                  <div v-else
-                    class="flex items-center gap-2 mt-3 text-sm text-red-500 dark:text-red-400">
+                  <div v-else class="flex items-center gap-2 mt-3 text-sm text-red-500 dark:text-red-400">
                     <i class="pi pi-ban text-base"></i>
                     <span>Comments have been disabled for this recipe.</span>
                   </div>
@@ -314,9 +312,16 @@ const deleteComment = async (comment) => {
       life: 5000,
     });
   } else {
-    // Remove comment from local state
-    comments.value = comments.value.filter(c => c.id !== comment.id )
-      comments.value.replies = comments.value.filter(c => c.replies.id !== comment.id)
+    // Remove the main comment from the top-level comments
+    comments.value = comments.value.filter(c => c.id !== comment.id);
+
+    // Remove the comment from any replies of other comments
+    comments.value = comments.value.map(c => {
+      if (Array.isArray(c.replies)) {
+        c.replies = c.replies.filter(r => r.id !== comment.id);
+      }
+      return c;
+    });
 
     toast.add({
       severity: 'success',
@@ -452,7 +457,7 @@ const submitComment = async () => {
   isSubmitting.value = false
 }
 
-const getComments = async()=>{
+const getComments = async () => {
   isLoadingComments.value = true;
 
   const { success, data, message } = await fetchComments(auth.token, props.recipe_id, { recipe_id: props.recipe_id });

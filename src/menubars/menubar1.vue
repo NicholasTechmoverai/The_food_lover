@@ -196,6 +196,7 @@ const route = useRoute()
 const showSearchButton = computed(() =>
   [
     'CookingTipsPage',
+    'CookingTipTarget',
     'RecipesPage',
     'Saved',
     'RecipeId',
