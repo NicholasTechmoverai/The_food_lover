@@ -1,6 +1,6 @@
 <template>
   <div 
-    class="w-full max-w-4xl mx-auto mt-12 p-6 bg-white dark:bg-gray-900 md:rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 transition-all duration-300"
+    class="w-full max-w-4xl mx-auto mt-12 p-6 px-3 bg-white dark:bg-gray-900 md:rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 transition-all duration-300"
     :style="{ maxHeight: 'calc(100vh - 50px)' }"
   >
     <!-- Scrollable content wrapper -->
