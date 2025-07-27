@@ -2,14 +2,14 @@
     <div class="wrapper  flex justify-center items-center px-4">
         <div class="carousel w-full max-w-md space-y-6">
             <div v-for="(dish, index) in data" :key="index" class="carousel__item  flex items-center  overflow-hidden">
-                <div class="carousel__item-head w-24 h-24 flex-shrink-0 m-2" :style="{ backgroundColor: dish.theme }">
+                <router-link  :to="dish.url" class="carousel__item-head w-24 h-24 flex-shrink-0 m-2" :style="{ backgroundColor: dish.theme }">
                     <img :src="dish.image" :alt="dish.alt"
                         class="w-full h-full object-cover rounded-full border border-gray-200 dark:border-gray-700"
                         @error="(e) => e.target.src = onerrorImage" />
-                </div>
+                </router-link>
                 <div
                     class="carousel__item-body hover:ring ring-gray-400/50 border-b duration-300 bg-white dark:bg-gray-900 flex flex-col justify-center pr-4">
-                    <router-link :to="dish.url" class="title text-lg font-semibold text-gray-900 dark:text-white whitespace-nowrap">
+                    <router-link :to="dish.url" class="title text-lg font-semibold text-gray-900 dark:text-white whitespace-nowrap truncate">
                         {{ dish.title }}
                     </router-link>
                     <div
@@ -21,7 +21,7 @@
                     </div>
 
                     <div
-                        class="cuisine-info text-sm text-gray-500 dark:text-gray-400 flex flex-wrap items-center gap-x-2">
+                        class="cuisine-info text-sm text-gray-500 dark:text-gray-400 flex flex-wrap items-center gap-x-2 truncate">
                         <span v-if="dish.cuisine?.name">{{ dish.cuisine.name }}</span>
                         <span v-if="dish.cuisine?.region">({{ dish.cuisine.region }})</span>
                     </div>

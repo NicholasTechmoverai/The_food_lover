@@ -1,7 +1,7 @@
 <template>
-  <div>
+  <div class="sm:flex sm:flex-col sm:justify-center items-center md:items-stretch">
     <!-- Main Recipe List -->
-    <section class="order-2 lg:order-1 lg:col-span-2 space-y-6 md:space-y-8">
+    <section class="order-2 lg:order-1 lg:col-span-2 space-y-6 sm:px-2 md:space-y-8">
       <!-- Recipe Cards Grid -->
       <div>
 

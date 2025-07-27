@@ -51,7 +51,7 @@
 
     </div>
     <!-- Location & Newsletter -->
-    <div class="space-y-8 flex flex-col md:flex-row gap-9 justify-around">
+    <div class="space-y-8 flex flex-col md:flex-row gap-9 justify-around items-center">
 
       <!-- Map & Address -->
       <div>
@@ -60,7 +60,7 @@
           Visit Our Food Haven
         </h3>
 
-        <div class="aspect-video rounded-xl overflow-hidden border relative transition-colors"
+        <div class="aspect-video rounded-xl  overflow-hidden border relative transition-colors"
           :style="{ borderColor: siteConfig.colors.primary + '30' }" @mouseenter="startMapAnimation"
           @mouseleave="stopMapAnimation">
 
@@ -183,7 +183,7 @@ const footerLinks = [
       { name: 'Receips', path: '/recipes' },
       // { name: 'Cooking Classes', path: '/classes' },
       // { name: 'Food Tours', path: '/tours' },
-      { name: 'videos', path: '/videos' },
+      // { name: 'videos', path: '/videos' },
       { name: 'live', path: '/live' }
 
     ]

@@ -16,7 +16,7 @@
         </div>
       </div>
       <div class="">
-        <button v-if="!NowFollowing && recipe?.user.id !== auth.user.id" @click="follow(recipe.user.id)"
+        <button v-if="!NowFollowing && recipe?.user?.id !== auth.user.id" @click="follow(recipe.user.id)"
           class="text-xs px-3 py-1 rounded-full border border-[var(--theme-color)] text-[var(--theme-color)] hover:bg-[var(--theme-color)] hover:text-white transition">
           <span v-if="recipe?.recipeMeta?.isFollowing">Following</span><span v-else>Follow</span>
         </button>
@@ -24,7 +24,7 @@
           class="text-xs px-3 py-1 rounded-full border border-[var(--theme-color)] text-[var(--theme-color)] opacity-70 cursor-not-allowed">
           <span v-if="recipe?.recipeMeta?.isFollowing">Unfollowing...</span><span v-else>Following...</span>
         </span>
-        <div v-if="recipe?.user.id === auth.user.id" class="card flex justify-center">
+        <div v-if="recipe?.user?.id && recipe?.user?.id === auth.user.id" class="card flex justify-center">
           <Button type="button" icon="pi pi-ellipsis-v" severity="success" rounded variant="text"
             @click="toggle_more_options" aria-haspopup="true" size="small" aria-controls="overlay_menu" />
           <Menu ref="more_options_menu" id="overlay_menu" :model="more_options_items" :popup="true" />
@@ -114,7 +114,7 @@
           <span class="sr-only">Save</span>
         </button>
 
-        <router-link :to="recipeUrl(recipe.recipeName, recipe.id)">
+        <router-link v-if="recipe.id" :to="recipeUrl(recipe.recipeName, recipe?.id)">
           <RecipeButton :theme="recipe.repiceColor" />
         </router-link>
       </div>
