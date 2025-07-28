@@ -773,7 +773,6 @@ const toast = useToast()
 
 
 onMounted(async () => {
-    control.setShowSearch(false)
     await Promise.all([fetchRecipe(), fetchMeta()]);
     update_view();
     IntervalledGetMeta();
@@ -820,7 +819,6 @@ const IntervalledGetMeta = () => {
 
 
 watch(() => props.recipe_id, (newId) => {
-    control.setShowSearch(false)
     if (newId) {
         update_view();
     }

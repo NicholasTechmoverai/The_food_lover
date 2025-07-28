@@ -434,9 +434,9 @@ const triggerSuggestions = async () => {
   }
 };
 
-onBeforeUnmount(()=>{
-  control.setShowSearch(false)
-})
+// onBeforeUnmount(()=>{
+//   control.setShowSearch(false)
+// })
 
 const debouncedLiveSuggestion = debounce(triggerSuggestions, 400);
 </script>

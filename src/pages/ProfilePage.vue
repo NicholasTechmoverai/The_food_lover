@@ -710,7 +710,6 @@ const topHeight = ref(0)
 let observer
 
 onMounted(() => {
-    control.setShowSearch(false)
 
     if (topElementRef.value) {
         topHeight.value = topElementRef.value.offsetHeight

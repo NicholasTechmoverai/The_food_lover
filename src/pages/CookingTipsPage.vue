@@ -174,7 +174,6 @@ const changeTipCategory = (tip) => {
 
 // Initial load (optional if using watch with immediate: true)
 onMounted( async() => {
-    control.setShowSearch(false)
     await Promise.all([get_cooking_tips(),
     get_popular_cooking_tips()])
 

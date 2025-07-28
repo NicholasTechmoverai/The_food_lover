@@ -203,7 +203,6 @@ const get_trending_recipes = async () => {
 
 
 onMounted(async () => {
-  control.setShowSearch(false)
   recipes_types_loading.value = true
   recipes_loading.value = true
   liveRecipes.value = await fetchLiveRecipes()
