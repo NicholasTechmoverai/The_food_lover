@@ -638,6 +638,8 @@ import { useSiteStore } from '../config/siteConfig.js';
 import { Cropper } from 'vue-advanced-cropper';
 import MainRecipeCardsParent from "../cards/ManyReipesParent.vue"
 import { useControl } from "../store/control.js";
+import { initializeSession } from './apis/auth.js'
+
 const control = useControl()
 import 'vue-advanced-cropper/dist/style.css';
 import router from '../router/index.js';
@@ -707,9 +709,28 @@ const themeColors = [
 const topElementRef = ref(null)
 const topHeight = ref(0)
 
+const refreshToken = async () => {
+  try {
+    const res = await initializeSession(auth.token, auth.user.id)
+    if (res?.success && res.data) {
+      auth.setUser(res.data.user)
+      auth.setToken({
+        token: res.data.access_token,
+        expires_in: res.data.expires_in
+      })
+      return true
+    }
+    return false
+  } catch (error) {
+    console.error('Token refresh error:', error)
+    return false
+  }
+}
+
 let observer
 
-onMounted(() => {
+onMounted( async() => {
+    await refreshToken()
 
     if (topElementRef.value) {
         topHeight.value = topElementRef.value.offsetHeight
@@ -723,6 +744,7 @@ onMounted(() => {
 
         observer.observe(topElementRef.value)
     }
+    await load_user()
 })
 
 onBeforeUnmount(() => {
@@ -1199,9 +1221,7 @@ const follow = async (chefId) => {
 
 
 
-onMounted(() => {
-    load_user();
-});
+
 
 watch(() => props.username, (newVal) => {
     if (newVal) {
