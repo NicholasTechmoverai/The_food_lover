@@ -269,25 +269,34 @@ const getYoutubeEmbedUrl = (url) => {
 };
 
 // Format instructions with basic HTML support
-const formatInstructions = (text) => {
-  if (!text) return 'No instructions';
+// const formatInstructions = (text) => {
+//   if (!text) return 'No instructions';
 
-  // Basic sanitization (in a real app, use a proper sanitizer library)
-  const sanitized = text
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
+//   // Basic sanitization (in a real app, use a proper sanitizer library)
+//   const sanitized = text
+//     .replace(/</g, '&lt;')
+//     .replace(/>/g, '&gt;')
+//     .replace(/\n/g, '<br>')
+//     // Allow some basic formatting
+//     .replace(/&lt;b&gt;(.*?)&lt;\/b&gt;/g, '<strong>$1</strong>')
+//     .replace(/&lt;i&gt;(.*?)&lt;\/i&gt;/g, '<em>$1</em>')
+//     .replace(/&lt;u&gt;(.*?)&lt;\/u&gt;/g, '<u>$1</u>')
+//     // Support markdown-style formatting
+//     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+//     .replace(/\*(.*?)\*/g, '<em>$1</em>')
+//     .replace(/_(.*?)_/g, '<u>$1</u>');
+
+//   return sanitized;
+// };
+
+function formatInstructions(text) {
+  if (!text) return '';
+  // Basic sanitization and formatting
+  return text
     .replace(/\n/g, '<br>')
-    // Allow some basic formatting
-    .replace(/&lt;b&gt;(.*?)&lt;\/b&gt;/g, '<strong>$1</strong>')
-    .replace(/&lt;i&gt;(.*?)&lt;\/i&gt;/g, '<em>$1</em>')
-    .replace(/&lt;u&gt;(.*?)&lt;\/u&gt;/g, '<u>$1</u>')
-    // Support markdown-style formatting
     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-    .replace(/\*(.*?)\*/g, '<em>$1</em>')
-    .replace(/_(.*?)_/g, '<u>$1</u>');
-
-  return sanitized;
-};
+    .replace(/\*(.*?)\*/g, '<em>$1</em>');
+}
 
 // Lifecycle hooks
 onMounted(() => {

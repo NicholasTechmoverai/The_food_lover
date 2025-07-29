@@ -85,7 +85,7 @@ code_template = """
 
 
 update_account_template = """
-<div style="max-width: 600px; margin: 0 auto; padding: 32px; background-color: #ffffff; border-radius: 12px; font-family: 'Arial', sans-serif; color: #333333; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);">
+<div style="max-width: 600px; margin: 0 auto; padding: 12px; background-color: #ffffff; border-radius: 12px; font-family: 'Arial', sans-serif; color: #333333; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);">
   
   <!-- Header -->
   <div style="text-align: center; margin-bottom: 24px;">
@@ -131,9 +131,9 @@ update_account_template = """
   flex-direction: row;
   overflow-x: auto;
   gap: 12px;
-  padding: 16px;
+  padding: 16px 0;
   -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
+
 '>
   {cards_html}
 </div>
@@ -306,7 +306,7 @@ async def form_email_message(body: str) -> str:
           <h2 style="margin: 10px 0; color: #222;">{Config.SITE_NAME}</h2>
         </div>
 
-        <div style="padding: 20px;">
+        <div style="padding: 20px 5px;">
           {body}
         </div>
             <div style="
