@@ -13,6 +13,8 @@ from pathlib import Path
 from typing import Optional
 import logging
 from config import Config
+import re
+from html import unescape
 
 def sanitizeContents(content: str) -> str:
     safe_tags = [
@@ -53,25 +55,15 @@ def sanitizeContents(content: str) -> str:
 
 
 
-# Setup logger
 logger = logging.getLogger("image_saver")
-logger.setLevel(logging.DEBUG)  # Change to INFO or WARNING in prod
+logger.setLevel(logging.DEBUG) 
 
-# Ensure handler is only added once
 if not logger.handlers:
     handler = logging.StreamHandler()
     formatter = logging.Formatter("%(asctime)s [%(levelname)s] %(message)s")
     handler.setFormatter(formatter)
     logger.addHandler(handler)
 
-
-# Configure logger for production
-logger = logging.getLogger("image_saver")
-logger.setLevel(logging.INFO)
-handler = logging.StreamHandler()
-formatter = logging.Formatter("[%(asctime)s] [%(levelname)s] %(message)s")
-handler.setFormatter(formatter)
-logger.addHandler(handler)
 
 async def save_base64_image(base64_str: str, folder: str = "uploads", filename: str = None) -> Optional[str]:
     if not base64_str.startswith("data:image/"):
@@ -110,3 +102,23 @@ async def save_base64_image(base64_str: str, folder: str = "uploads", filename: 
 
 async def sanitize_name (name):
     return re.sub(r'[^a-zA-Z0-9_-]', '', name.strip().replace(" ", "_").lower())
+
+
+
+
+def clean_and_truncate(text: str, limit: int = 30) -> str:
+    """
+    Removes HTML tags from text and truncates it to a given character limit.
+    Adds ellipsis if text is longer than the limit.
+    """
+    if not text:
+        return ""
+    
+    # Remove HTML tags
+    clean_text = re.sub(r'<[^>]*>', '', text)
+    
+    # Decode HTML entities (like &amp;)
+    clean_text = unescape(clean_text).strip()
+    
+    # Truncate with ellipsis
+    return clean_text[:limit - 3] + "..." if len(clean_text) > limit else clean_text

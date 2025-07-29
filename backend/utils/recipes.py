@@ -13,7 +13,7 @@ from models import (
     Notification,
     CommentLike,
 )
-from reusables.main import sanitizeContents, save_base64_image, sanitize_name
+from reusables.main import sanitizeContents, save_base64_image, sanitize_name,clean_and_truncate
 from uuid import UUID
 from typing import Tuple
 from tortoise.exceptions import DoesNotExist
@@ -27,7 +27,7 @@ from tortoise.functions import Count
 from itertools import islice
 from datetime import datetime, timedelta, timezone
 import random
-from config import Config, BASE_SERVER
+from config import Config, BASE_SERVER,WEB_SERVER
 from tortoise.expressions import Q
 from collections import defaultdict
 
@@ -345,7 +345,7 @@ class RecipeService:
 
         return {"recipes": result, "limit": limit, "offset": offset}
 
-    async def get_recipes_suggestions(self, name: str,return_unsimilar:bool=True):
+    async def get_recipes_suggestions(self, name: str,return_unsimilar:bool=True,return_no:int=10):
         query = self.recipe_repo.all().prefetch_related(
             "tags", "category", "steps__ingredients", "user", "views", "likes"
         )
@@ -366,8 +366,8 @@ class RecipeService:
         count_found = len(filtered_recipes)
 
         # If we found less than 10, fetch top-rated to fill the gap
-        if count_found < 10 and return_unsimilar:
-            filler_limit = 10 - count_found
+        if count_found < return_no and return_unsimilar:
+            filler_limit = return_no - count_found
 
             filler_recipes = (
                 await self.recipe_repo.all()
@@ -384,13 +384,14 @@ class RecipeService:
 
         return [
             {
-                "title": recipe.name,
+                "title": recipe.name[:30],
+                "description": clean_and_truncate(recipe.description[:50]),
                 "image": f"{BASE_SERVER}/{recipe.cover_image_url}" or "",
                 "alt": f"{recipe.name} by {recipe.user.name}",
                 "views": await recipe.views.all().count(),
                 "likes": await recipe.likes.all().count(),
                 "theme":recipe.theme_color,
-                "url": f"/recipes/{recipe.name.strip().lower().replace(' ', '-')}/{recipe.id}",
+                "url": f"{WEB_SERVER}/recipes/{recipe.name.strip().lower().replace(' ', '-')}/{recipe.id}",
                 "cook_time": await self.minutes_to_time(recipe.cook_time_minutes),
                 "difficulty_level": recipe.difficulty_level,
                 "cuisine": {"name": recipe.cuisine, "region": "East Africa"},
