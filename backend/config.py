@@ -1,7 +1,7 @@
 from tortoise import Tortoise
 import os
 WEB_SERVER = 'https://the-food-lovers.netlify.app'
-BASE_SERVER = 'https://skill-camping-tobago-controversial.trycloudflare.com'
+BASE_SERVER = 'https://teacher-tomatoes-travelers-you.trycloudflare.com'
 # BASE_SERVER = 'http://localhost:8000'
 
 db_url = "mysql://root:75223031@localhost/the_food_lovers"
