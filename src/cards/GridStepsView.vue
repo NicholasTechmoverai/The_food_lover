@@ -68,7 +68,7 @@
 
           <!-- Instructions -->
           <div
-            class="text-gray-700 dark:text-gray-300 text-sm mb-4 line-clamp-3 prose dark:prose-invert prose-sm max-w-none"
+            class="text-gray-700 dark:text-gray-300 text-sm mb-4 line-clamp-3 prose dark:prose-invert prose-sm max-w-none break-words"
             v-html="formatInstructions(step.instructions)"></div>
 
           <!-- Ingredients -->
@@ -94,7 +94,7 @@
       :responsiveOptions="responsiveOptions" :circular="true" :autoPlay="false" :transitionInterval="3000"
       containerClass="fullscreen-galleria" @activeIndexChange="onIndexChange">
       <template #item="slotProps">
-        <div class="relative h-full w-full min-w-[200px] flex flex-col md:flex-row bg-gray-50 dark:bg-gray-900">
+        <div class="relative h-full w-full md:w-fit min-w-[200px] flex flex-col md:flex-row bg-gray-50 dark:bg-gray-900">
           <!-- Media Viewer -->
           <div class="flex-grow flex items-center justify-center bg-black relative">
             <!-- Video Player -->
@@ -129,7 +129,7 @@
           </div>
 
           <!-- Detailed Info Panel -->
-          <div class="bg-white dark:bg-gray-800 p-6 shadow-inner overflow-y-auto min-w-[200px]">
+          <div class="bg-white dark:bg-gray-800 p-6 shadow-inner overflow-y-auto min-w-[200px] max-w-[600px]">
             <div class="max-w-4xl mx-auto">
               <div class="flex flex-wrap justify-between items-start gap-4 mb-6">
                 <h3 class="text-2xl font-bold text-gray-800 dark:text-white">
@@ -150,8 +150,8 @@
               </div>
 
               <!-- Instructions with v-html -->
-              <div class="text-gray-700 w-full max-w-[400px] dark:text-gray-300 mb-8 prose dark:prose-invert "
-                v-html="formatInstructions(slotProps.item.instructions)"></div>
+              <div class="text-gray-700 w-full max-w-[400px] dark:text-gray-300 mb-8  break-words prose dark:prose-invert "
+                v-html="formatInstructions(slotProps.item.instructions||'No instructions provided')"></div>
 
               <div v-if="slotProps.item.ingredientsUsed?.length" class="mb-8">
                 <h4 class="text-lg font-semibold text-gray-800 dark:text-white mb-4 flex items-center">
@@ -175,7 +175,7 @@
                   <i class="pi pi-info-circle mr-2"></i>
                   Chef's Notes
                 </h4>
-                <div class="text-blue-700 dark:text-blue-300 prose dark:prose-invert prose-sm max-w-none"
+                <div class="text-blue-700 dark:text-blue-300 prose  break-words dark:prose-invert prose-sm max-w-none"
                   v-html="formatInstructions(slotProps.item.notes)"></div>
               </div>
             </div>

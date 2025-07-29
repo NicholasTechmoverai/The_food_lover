@@ -638,7 +638,7 @@ import { useSiteStore } from '../config/siteConfig.js';
 import { Cropper } from 'vue-advanced-cropper';
 import MainRecipeCardsParent from "../cards/ManyReipesParent.vue"
 import { useControl } from "../store/control.js";
-import { initializeSession } from './apis/auth.js'
+import { initializeSession } from '../apis/auth.js'
 
 const control = useControl()
 import 'vue-advanced-cropper/dist/style.css';
