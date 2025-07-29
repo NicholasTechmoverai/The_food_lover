@@ -180,7 +180,7 @@ def render_cards(cards: list[dict]) -> str:
       border: 3px solid rgba(255,255,255,0.25);
       box-shadow: 0 6px 20px rgba(0,0,0,0.15);
     ">
-     <a href="{card["url"]}" style="text-decoration: none;">
+     <a href="{card["out_url"]}" style="text-decoration: none;">
       <img src="{card["image"]}" alt="{card["title"]}" style="
         width: 110px;
         height: 110px;
@@ -199,7 +199,7 @@ def render_cards(cards: list[dict]) -> str:
       text-align: center;
       width: 100%;
     ">
-     <a href="{card["url"]}" style="text-decoration: none;">
+     <a href="{card["out_url"]}" style="text-decoration: none;">
       <h3 style="
         font-size: 22px;
         font-weight: 700;
@@ -215,7 +215,7 @@ def render_cards(cards: list[dict]) -> str:
         line-height: 1.5;
       ">{card["description"]}</p>
       
-      <a href="{card["url"]}" style="text-decoration: none;">
+      <a href="{card["out_url"]}" style="text-decoration: none;">
         <div style="
           display: inline-block;
           padding: 10px 24px;
@@ -247,7 +247,6 @@ def render_cards(cards: list[dict]) -> str:
 </div>
 """
 
-    # Wrap all cards in horizontally scrollable row
     return cards_html
 
 

@@ -107,7 +107,7 @@ from utils.manual_email_send import trigger
 async def startup():
     print("🚀 Connecting to database...")
     await init_db(app)
-    # print(await trigger())
+    # print(await triger())
 
     print("✅ DATABASE CONNECTED")
 

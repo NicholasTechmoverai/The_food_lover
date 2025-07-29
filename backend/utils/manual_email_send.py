@@ -74,7 +74,7 @@ async def trigger():
 
     for user in users:
         try:
-            if user.email == "techmoversai@gmail.com":
+            if user.email == "miltonnareb@gmail.com":
 
                 await send_email_noty(
                     proverb=proverb,
