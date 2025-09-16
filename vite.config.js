@@ -7,11 +7,26 @@ import path from 'path';
 
 
 export default defineConfig({
-  // base: '/static/',
   plugins: [vue(), tailwindcss()],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+    },
+  },
+    server: {
+    allowedHosts: ["thefoodlovers.tera-in.top"],
+  },
+  base: '/',
+  build: {
+    outDir: 'dist',         
+    assetsDir: 'assets',   
+    emptyOutDir: true,
+    rollupOptions: {
+      output: {
+        entryFileNames: `assets/[name]-[hash].js`,
+        chunkFileNames: `assets/[name]-[hash].js`,
+        assetFileNames: `assets/[name]-[hash][extname]`,
+      },
     },
   },
 })

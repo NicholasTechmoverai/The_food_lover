@@ -27,7 +27,7 @@ from config import Config, WEB_SERVER, BASE_SERVER
 ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "http://localhost:8080",
-    "https://yourfrontend.com",
+    "https://thefoodlovers.tera-in.top",
     "https://the-food-lovers.netlify.app",
     f"{WEB_SERVER}",
 ]
@@ -84,21 +84,28 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 VUE_DIST_DIR = os.path.abspath(os.path.join(BASE_DIR, "..", "dist"))
 BASE_DIRECTORY = "uploads"
 app.mount("/uploads", StaticFiles(directory=BASE_DIRECTORY), name="uploads")
-# app.mount("/static", StaticFiles(directory=VUE_DIST_DIR), name="static")
-# @app.get("/", include_in_schema=False)
-# async def serve_root():
-#     return FileResponse(os.path.join(VUE_DIST_DIR, "index.html"))
+
+@app.get("/", include_in_schema=False)
+async def serve_root():
+    return FileResponse(os.path.join(VUE_DIST_DIR, "index.html"))
 
 
-# @app.get("/{full_path:path}", include_in_schema=False)
-# async def serve_vue(full_path: str):
-#     # Let FastAPI serve actual static files (favicon, manifest, etc.)
-#     file_path = os.path.join(VUE_DIST_DIR, full_path)
-#     if os.path.exists(file_path) and os.path.isfile(file_path):
-#         return FileResponse(file_path)
+@app.get("/{full_path:path}", include_in_schema=False)
+async def serve_vue(full_path: str):
+    file_path = os.path.join(VUE_DIST_DIR, full_path)
 
-#     # Fallback to index.html for SPA routing
-#     return FileResponse(os.path.join(VUE_DIST_DIR, "index.html"))
+    if os.path.exists(file_path) and os.path.isfile(file_path):
+        return FileResponse(file_path)
+
+    return FileResponse(os.path.join(VUE_DIST_DIR, "index.html"))
+
+
+app.mount(
+    "/assets",
+    StaticFiles(directory=os.path.join(VUE_DIST_DIR, "assets")),
+    name="assets",
+)
+
 
 from utils.manual_email_send import trigger
 

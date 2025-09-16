@@ -3,7 +3,7 @@ import { ref } from "vue";
 
 
 // export const B_URl = 'http://localhost:8000'
-export const B_URl = 'https://teacher-tomatoes-travelers-you.trycloudflare.com'
+export const B_URl = 'https://thefoodlovers.tera-in.top'
 
 const BACKEND_URL = `${B_URl}/api`
 
