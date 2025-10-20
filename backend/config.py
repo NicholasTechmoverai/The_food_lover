@@ -35,7 +35,7 @@ TORTOISE_ORM = {
 }
 
 class Config:
-    SECRET_KEY = "75223031"  # 🔐 Use a strong random string in production
+    SECRET_KEY = "75223031"  
     ALGORITHM = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES = 60  # 60 minutes
     
