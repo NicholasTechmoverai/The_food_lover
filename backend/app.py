@@ -14,7 +14,7 @@ from web_socket.main import (
     UsersNamespace,
     NotificationsNamespace,
 )
-from config import init_db  # Your DB init logic
+from config import init_db  #  DB init logic
 from routes.auth import auth_router, limiter, AuthService
 from routes.recipes import recipe_router, RecipeService
 from routes.notifications import notification_router
@@ -59,7 +59,7 @@ sio.register_namespace(notifications_namespace)
 socket_app = socketio.ASGIApp(
     sio,
     other_asgi_app=app,
-    socketio_path="/ws/socket.io",  # Match frontend path
+    socketio_path="/ws/socket.io", 
 )
 
 
