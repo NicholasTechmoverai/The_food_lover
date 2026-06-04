@@ -13,6 +13,18 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  test: {
+    globals: false,
+    environment: 'happy-dom',
+    setupFiles: ['./src/test/setup.js'],
+    include: ['src/**/*.{test,spec}.{js,ts}'],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'html'],
+      include: ['src/**/*.{js,vue}'],
+      exclude: ['src/**/*.test.js', 'src/test/**'],
+    },
+  },
     server: {
     allowedHosts: ["thefoodlovers.tera-in.top"],
   },

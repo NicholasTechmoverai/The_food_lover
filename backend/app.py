@@ -80,6 +80,11 @@ app.include_router(cooking_tip_router, prefix="/api")
 app.include_router(notification_router, prefix="/api")
 
 
+@app.get("/health", include_in_schema=False)
+async def health_check():
+    return {"status": "ok"}
+
+
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 VUE_DIST_DIR = os.path.abspath(os.path.join(BASE_DIR, "..", "dist"))
 BASE_DIRECTORY = "uploads"
