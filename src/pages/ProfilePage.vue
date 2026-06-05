@@ -1245,9 +1245,9 @@ export default {
 /* Add any custom styles here if needed */
 </style>
 <style scoped>
-.b_content {}
-
 @import url("https://unpkg.com/normalize.css") layer(normalize);
+
+.b_content {}
 
 @layer normalize, base, demo;
 
