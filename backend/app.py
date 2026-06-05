@@ -88,6 +88,12 @@ async def health_check():
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 VUE_DIST_DIR = os.path.abspath(os.path.join(BASE_DIR, "..", "dist"))
 BASE_DIRECTORY = "uploads"
+
+# Ensure upload directories exist before mounting to prevent startup crashes
+os.makedirs(BASE_DIRECTORY, exist_ok=True)
+os.makedirs(os.path.join(BASE_DIRECTORY, "chefs"), exist_ok=True)
+os.makedirs(os.path.join(BASE_DIRECTORY, "users"), exist_ok=True)
+
 app.mount("/uploads", StaticFiles(directory=BASE_DIRECTORY), name="uploads")
 
 @app.get("/", include_in_schema=False)
@@ -105,9 +111,13 @@ async def serve_vue(full_path: str):
     return FileResponse(os.path.join(VUE_DIST_DIR, "index.html"))
 
 
+# Ensure assets directory exists before mounting to prevent startup crashes
+assets_dir = os.path.join(VUE_DIST_DIR, "assets")
+os.makedirs(assets_dir, exist_ok=True)
+
 app.mount(
     "/assets",
-    StaticFiles(directory=os.path.join(VUE_DIST_DIR, "assets")),
+    StaticFiles(directory=assets_dir),
     name="assets",
 )
 
