@@ -1,3 +1,15 @@
+# Stage 1: Build the frontend
+FROM node:20-slim AS builder
+
+WORKDIR /app
+
+# COPY 1: Copy the entire project to compile the frontend
+COPY . .
+
+# Install dependencies and build
+RUN npm ci && npm run build
+
+# Stage 2: Python Runner
 FROM python:3.11.9-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
@@ -6,19 +18,14 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends nodejs npm \
-    && rm -rf /var/lib/apt/lists/*
+# COPY 2: Copy the backend source files from the builder stage
+COPY --from=builder /app/backend ./backend
 
-COPY backend/requirements.txt package.json package-lock.json ./
+# COPY 3: Copy the compiled frontend dist folder from the builder stage
+COPY --from=builder /app/dist ./dist
 
-RUN pip install --no-cache-dir -r requirements.txt \
-    && npm ci
-
-COPY backend ./backend
-COPY src public index.html vite.config.js tailwind.config.js bellakitchenware.jpg ./
-
-RUN npm run build \
+# Install python dependencies and create verification logs
+RUN pip install --no-cache-dir -r backend/requirements.txt \
     && mkdir -p /logs/verifier \
     && printf "0\n" > /logs/verifier/reward.txt
 

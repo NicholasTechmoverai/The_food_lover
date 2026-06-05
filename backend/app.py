@@ -118,10 +118,12 @@ from utils.manual_email_send import trigger
 @app.on_event("startup")
 async def startup():
     print("🚀 Connecting to database...")
-    await init_db(app)
-    # print(await triger())
-
-    print("✅ DATABASE CONNECTED")
+    try:
+        await init_db(app)
+        print("✅ DATABASE CONNECTED")
+    except Exception as e:
+        print(f"⚠️ DATABASE CONNECTION FAILED: {e}")
+        print("⚠️ Application starting without database connection.")
 
 
 @app.on_event("shutdown")
